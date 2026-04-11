@@ -1,16 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { ChevronDown } from 'lucide-react';
-import {
-    SidebarGroup,
-    SidebarGroupLabel,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-    SidebarMenuSub,
-    SidebarMenuSubItem,
-    SidebarMenuSubButton,
-    useSidebar,
-} from '@/components/ui/sidebar';
+import React from 'react';
 import {
     Collapsible,
     CollapsibleContent,
@@ -22,9 +12,19 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+    SidebarGroup,
+    SidebarGroupLabel,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+    SidebarMenuSub,
+    SidebarMenuSubItem,
+    SidebarMenuSubButton,
+    useSidebar,
+} from '@/components/ui/sidebar';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import type { NavItem } from '@/types';
-import React from 'react';
 
 export function NavMain({ items = [] }: { items: NavItem[] }) {
     const { isCurrentUrl } = useCurrentUrl();
@@ -41,10 +41,14 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
     };
 
     const hasActiveChild = (item: NavItem): boolean => {
-        if (item.href && isCurrentUrl(item.href)) return true;
+        if (item.href && isCurrentUrl(item.href)) {
+return true;
+}
+
         if (item.items) {
             return item.items.some((child) => hasActiveChild(child));
         }
+
         return false;
     };
 

@@ -1,7 +1,7 @@
 'use client';
 
+import { Check, Monitor, Moon, Palette, Sun } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Check, ChevronsUpDown, Monitor, Moon, Sun } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -62,9 +62,11 @@ export function ThemeSwitcher() {
         document.documentElement.classList.remove(
             ...themes.map((x) => `theme-${x.value}`),
         );
+
         if (value) {
             document.documentElement.classList.add(`theme-${value}`);
         }
+
         localStorage.setItem('theme-preset', value);
         setCurrentPreset(value);
         // Popover tetap terbuka
@@ -74,8 +76,7 @@ export function ThemeSwitcher() {
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <Sun className="h-4 w-4 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-                    <Moon className="absolute h-4 w-4 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+                    <Palette className="h-4 w-4" />
                     <span className="sr-only">Toggle theme</span>
                 </Button>
             </PopoverTrigger>

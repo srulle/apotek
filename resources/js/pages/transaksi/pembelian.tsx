@@ -1,6 +1,4 @@
 import { Head } from '@inertiajs/react';
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
-import { transaksi } from '@/routes';
 import { ClipboardPlus, ClipboardList } from 'lucide-react';
 import {
     Card,
@@ -9,7 +7,10 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { transaksi } from '@/routes';
+import { InputLabelAndHelper } from '@/components/ui/input/input-label-and-helper';
 
 export default function Transaksi() {
     return (
@@ -52,9 +53,12 @@ export default function Transaksi() {
                                         sistem.
                                     </CardDescription>
                                 </CardHeader>
-                                <CardContent className="text-sm text-muted-foreground">
-                                    Form untuk menambahkan transaksi pembelian
-                                    baru.
+                                <CardContent className="grid gap-4 md:grid-cols-2">
+                                    <InputLabelAndHelper
+                                        label="Nomor Faktur"
+                                        helperText="Nomor faktur transaksi pembelian"
+                                        placeholder="Masukkan nomor faktur"
+                                    />
                                 </CardContent>
                             </Card>
                         </TabsContent>
