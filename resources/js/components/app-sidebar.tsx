@@ -13,6 +13,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard, laporan, transaksi } from '@/routes';
+import { penjualan, pembelian } from '@/routes/transaksi';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
@@ -23,8 +24,17 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Transaksi',
-        href: transaksi(),
         icon: ArrowRightLeft,
+        items: [
+            {
+                title: 'Penjualan',
+                href: penjualan(),
+            },
+            {
+                title: 'Pembelian',
+                href: pembelian(),
+            },
+        ],
     },
     {
         title: 'Laporan',
@@ -40,7 +50,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
+                            <Link href={dashboard().url} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
