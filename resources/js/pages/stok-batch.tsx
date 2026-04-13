@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
-import { stokBatch } from '@/routes';
 import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
+import { stokBatch } from '@/routes';
 
 export default function StokBatch() {
     return (

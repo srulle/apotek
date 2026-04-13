@@ -1,12 +1,12 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { useState, useRef } from 'react';
+import type { ColumnDef } from '@tanstack/react-table';
 import { ClipboardPlus, Pencil, Trash2 } from 'lucide-react';
+import { useState, useRef } from 'react';
 import { toast } from 'sonner';
-import { ColumnDef } from '@tanstack/react-table';
-import { Button } from '@/components/ui/button';
-import { OneFieldForm } from '@/components/input/one-field-form';
-import { DeleteConfirm } from '@/components/delete-confirm';
 import { SimpleDatatable } from '@/components/datatable/simple-datatable';
+import { DeleteConfirm } from '@/components/delete-confirm';
+import { OneFieldForm } from '@/components/input/one-field-form';
+import { Button } from '@/components/ui/button';
 
 type Satuan = {
     id: number;
@@ -42,7 +42,9 @@ export default function Satuan() {
     };
 
     const handleUpdate = (value: string) => {
-        if (!editId) return;
+        if (!editId) {
+return;
+}
 
         const promise = new Promise((resolve, reject) => {
             router.put(
@@ -75,6 +77,7 @@ export default function Satuan() {
             header: 'Nama Satuan',
             cell: ({ row }) => {
                 const value = row.getValue<string>('nama_satuan');
+
                 return (
                     <div>
                         {value.charAt(0).toUpperCase() +

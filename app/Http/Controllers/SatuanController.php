@@ -22,7 +22,9 @@ class SatuanController extends Controller
 
         Satuan::create($validated);
 
-        return redirect()->back()->with('success', 'Satuan berhasil ditambahkan');
+        return redirect()->back()
+            ->with('success', 'Satuan berhasil ditambahkan')
+            ->with('invalidate.cache', ['satuan']);
     }
 
     public function update(Request $request, Satuan $satuan)
@@ -33,13 +35,17 @@ class SatuanController extends Controller
 
         $satuan->update($validated);
 
-        return redirect()->back()->with('success', 'Satuan berhasil diupdate');
+        return redirect()->back()
+            ->with('success', 'Satuan berhasil diupdate')
+            ->with('invalidate.cache', ['satuan']);
     }
 
     public function destroy(Satuan $satuan)
     {
         $satuan->delete();
 
-        return redirect()->back()->with('success', 'Satuan berhasil dihapus');
+        return redirect()->back()
+            ->with('success', 'Satuan berhasil dihapus')
+            ->with('invalidate.cache', ['satuan']);
     }
 }

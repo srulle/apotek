@@ -1,12 +1,22 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
+import { useForm } from '@tanstack/react-form';
 import { ClipboardPlus } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { ComboboxLabelAndHelper } from '@/components/input/combobox';
+import { InputLabelAndHelper } from '@/components/input/input-label-and-helper';
+import { Modal } from '@/components/modal';
 import { Button } from '@/components/ui/button';
 import { DialogClose } from '@/components/ui/dialog';
-import { Modal } from '@/components/modal';
-import { useForm } from '@tanstack/react-form';
-import { InputLabelAndHelper } from '@/components/input/input-label-and-helper';
 
-export default function Obat() {
+interface ObatPageProps {
+    kategoriObat: string[];
+    satuan: string[];
+}
+
+export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
     const form = useForm({
         defaultValues: {
             nama_obat: '',
@@ -30,15 +40,30 @@ export default function Obat() {
                     <h1 className="font-semibold">Obat</h1>
                     <Modal
                         trigger={
-                            <Button className="w-fit">
+                            <Button
+                                className="w-fit"
+                                disabled={isRefreshing}
+                                onClick={async () => {
+                                    setIsRefreshing(true);
+
+                                    try {
+                                        await router.reload({
+                                            only: ['kategoriObat', 'satuan'],
+                                        });
+                                    } finally {
+                                        setIsRefreshing(false);
+                                    }
+                                }}
+                            >
                                 <ClipboardPlus />
-                                Tambah Obat
+                                {isRefreshing ? 'Memuat...' : 'Tambah Obat'}
                             </Button>
                         }
                         size="6xl"
                         title="Tambah Data Obat"
                         persistent={true}
                         description="Isi form berikut untuk menambah data obat baru."
+                        onClose={() => form.reset()}
                         footer={
                             <>
                                 <DialogClose asChild>
@@ -68,76 +93,242 @@ export default function Obat() {
                         }
                     >
                         <div className="grid gap-4 py-4 md:grid-cols-3">
-                            {[
-                                {
-                                    name: 'nama_obat' as const,
-                                    label: 'Nama Obat',
-                                    placeholder: 'Masukkan nama obat',
-                                    required: true,
-                                },
-                                {
-                                    name: 'kategori_obat' as const,
-                                    label: 'Kategori Obat',
-                                    placeholder: 'Masukkan kategori obat',
-                                    required: true,
-                                },
-                                {
-                                    name: 'satuan_besar' as const,
-                                    label: 'Satuan Besar',
-                                    placeholder: 'Contoh: Botol, Box',
-                                    required: true,
-                                },
-                                {
-                                    name: 'satuan_kecil' as const,
-                                    label: 'Satuan Kecil',
-                                    placeholder: 'Contoh: Tablet, Kapsul',
-                                    required: true,
-                                },
-                                {
-                                    name: 'isi_per_satuan' as const,
-                                    label: 'Isi Per Satuan',
-                                    placeholder: 'Contoh: 10',
-                                    type: 'number',
-                                    required: true,
-                                    isNumber: true,
-                                },
-                                {
-                                    name: 'harga_jual' as const,
-                                    label: 'Harga Jual',
-                                    placeholder: 'Contoh: 15000',
-                                    type: 'number',
-                                    required: true,
-                                    isNumber: true,
-                                },
-                            ].map((fieldConfig) => (
-                                <form.Field
-                                    key={fieldConfig.name}
-                                    name={fieldConfig.name}
-                                    validators={{
-                                        onChange: ({ value }) => {
-                                            if (fieldConfig.required && !value)
-                                                return `${fieldConfig.label} harus diisi`;
-                                            if (
-                                                fieldConfig.isNumber &&
-                                                value &&
-                                                isNaN(Number(value))
-                                            )
-                                                return 'Harus berupa angka';
-                                        },
-                                    }}
-                                >
-                                    {(field) => (
-                                        <InputLabelAndHelper
-                                            field={field}
-                                            label={fieldConfig.label}
-                                            placeholder={
-                                                fieldConfig.placeholder
-                                            }
-                                            type={fieldConfig.type}
-                                        />
-                                    )}
-                                </form.Field>
-                            ))}
+                            <form.Field
+                                name="nama_obat"
+                                validators={{
+                                    onChange: ({ value }) => {
+                                        if (!value) {
+return 'Nama Obat harus diisi';
+}
+                                    },
+                                }}
+                            >
+                                {(field) => (
+                                    <InputLabelAndHelper
+                                        field={field}
+                                        label="Nama Obat"
+                                        placeholder="Masukkan nama obat"
+                                    />
+                                )}
+                            </form.Field>
+
+                            <form.Field
+                                name="kategori_obat"
+                                validators={{
+                                    onChange: ({ value }) => {
+                                        if (!value) {
+return 'Kategori Obat harus diisi';
+}
+                                    },
+                                }}
+                            >
+                                {(field) => (
+                                    <ComboboxLabelAndHelper
+                                        field={field}
+                                        label="Kategori Obat"
+                                        placeholder="Pilih atau buat kategori obat"
+                                        initialItems={kategoriObat}
+                                        creatable={true}
+                                        onCreate={async (value) => {
+                                            return new Promise(
+                                                (resolve, reject) => {
+                                                    router.post(
+                                                        '/master-data/kategori-obat',
+                                                        {
+                                                            nama_kategori:
+                                                                value,
+                                                        },
+                                                        {
+                                                            preserveState: true,
+                                                            preserveScroll: true,
+                                                            onSuccess: () => {
+                                                                toast.success(
+                                                                    'Kategori obat berhasil ditambahkan',
+                                                                );
+                                                                resolve();
+                                                            },
+                                                            onError: (
+                                                                errors,
+                                                            ) => {
+                                                                toast.error(
+                                                                    errors.nama_kategori ||
+                                                                        'Gagal menambahkan kategori obat',
+                                                                );
+                                                                reject(
+                                                                    new Error(
+                                                                        errors.nama_kategori,
+                                                                    ),
+                                                                );
+                                                            },
+                                                        },
+                                                    );
+                                                },
+                                            );
+                                        }}
+                                    />
+                                )}
+                            </form.Field>
+
+                            <form.Field
+                                name="satuan_besar"
+                                validators={{
+                                    onChange: ({ value }) => {
+                                        if (!value) {
+return 'Satuan Besar harus diisi';
+}
+                                    },
+                                }}
+                            >
+                                {(field) => (
+                                    <ComboboxLabelAndHelper
+                                        field={field}
+                                        label="Satuan Besar"
+                                        placeholder="Pilih satuan besar"
+                                        initialItems={satuan}
+                                        creatable={true}
+                                        onCreate={async (value) => {
+                                            return new Promise(
+                                                (resolve, reject) => {
+                                                    router.post(
+                                                        '/master-data/satuan',
+                                                        {
+                                                            nama_satuan: value,
+                                                        },
+                                                        {
+                                                            preserveState: true,
+                                                            preserveScroll: true,
+                                                            onSuccess: () => {
+                                                                toast.success(
+                                                                    'Satuan berhasil ditambahkan',
+                                                                );
+                                                                resolve();
+                                                            },
+                                                            onError: (
+                                                                errors,
+                                                            ) => {
+                                                                toast.error(
+                                                                    errors.nama_satuan ||
+                                                                        'Gagal menambahkan satuan',
+                                                                );
+                                                                reject(
+                                                                    new Error(
+                                                                        errors.nama_satuan,
+                                                                    ),
+                                                                );
+                                                            },
+                                                        },
+                                                    );
+                                                },
+                                            );
+                                        }}
+                                    />
+                                )}
+                            </form.Field>
+
+                            <form.Field
+                                name="satuan_kecil"
+                                validators={{
+                                    onChange: ({ value }) => {
+                                        if (!value) {
+return 'Satuan Kecil harus diisi';
+}
+                                    },
+                                }}
+                            >
+                                {(field) => (
+                                    <ComboboxLabelAndHelper
+                                        field={field}
+                                        label="Satuan Kecil"
+                                        placeholder="Pilih satuan kecil"
+                                        initialItems={satuan}
+                                        creatable={true}
+                                        onCreate={async (value) => {
+                                            return new Promise(
+                                                (resolve, reject) => {
+                                                    router.post(
+                                                        '/master-data/satuan',
+                                                        {
+                                                            nama_satuan: value,
+                                                        },
+                                                        {
+                                                            preserveState: true,
+                                                            preserveScroll: true,
+                                                            onSuccess: () => {
+                                                                toast.success(
+                                                                    'Satuan berhasil ditambahkan',
+                                                                );
+                                                                resolve();
+                                                            },
+                                                            onError: (
+                                                                errors,
+                                                            ) => {
+                                                                toast.error(
+                                                                    errors.nama_satuan ||
+                                                                        'Gagal menambahkan satuan',
+                                                                );
+                                                                reject(
+                                                                    new Error(
+                                                                        errors.nama_satuan,
+                                                                    ),
+                                                                );
+                                                            },
+                                                        },
+                                                    );
+                                                },
+                                            );
+                                        }}
+                                    />
+                                )}
+                            </form.Field>
+
+                            <form.Field
+                                name="isi_per_satuan"
+                                validators={{
+                                    onChange: ({ value }) => {
+                                        if (!value) {
+return 'Isi Per Satuan harus diisi';
+}
+
+                                        if (isNaN(Number(value))) {
+return 'Harus berupa angka';
+}
+                                    },
+                                }}
+                            >
+                                {(field) => (
+                                    <InputLabelAndHelper
+                                        field={field}
+                                        label="Isi Per Satuan"
+                                        placeholder="Contoh: 10"
+                                        type="number"
+                                        helperText="Jumlah satuan kecil yang terdapat dalam 1 satuan besar"
+                                    />
+                                )}
+                            </form.Field>
+
+                            <form.Field
+                                name="harga_jual"
+                                validators={{
+                                    onChange: ({ value }) => {
+                                        if (!value) {
+return 'Harga Jual harus diisi';
+}
+
+                                        if (isNaN(Number(value))) {
+return 'Harus berupa angka';
+}
+                                    },
+                                }}
+                            >
+                                {(field) => (
+                                    <InputLabelAndHelper
+                                        field={field}
+                                        label="Harga Jual"
+                                        placeholder="Contoh: 15000"
+                                        type="currency"
+                                    />
+                                )}
+                            </form.Field>
                         </div>
                     </Modal>
                 </div>

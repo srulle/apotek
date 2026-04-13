@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { ClipboardPlus, ClipboardList } from 'lucide-react';
+import { InputLabelAndHelper } from '@/components/input/input-label-and-helper';
 import {
     Card,
     CardContent,
@@ -10,7 +11,6 @@ import {
 import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { transaksi } from '@/routes';
-import { InputLabelAndHelper } from '@/components/input/input-label-and-helper';
 
 export default function Transaksi() {
     return (

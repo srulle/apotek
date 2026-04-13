@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import {
     Dialog,
     DialogContent,
@@ -32,6 +32,7 @@ interface ModalProps {
     footer?: ReactNode;
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
+    onClose?: () => void;
     size?: ModalSize;
     persistent?: boolean;
     className?: string;
@@ -60,12 +61,21 @@ export function Modal({
     footer,
     open,
     onOpenChange,
+    onClose,
     size = 'md',
     persistent = false,
     className = '',
 }: ModalProps) {
+    const handleOpenChange = (newOpen: boolean) => {
+        if (!newOpen && onClose) {
+            onClose();
+        }
+
+        onOpenChange?.(newOpen);
+    };
+
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>{trigger}</DialogTrigger>
             <DialogOverlay className="backdrop-blur-xs" />
             <DialogContent

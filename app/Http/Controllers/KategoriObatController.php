@@ -22,7 +22,9 @@ class KategoriObatController extends Controller
 
         KategoriObat::create($validated);
 
-        return redirect()->back()->with('success', 'Kategori obat berhasil ditambahkan');
+        return redirect()->back()
+            ->with('success', 'Kategori obat berhasil ditambahkan')
+            ->with('invalidate.cache', ['kategoriObat']);
     }
 
     public function update(Request $request, KategoriObat $kategoriObat)
@@ -33,13 +35,17 @@ class KategoriObatController extends Controller
 
         $kategoriObat->update($validated);
 
-        return redirect()->back()->with('success', 'Kategori obat berhasil diupdate');
+        return redirect()->back()
+            ->with('success', 'Kategori obat berhasil diupdate')
+            ->with('invalidate.cache', ['kategoriObat']);
     }
 
     public function destroy(KategoriObat $kategoriObat)
     {
         $kategoriObat->delete();
 
-        return redirect()->back()->with('success', 'Kategori obat berhasil dihapus');
+        return redirect()->back()
+            ->with('success', 'Kategori obat berhasil dihapus')
+            ->with('invalidate.cache', ['kategoriObat']);
     }
 }

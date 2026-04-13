@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\KategoriObatController;
+use App\Http\Controllers\ObatController;
 use App\Http\Controllers\SatuanController;
 use App\Http\Controllers\SuplierController;
 use Illuminate\Support\Facades\Route;
@@ -16,7 +17,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('laporan', 'laporan')->name('laporan');
 
     // Master Data
-    Route::inertia('master-data/obat', 'master-data/obat')->name('obat');
+    Route::get('master-data/obat', [ObatController::class, 'index'])->name('obat');
     Route::get('master-data/kategori-obat', [KategoriObatController::class, 'index'])->name('kategori-obat');
     Route::post('master-data/kategori-obat', [KategoriObatController::class, 'store'])->name('kategori-obat.store');
     Route::put('master-data/kategori-obat/{kategori_obat}', [KategoriObatController::class, 'update'])->name('kategori-obat.update');
