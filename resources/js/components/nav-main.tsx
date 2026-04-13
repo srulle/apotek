@@ -28,7 +28,7 @@ import type { NavItem } from '@/types';
 
 export function NavMain({ items = [] }: { items: NavItem[] }) {
     const { isCurrentUrl } = useCurrentUrl();
-    const { state } = useSidebar();
+    const { state, isMobile, setOpenMobile } = useSidebar();
     const isCollapsed = state === 'collapsed';
     const [openMenus, setOpenMenus] = React.useState<string[]>([]);
 
@@ -40,10 +40,16 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
         );
     };
 
+    const closeSidebarOnMobile = () => {
+        if (isMobile) {
+            setTimeout(() => setOpenMobile(false), 0);
+        }
+    };
+
     const hasActiveChild = (item: NavItem): boolean => {
         if (item.href && isCurrentUrl(item.href)) {
-return true;
-}
+            return true;
+        }
 
         if (item.items) {
             return item.items.some((child) => hasActiveChild(child));
@@ -79,10 +85,14 @@ return true;
                                             <DropdownMenuItem
                                                 key={subItem.title}
                                                 asChild
+                                                onClick={closeSidebarOnMobile}
                                             >
                                                 <Link
                                                     href={subItem.href}
                                                     prefetch
+                                                    onClick={
+                                                        closeSidebarOnMobile
+                                                    }
                                                 >
                                                     {subItem.icon && (
                                                         <subItem.icon />
@@ -122,6 +132,9 @@ return true;
                                                         isActive={isCurrentUrl(
                                                             subItem.href,
                                                         )}
+                                                        onClick={
+                                                            closeSidebarOnMobile
+                                                        }
                                                     >
                                                         <Link
                                                             href={subItem.href}
@@ -146,8 +159,13 @@ return true;
                                 asChild
                                 isActive={isCurrentUrl(item.href)}
                                 tooltip={{ children: item.title }}
+                                onClick={closeSidebarOnMobile}
                             >
-                                <Link href={item.href} prefetch>
+                                <Link
+                                    href={item.href}
+                                    prefetch
+                                    onClick={closeSidebarOnMobile}
+                                >
                                     {item.icon && <item.icon />}
                                     <span>{item.title}</span>
                                 </Link>

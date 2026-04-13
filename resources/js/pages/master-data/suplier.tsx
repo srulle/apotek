@@ -1,6 +1,6 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { useState, useRef } from 'react';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { ClipboardPlus, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
@@ -180,42 +180,40 @@ export default function Suplier() {
     return (
         <>
             <Head title="Suplier" />
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <div className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 p-4 md:min-h-min dark:border-sidebar-border">
-                    <div className="space-y-2">
-                        <h1 className="font-semibold">Suplier</h1>
+            <div className="m-2 flex flex-1 flex-col overflow-auto rounded-xl border border-sidebar-border/70 p-2 md:m-4 md:p-4 dark:border-sidebar-border">
+                <div className="space-y-2">
+                    <h1 className="font-semibold">Suplier</h1>
 
-                        <OneFieldForm
-                            open={isFormOpen}
-                            onOpenChange={setIsFormOpen}
-                            trigger={
-                                <Button>
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Tambah Suplier
-                                </Button>
-                            }
-                            title="Tambah Suplier"
-                            label="Nama Suplier"
-                            placeholder="Masukkan nama suplier"
-                            align="start"
-                            value={namaSupplier}
-                            onChange={setNamaSupplier}
-                            onSubmit={handleSubmit}
-                            submitLabel="Simpan"
-                            cancelLabel="Batal"
-                            error={!!error}
-                            errorMessage={error || ''}
-                            isLoading={isLoading}
-                        />
+                    <OneFieldForm
+                        open={isFormOpen}
+                        onOpenChange={setIsFormOpen}
+                        trigger={
+                            <Button className="w-fit">
+                                <ClipboardPlus/>
+                                Tambah Suplier
+                            </Button>
+                        }
+                        title="Tambah Suplier"
+                        label="Nama Suplier"
+                        placeholder="Masukkan nama suplier"
+                        align="start"
+                        value={namaSupplier}
+                        onChange={setNamaSupplier}
+                        onSubmit={handleSubmit}
+                        submitLabel="Simpan"
+                        cancelLabel="Batal"
+                        error={!!error}
+                        errorMessage={error || ''}
+                        isLoading={isLoading}
+                    />
 
-                        <SimpleDatatable
-                            data={suplier || []}
-                            columns={columns}
-                            pageSize={10}
-                            emptyMessage="Belum ada suplier"
-                            className="max-w-md"
-                        />
-                    </div>
+                    <SimpleDatatable
+                        data={suplier || []}
+                        columns={columns}
+                        pageSize={10}
+                        emptyMessage="Belum ada suplier"
+                        className="max-w-md"
+                    />
                 </div>
             </div>
 
