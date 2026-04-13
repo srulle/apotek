@@ -1,0 +1,252 @@
+import { Head, router, usePage } from '@inertiajs/react';
+import { useState, useRef } from 'react';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { ColumnDef } from '@tanstack/react-table';
+import { Button } from '@/components/ui/button';
+import { OneFieldForm } from '@/components/input/one-field-form';
+import { DeleteConfirm } from '@/components/delete-confirm';
+import { SimpleDatatable } from '@/components/datatable/simple-datatable';
+
+type Satuan = {
+    id: number;
+    nama_satuan: string;
+};
+
+export default function Satuan() {
+    const { satuan } = usePage<{ satuan: Satuan[] }>().props;
+
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [namaSatuan, setNamaSatuan] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    // State untuk edit
+    const [editId, setEditId] = useState<number | null>(null);
+    const [editValue, setEditValue] = useState('');
+    const [isEditLoading, setIsEditLoading] = useState(false);
+    const [editError, setEditError] = useState<string | null>(null);
+    const editAnchorRef = useRef<HTMLButtonElement>(null);
+
+    // State untuk delete
+    const [deleteLoading, setDeleteLoading] = useState<number | null>(null);
+
+    const handleEdit = (
+        item: Satuan,
+        event: React.MouseEvent<HTMLButtonElement>,
+    ) => {
+        setEditId(item.id);
+        setEditValue(item.nama_satuan);
+        setEditError(null);
+        editAnchorRef.current = event.currentTarget;
+    };
+
+    const handleUpdate = (value: string) => {
+        if (!editId) return;
+
+        const promise = new Promise((resolve, reject) => {
+            router.put(
+                `/master-data/satuan/${editId}`,
+                { nama_satuan: value },
+                {
+                    onSuccess: () => {
+                        setEditId(null);
+                        setEditValue('');
+                        resolve(true);
+                    },
+                    onError: (errors) => {
+                        setEditError(errors.nama_satuan || 'Terjadi kesalahan');
+                        reject(new Error(errors.nama_satuan));
+                    },
+                },
+            );
+        });
+
+        toast.promise(promise, {
+            loading: 'Memperbarui satuan...',
+            success: 'Satuan berhasil diperbarui',
+            error: (err) => err.message || 'Gagal memperbarui satuan',
+        });
+    };
+
+    const columns: ColumnDef<Satuan>[] = [
+        {
+            accessorKey: 'nama_satuan',
+            header: 'Nama Satuan',
+            cell: ({ row }) => {
+                const value = row.getValue<string>('nama_satuan');
+                return (
+                    <div>
+                        {value.charAt(0).toUpperCase() +
+                            value.slice(1).toLowerCase()}
+                    </div>
+                );
+            },
+        },
+        {
+            id: 'actions',
+            header: () => <div className="text-center">Aksi</div>,
+            cell: ({ row }) => {
+                const item = row.original;
+
+                return (
+                    <div className="flex justify-center gap-1">
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => handleEdit(item, e)}
+                            className="h-6 w-6 cursor-pointer p-2"
+                        >
+                            <Pencil />
+                        </Button>
+                        <DeleteConfirm
+                            title="Hapus Satuan"
+                            description={`Apakah Anda yakin ingin menghapus satuan "${item.nama_satuan}"? Tindakan ini tidak dapat dibatalkan.`}
+                            isLoading={deleteLoading === item.id}
+                            onConfirm={() => {
+                                setDeleteLoading(item.id);
+
+                                const promise = new Promise(
+                                    (resolve, reject) => {
+                                        router.delete(
+                                            `/master-data/satuan/${item.id}`,
+                                            {
+                                                onSuccess: () => {
+                                                    setDeleteLoading(null);
+                                                    resolve(true);
+                                                },
+                                                onError: () => {
+                                                    setDeleteLoading(null);
+                                                    reject(
+                                                        new Error(
+                                                            'Gagal menghapus satuan',
+                                                        ),
+                                                    );
+                                                },
+                                            },
+                                        );
+                                    },
+                                );
+
+                                toast.promise(promise, {
+                                    loading: 'Menghapus satuan...',
+                                    success: 'Satuan berhasil dihapus',
+                                    error: (err) => err.message,
+                                });
+                            }}
+                        >
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 w-6 cursor-pointer border-destructive! p-2 text-destructive! hover:bg-destructive/10! focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40"
+                            >
+                                <Trash2 />
+                            </Button>
+                        </DeleteConfirm>
+                    </div>
+                );
+            },
+        },
+    ];
+
+    const handleSubmit = (value: string) => {
+        const promise = new Promise((resolve, reject) => {
+            router.post(
+                '/master-data/satuan',
+                { nama_satuan: value },
+                {
+                    onSuccess: () => {
+                        setNamaSatuan('');
+                        setIsFormOpen(false);
+                        resolve(true);
+                    },
+                    onError: (errors) => {
+                        setError(errors.nama_satuan || 'Terjadi kesalahan');
+                        reject(new Error(errors.nama_satuan));
+                    },
+                },
+            );
+        });
+
+        toast.promise(promise, {
+            loading: 'Menambahkan satuan...',
+            success: 'Satuan berhasil ditambahkan',
+            error: (err) => err.message || 'Gagal menambahkan satuan',
+        });
+    };
+
+    return (
+        <>
+            <Head title="Satuan" />
+            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
+                <div className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 p-4 md:min-h-min dark:border-sidebar-border">
+                    <div className="space-y-2">
+                        <h1 className="font-semibold">Satuan</h1>
+
+                        <OneFieldForm
+                            open={isFormOpen}
+                            onOpenChange={setIsFormOpen}
+                            trigger={
+                                <Button>
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Tambah Satuan
+                                </Button>
+                            }
+                            title="Tambah Satuan"
+                            label="Nama Satuan"
+                            placeholder="Masukkan nama satuan"
+                            align="start"
+                            value={namaSatuan}
+                            onChange={setNamaSatuan}
+                            onSubmit={handleSubmit}
+                            submitLabel="Simpan"
+                            cancelLabel="Batal"
+                            error={!!error}
+                            errorMessage={error || ''}
+                            isLoading={isLoading}
+                        />
+
+                        <SimpleDatatable
+                            data={satuan || []}
+                            columns={columns}
+                            pageSize={10}
+                            emptyMessage="Belum ada satuan"
+                            className="max-w-md"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* Popover edit dipisah dari table untuk menghindari re-render */}
+            <OneFieldForm
+                open={editId !== null}
+                onOpenChange={(open: boolean) => !open && setEditId(null)}
+                title="Ubah Satuan"
+                label="Nama Satuan"
+                placeholder="Masukkan nama satuan"
+                value={editValue}
+                onChange={setEditValue}
+                onSubmit={handleUpdate}
+                submitLabel="Simpan"
+                cancelLabel="Batal"
+                error={!!editError}
+                errorMessage={editError || ''}
+                isLoading={isEditLoading}
+                anchorRef={editAnchorRef}
+            />
+        </>
+    );
+}
+
+Satuan.layout = {
+    breadcrumbs: [
+        {
+            title: 'Master Data',
+            href: null,
+        },
+        {
+            title: 'Satuan',
+            href: '/master-data/satuan',
+        },
+    ],
+};

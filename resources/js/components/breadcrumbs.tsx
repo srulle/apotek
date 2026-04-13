@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { Fragment } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -15,6 +15,16 @@ export function Breadcrumbs({
 }: {
     breadcrumbs: BreadcrumbItemType[];
 }) {
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    if (!isClient) {
+        return null;
+    }
+
     return (
         <>
             {breadcrumbs.length > 0 && (
@@ -28,6 +38,10 @@ export function Breadcrumbs({
                                     <BreadcrumbItem>
                                         {isLast ? (
                                             <BreadcrumbPage>
+                                                {item.title}
+                                            </BreadcrumbPage>
+                                        ) : item.href === null ? (
+                                            <BreadcrumbPage className="text-muted-foreground">
                                                 {item.title}
                                             </BreadcrumbPage>
                                         ) : (

@@ -1,5 +1,14 @@
 import { Link } from '@inertiajs/react';
-import { FileText, LayoutGrid, ArrowRightLeft } from 'lucide-react';
+import {
+    FileText,
+    LayoutGrid,
+    ArrowRightLeft,
+    Database,
+    Pill,
+    Tags,
+    Users,
+    Package,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -12,7 +21,16 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard, laporan, transaksi } from '@/routes';
+import {
+    dashboard,
+    laporan,
+    transaksi,
+    obat,
+    kategoriObat,
+    satuan,
+    suplier,
+    stokBatch,
+} from '@/routes';
 import { penjualan, pembelian } from '@/routes/transaksi';
 import type { NavItem } from '@/types';
 
@@ -33,6 +51,33 @@ const mainNavItems: NavItem[] = [
             {
                 title: 'Pembelian',
                 href: pembelian(),
+            },
+        ],
+    },
+    {
+        title: 'Stok Batch',
+        href: stokBatch(),
+        icon: Package,
+    },
+    {
+        title: 'Master Data',
+        icon: Database,
+        items: [
+            {
+                title: 'Obat',
+                href: obat(),
+            },
+            {
+                title: 'Suplier',
+                href: suplier(),
+            },
+            {
+                title: 'Kategori Obat',
+                href: kategoriObat(),
+            },
+            {
+                title: 'Satuan',
+                href: satuan(),
             },
         ],
     },

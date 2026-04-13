@@ -10,7 +10,7 @@ import {
 import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { transaksi } from '@/routes';
-import { InputLabelAndHelper } from '@/components/ui/input/input-label-and-helper';
+import { InputLabelAndHelper } from '@/components/input/input-label-and-helper';
 
 export default function Transaksi() {
     return (

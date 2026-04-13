@@ -1,18 +1,58 @@
-Table "barang"
-- id(Primary Key)
-- nomor_batch
-- nama_barang
-- tanggal_expired
-- stok
-- harga_satuan
 
-Table "transaksi"
-- id(Primary Key)
-- id_barang(Foreign Key dari table "barang")
-- jenis_transaksi(pembelian/penjualan)
-- tanggal_transaksi
-- jumlah
-- total harga
+KATEGORI_OBAT
+id	INT PK	
+nama_kategori	VARCHAR(100)	
 
-hitungan stok per tablet
-ada kemungkinan barang dengan nomor batch yang sama masuk kembali()
+OBAT	
+id	INT PK	
+nama_obat	VARCHAR(150)	
+kategori_id	INT FK	
+satuan_besar	VARCHAR(50)	Strip, Box, Botol, Tube
+satuan_kecil	VARCHAR(50)	Tablet, Kapsul, ml
+isi_per_satuan	INT	Jumlah satuan kecil per satuan besar
+harga_jual	INT	Harga jual PER SATUAN KECIL
+created_at	DATETIME
+
+SUPLIER	
+id	INT PK	
+nama_supplier	VARCHAR(150)
+
+PEMBELIAN	
+id	INT PK	
+supplier_id	INT FK	
+tanggal	DATE	Tanggal pembelian
+user_id	INT FK	User yang input
+created_at	DATETIME	
+
+PEMBELIAN_DETAIL	
+id	INT PK	
+pembelian_id	INT FK	
+obat_id	INT FK	
+batch	VARCHAR(50)	Nomor batch obat
+expired_date	DATE	Tanggal kadaluarsa
+jumlah	INT	✅ SELALU satuan terkecil
+harga_beli	INT	✅ Harga beli PER SATUAN KECIL
+
+STOK_BATCH	
+id	INT PK	
+pembelian_detail_id	INT FK UNIQUE	Asal stok dari pembelian mana
+obat_id	INT FK	
+batch	VARCHAR(50)	Copy dari pembelian detail
+expired_date	DATE	Copy dari pembelian detail
+sisa_stok	INT	✅ SELALU satuan terkecil
+harga_beli	INT	Copy dari pembelian detail
+created_at	DATETIME	
+
+PENJUALAN	
+id	INT PK	
+tanggal	DATE	Tanggal penjualan
+user_id	INT FK	Kasir yang melayani
+created_at	DATETIME
+
+PENJUALAN_DETAIL	
+id	INT PK	
+penjualan_id	INT FK	
+obat_id	INT FK	
+stok_batch_id	INT FK	Batch mana yang dikeluarkan
+jumlah	INT	✅ SELALU satuan terkecil
+harga_jual	INT	Harga jual saat transaksi
