@@ -17,6 +17,30 @@ interface ObatPageProps {
 export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
     const [isRefreshing, setIsRefreshing] = useState(false);
 
+    const createItem = async (
+        url: string,
+        data: Record<string, any>,
+        successMessage: string,
+        errorKey: string,
+    ) => {
+        return new Promise<void>((resolve, reject) => {
+            router.post(url, data, {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    toast.success(successMessage);
+                    resolve();
+                },
+                onError: (errors: any) => {
+                    toast.error(
+                        errors[errorKey] || `Gagal menambahkan ${errorKey}`,
+                    );
+                    reject(new Error(errors[errorKey]));
+                },
+            });
+        });
+    };
+
     const form = useForm({
         defaultValues: {
             nama_obat: '',
@@ -27,8 +51,24 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
             harga_jual: '',
         },
         onSubmit: async ({ value }) => {
-            console.log(value);
-            // Handle form submission here
+            return new Promise<void>((resolve, reject) => {
+                router.post('/master-data/obat', value, {
+                    preserveState: true,
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        toast.success('Obat berhasil ditambahkan');
+                        form.reset();
+                        resolve();
+                    },
+                    onError: (errors: any) => {
+                        const errorMessage =
+                            Object.values(errors).join(', ') ||
+                            'Gagal menambahkan obat';
+                        toast.error(errorMessage);
+                        reject(new Error(errorMessage));
+                    },
+                });
+            });
         },
     });
 
@@ -98,8 +138,8 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                                 validators={{
                                     onChange: ({ value }) => {
                                         if (!value) {
-return 'Nama Obat harus diisi';
-}
+                                            return 'Nama Obat harus diisi';
+                                        }
                                     },
                                 }}
                             >
@@ -117,8 +157,8 @@ return 'Nama Obat harus diisi';
                                 validators={{
                                     onChange: ({ value }) => {
                                         if (!value) {
-return 'Kategori Obat harus diisi';
-}
+                                            return 'Kategori Obat harus diisi';
+                                        }
                                     },
                                 }}
                             >
@@ -129,42 +169,14 @@ return 'Kategori Obat harus diisi';
                                         placeholder="Pilih atau buat kategori obat"
                                         initialItems={kategoriObat}
                                         creatable={true}
-                                        onCreate={async (value) => {
-                                            return new Promise(
-                                                (resolve, reject) => {
-                                                    router.post(
-                                                        '/master-data/kategori-obat',
-                                                        {
-                                                            nama_kategori:
-                                                                value,
-                                                        },
-                                                        {
-                                                            preserveState: true,
-                                                            preserveScroll: true,
-                                                            onSuccess: () => {
-                                                                toast.success(
-                                                                    'Kategori obat berhasil ditambahkan',
-                                                                );
-                                                                resolve();
-                                                            },
-                                                            onError: (
-                                                                errors,
-                                                            ) => {
-                                                                toast.error(
-                                                                    errors.nama_kategori ||
-                                                                        'Gagal menambahkan kategori obat',
-                                                                );
-                                                                reject(
-                                                                    new Error(
-                                                                        errors.nama_kategori,
-                                                                    ),
-                                                                );
-                                                            },
-                                                        },
-                                                    );
-                                                },
-                                            );
-                                        }}
+                                        onCreate={(value) =>
+                                            createItem(
+                                                '/master-data/kategori-obat',
+                                                { nama_kategori: value },
+                                                'Kategori obat berhasil ditambahkan',
+                                                'nama_kategori',
+                                            )
+                                        }
                                     />
                                 )}
                             </form.Field>
@@ -174,8 +186,8 @@ return 'Kategori Obat harus diisi';
                                 validators={{
                                     onChange: ({ value }) => {
                                         if (!value) {
-return 'Satuan Besar harus diisi';
-}
+                                            return 'Satuan Besar harus diisi';
+                                        }
                                     },
                                 }}
                             >
@@ -230,8 +242,8 @@ return 'Satuan Besar harus diisi';
                                 validators={{
                                     onChange: ({ value }) => {
                                         if (!value) {
-return 'Satuan Kecil harus diisi';
-}
+                                            return 'Satuan Kecil harus diisi';
+                                        }
                                     },
                                 }}
                             >
@@ -286,12 +298,12 @@ return 'Satuan Kecil harus diisi';
                                 validators={{
                                     onChange: ({ value }) => {
                                         if (!value) {
-return 'Isi Per Satuan harus diisi';
-}
+                                            return 'Isi Per Satuan harus diisi';
+                                        }
 
                                         if (isNaN(Number(value))) {
-return 'Harus berupa angka';
-}
+                                            return 'Harus berupa angka';
+                                        }
                                     },
                                 }}
                             >
@@ -311,12 +323,12 @@ return 'Harus berupa angka';
                                 validators={{
                                     onChange: ({ value }) => {
                                         if (!value) {
-return 'Harga Jual harus diisi';
-}
+                                            return 'Harga Jual harus diisi';
+                                        }
 
                                         if (isNaN(Number(value))) {
-return 'Harus berupa angka';
-}
+                                            return 'Harus berupa angka';
+                                        }
                                     },
                                 }}
                             >

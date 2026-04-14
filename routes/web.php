@@ -18,6 +18,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Master Data
     Route::get('master-data/obat', [ObatController::class, 'index'])->name('obat');
+    Route::post('master-data/obat', [ObatController::class, 'store'])->name('obat.store');
     Route::get('master-data/kategori-obat', [KategoriObatController::class, 'index'])->name('kategori-obat');
     Route::post('master-data/kategori-obat', [KategoriObatController::class, 'store'])->name('kategori-obat.store');
     Route::put('master-data/kategori-obat/{kategori_obat}', [KategoriObatController::class, 'update'])->name('kategori-obat.update');
