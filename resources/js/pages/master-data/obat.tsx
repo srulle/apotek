@@ -1,21 +1,89 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { useForm } from '@tanstack/react-form';
+import type { ColumnDef } from '@tanstack/react-table';
 import { ClipboardPlus } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import DataTable from '@/components/datatable/datatable';
 import { ComboboxLabelAndHelper } from '@/components/input/combobox';
 import { InputLabelAndHelper } from '@/components/input/input-label-and-helper';
 import { Modal } from '@/components/modal';
 import { Button } from '@/components/ui/button';
 import { DialogClose } from '@/components/ui/dialog';
 
+type Kategori = {
+    id: number;
+    nama_kategori: string;
+};
+
+type Satuan = {
+    id: number;
+    nama_satuan: string;
+};
+
+type Obat = {
+    id: number;
+    nama_obat: string;
+    kategori_id: number;
+    satuan_besar_id: number;
+    satuan_kecil_id: number;
+    isi_per_satuan: number;
+    harga_jual: number;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+    kategori: Kategori;
+    satuan_besar: Satuan;
+    satuan_kecil: Satuan;
+};
+
 interface ObatPageProps {
+    obat: Obat[];
     kategoriObat: string[];
     satuan: string[];
 }
 
 export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
+    const pageProps = usePage().props as unknown as ObatPageProps;
+    const obat = pageProps.obat;
+
+    const columns: ColumnDef<Obat>[] = [
+        {
+            accessorKey: 'nama_obat',
+            header: 'Nama Obat',
+        },
+        {
+            accessorKey: 'kategori.nama_kategori',
+            header: 'Kategori Obat',
+            cell: ({ row }) => row.original.kategori?.nama_kategori || '-',
+        },
+        {
+            accessorKey: 'satuan_besar.nama_satuan',
+            header: 'Satuan Besar',
+            cell: ({ row }) => row.original.satuan_besar?.nama_satuan || '-',
+        },
+        {
+            accessorKey: 'satuan_kecil.nama_satuan',
+            header: 'Satuan Kecil',
+            cell: ({ row }) => row.original.satuan_kecil?.nama_satuan || '-',
+        },
+        {
+            accessorKey: 'isi_per_satuan',
+            header: 'Isi',
+        },
+        {
+            accessorKey: 'harga_jual',
+            header: 'Harga Jual',
+            cell: ({ row }) => {
+                return new Intl.NumberFormat('id-ID', {
+                    style: 'currency',
+                    currency: 'IDR',
+                }).format(row.original.harga_jual);
+            },
+        },
+    ];
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [selectedObat, setSelectedObat] = useState<Obat[]>([]);
 
     const createItem = async (
         url: string,
@@ -343,6 +411,31 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                             </form.Field>
                         </div>
                     </Modal>
+
+                    <div className="mt-6">
+                        {selectedObat.length > 0 && (
+                            <div className="mb-4 flex items-center gap-2 rounded-md bg-muted p-2">
+                                <span className="text-sm text-muted-foreground">
+                                    {selectedObat.length} data terpilih
+                                </span>
+                                <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    className="ml-auto"
+                                >
+                                    Hapus Terpilih
+                                </Button>
+                            </div>
+                        )}
+                        <DataTable
+                            data={obat || []}
+                            columns={columns}
+                            initialPagination={{ pageIndex: 0, pageSize: 10 }}
+                            emptyMessage="Belum ada data obat"
+                            enableRowSelection
+                            onSelectionChange={setSelectedObat}
+                        />
+                    </div>
                 </div>
             </div>
         </>

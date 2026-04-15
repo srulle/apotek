@@ -12,6 +12,7 @@ class ObatController extends Controller
     public function index()
     {
         return inertia('master-data/obat', [
+            'obat' => Obat::with('kategori', 'satuanBesar', 'satuanKecil')->orderBy('created_at', 'desc')->get(),
             'kategoriObat' => fn () => KategoriObat::orderBy('nama_kategori', 'asc')->pluck('nama_kategori'),
             'satuan' => fn () => Satuan::orderBy('nama_satuan', 'asc')->pluck('nama_satuan'),
         ]);
