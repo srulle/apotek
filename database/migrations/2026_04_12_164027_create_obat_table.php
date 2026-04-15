@@ -18,9 +18,9 @@ return new class extends Migration
             $table->foreignId('satuan_besar_id')->constrained('satuan');
             $table->foreignId('satuan_kecil_id')->constrained('satuan');
             $table->integer('isi_per_satuan');
-            $table->integer('harga_jual');
+            $table->decimal('harga_jual', 12, 2);
             $table->boolean('is_active')->default(true);
-            $table->datetime('created_at');
+            $table->timestamps();
         });
     }
 

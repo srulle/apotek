@@ -19,21 +19,14 @@ class ObatController extends Controller
 
     public function store(Request $request)
     {
-        // Clean harga_jual: remove thousand separators (dots) and convert to integer in cents
-        $data = $request->all();
-        $data['harga_jual'] = (int) str_replace('.', '', $data['harga_jual']) * 100;
-
         $validated = $request->validate([
             'nama_obat' => 'required|string|max:150',
             'kategori_obat' => 'required|string',
             'satuan_besar' => 'required|string',
             'satuan_kecil' => 'required|string',
             'isi_per_satuan' => 'required|integer|min:1',
-            'harga_jual' => 'required|integer|min:0',
+            'harga_jual' => 'required|numeric|min:0',
         ]);
-
-        // Use cleaned data
-        $validated['harga_jual'] = $data['harga_jual'];
 
         // Find or create kategori
         $kategori = KategoriObat::firstOrCreate(['nama_kategori' => $validated['kategori_obat']]);

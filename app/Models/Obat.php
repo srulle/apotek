@@ -9,6 +9,8 @@ class Obat extends Model
 {
     use HasFactory;
 
+    protected $table = 'obat';
+
     protected $fillable = [
         'nama_obat',
         'kategori_id',
@@ -21,9 +23,10 @@ class Obat extends Model
 
     protected $casts = [
         'isi_per_satuan' => 'integer',
-        'harga_jual' => 'integer',
+        'harga_jual' => 'decimal:2',
         'is_active' => 'boolean',
         'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function kategori()
