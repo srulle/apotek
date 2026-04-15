@@ -3,12 +3,15 @@
 import { useEffect, useId, useState } from 'react';
 
 import {
-    ChevronDownIcon,
     ChevronFirstIcon,
     ChevronLastIcon,
     ChevronLeftIcon,
     ChevronRightIcon,
-    ChevronUpIcon,
+    ArrowDownUp,
+    ArrowUpAZ,
+    ArrowDownAZ,
+    ArrowUp01,
+    ArrowDown10,
 } from 'lucide-react';
 
 import type {
@@ -88,7 +91,7 @@ const DataTable = <T,>({
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
         onSortingChange: setSorting,
-        enableSortingRemoval: false,
+        enableSortingRemoval: true,
         getPaginationRowModel: getPaginationRowModel(),
         onPaginationChange: setPagination,
         enableRowSelection: enableRowSelection,
@@ -149,7 +152,7 @@ const DataTable = <T,>({
                                                 <div
                                                     className={cn(
                                                         header.column.getCanSort() &&
-                                                            'flex h-full cursor-pointer items-center justify-between gap-2 select-none',
+                                                            'flex h-full cursor-pointer items-center gap-2 select-none',
                                                     )}
                                                     onClick={header.column.getToggleSortingHandler()}
                                                     onKeyDown={(e) => {
@@ -171,29 +174,87 @@ const DataTable = <T,>({
                                                             : undefined
                                                     }
                                                 >
+                                                    {(() => {
+                                                        const sortState =
+                                                            header.column.getIsSorted();
+                                                        const metaType = (
+                                                            header.column
+                                                                .columnDef
+                                                                .meta as any
+                                                        )?.sortIconType;
+
+                                                        if (!sortState) {
+                                                            return (
+                                                                <ArrowDownUp
+                                                                    className="shrink-0 opacity-30"
+                                                                    size={16}
+                                                                    aria-hidden="true"
+                                                                />
+                                                            );
+                                                        }
+
+                                                        // Deteksi otomatis tipe kolom
+                                                        let isNumeric =
+                                                            metaType ===
+                                                            'numeric';
+                                                        if (
+                                                            !metaType &&
+                                                            table.getCoreRowModel()
+                                                                .rows.length > 0
+                                                        ) {
+                                                            const firstRowValue =
+                                                                table
+                                                                    .getCoreRowModel()
+                                                                    .rows[0].getValue(
+                                                                        header
+                                                                            .column
+                                                                            .id,
+                                                                    );
+                                                            isNumeric =
+                                                                typeof firstRowValue ===
+                                                                    'number' &&
+                                                                !isNaN(
+                                                                    firstRowValue,
+                                                                );
+                                                        }
+
+                                                        if (isNumeric) {
+                                                            return sortState ===
+                                                                'asc' ? (
+                                                                <ArrowUp01
+                                                                    className="shrink-0 opacity-70"
+                                                                    size={16}
+                                                                    aria-hidden="true"
+                                                                />
+                                                            ) : (
+                                                                <ArrowDown10
+                                                                    className="shrink-0 opacity-67"
+                                                                    size={16}
+                                                                    aria-hidden="true"
+                                                                />
+                                                            );
+                                                        }
+
+                                                        return sortState ===
+                                                            'asc' ? (
+                                                            <ArrowUpAZ
+                                                                className="shrink-0 opacity-70"
+                                                                size={16}
+                                                                aria-hidden="true"
+                                                            />
+                                                        ) : (
+                                                            <ArrowDownAZ
+                                                                className="shrink-0 opacity-70"
+                                                                size={16}
+                                                                aria-hidden="true"
+                                                            />
+                                                        );
+                                                    })()}
                                                     {flexRender(
                                                         header.column.columnDef
                                                             .header,
                                                         header.getContext(),
                                                     )}
-                                                    {{
-                                                        asc: (
-                                                            <ChevronUpIcon
-                                                                className="shrink-0 opacity-60"
-                                                                size={16}
-                                                                aria-hidden="true"
-                                                            />
-                                                        ),
-                                                        desc: (
-                                                            <ChevronDownIcon
-                                                                className="shrink-0 opacity-60"
-                                                                size={16}
-                                                                aria-hidden="true"
-                                                            />
-                                                        ),
-                                                    }[
-                                                        header.column.getIsSorted() as string
-                                                    ] ?? null}
                                                 </div>
                                             ) : (
                                                 flexRender(

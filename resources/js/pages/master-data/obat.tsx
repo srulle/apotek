@@ -74,6 +74,9 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
         {
             accessorKey: 'harga_jual',
             header: 'Harga Jual',
+            meta: {
+                sortIconType: 'numeric'
+            },
             cell: ({ row }) => {
                 return new Intl.NumberFormat('id-ID', {
                     style: 'currency',
