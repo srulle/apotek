@@ -1,7 +1,18 @@
 'use client';
 
-import { useEffect, useId, useState, useMemo } from 'react';
-
+import type {
+    ColumnDef,
+    PaginationState,
+    SortingState,
+    RowSelectionState,
+} from '@tanstack/react-table';
+import {
+    flexRender,
+    getCoreRowModel,
+    getPaginationRowModel,
+    getSortedRowModel,
+    useReactTable,
+} from '@tanstack/react-table';
 import {
     ChevronFirstIcon,
     ChevronLastIcon,
@@ -16,26 +27,13 @@ import {
     CheckIcon,
     ChevronsUpDownIcon,
 } from 'lucide-react';
+import { useEffect, useId, useState, useMemo } from 'react';
 
-import type {
-    ColumnDef,
-    PaginationState,
-    SortingState,
-    RowSelectionState,
-} from '@tanstack/react-table';
-import {
-    flexRender,
-    getCoreRowModel,
-    getPaginationRowModel,
-    getSortedRowModel,
-    useReactTable,
-} from '@tanstack/react-table';
+
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
     Command,
     CommandEmpty,
@@ -44,16 +42,18 @@ import {
     CommandItem,
     CommandList,
 } from '@/components/ui/command';
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Pagination,
     PaginationContent,
     PaginationItem,
 } from '@/components/ui/pagination';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
 import {
     Select,
     SelectContent,
@@ -124,6 +124,7 @@ const DataTable = <T,>({
                     filterFn: 'multiSelect',
                 };
             }
+
             return col;
         });
     }, [columns]);
@@ -162,19 +163,31 @@ const DataTable = <T,>({
                 const searchTerm = globalFilter.toLowerCase().trim();
                 const matchesSearch = processedColumns.some((col: any) => {
                     const accessorKey = col.accessorKey;
-                    if (!accessorKey) return false;
+
+                    if (!accessorKey) {
+return false;
+}
+
                     const value = getNestedValue(row, accessorKey);
+
                     return String(value).toLowerCase().includes(searchTerm);
                 });
-                if (!matchesSearch) return false;
+
+                if (!matchesSearch) {
+return false;
+}
             }
 
             // Check column filters
             for (const [columnId, filterValues] of Object.entries(
                 columnFilters,
             )) {
-                if (filterValues.length === 0) continue;
+                if (filterValues.length === 0) {
+continue;
+}
+
                 const value = getNestedValue(row, columnId);
+
                 if (!filterValues.includes(String(value))) {
                     return false;
                 }
@@ -306,6 +319,7 @@ const DataTable = <T,>({
                                                                               ...current,
                                                                               value,
                                                                           ];
+
                                                                 return {
                                                                     ...prev,
                                                                     [column.id]:
@@ -420,6 +434,7 @@ const DataTable = <T,>({
                                                         let isNumeric =
                                                             metaType ===
                                                             'numeric';
+
                                                         if (
                                                             !metaType &&
                                                             table.getCoreRowModel()

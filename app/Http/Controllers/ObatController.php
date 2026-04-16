@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreObatRequest;
+use App\Http\Requests\UpdateObatRequest;
 use App\Models\KategoriObat;
 use App\Models\Obat;
 use App\Models\Satuan;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ObatController extends Controller
 {
@@ -18,38 +20,55 @@ class ObatController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    private function resolveRelations(array $validated): array
     {
-        $validated = $request->validate([
-            'nama_obat' => 'required|string|max:150',
-            'kategori_obat' => 'required|string',
-            'satuan_besar' => 'required|string',
-            'satuan_kecil' => 'required|string',
-            'isi_per_satuan' => 'required|integer|min:1',
-            'harga_jual' => 'required|numeric|min:0',
-        ]);
+        return [
+            'kategori_id' => KategoriObat::firstOrCreate(['nama_kategori' => $validated['kategori_obat']])->id,
+            'satuan_besar_id' => Satuan::firstOrCreate(['nama_satuan' => $validated['satuan_besar']])->id,
+            'satuan_kecil_id' => Satuan::firstOrCreate(['nama_satuan' => $validated['satuan_kecil']])->id,
+        ];
+    }
 
-        // Find or create kategori
-        $kategori = KategoriObat::firstOrCreate(['nama_kategori' => $validated['kategori_obat']]);
+    public function store(StoreObatRequest $request)
+    {
+        $validated = $request->validated();
 
-        // Find or create satuan besar
-        $satuanBesar = Satuan::firstOrCreate(['nama_satuan' => $validated['satuan_besar']]);
+        DB::transaction(function () use ($validated) {
+            $relations = $this->resolveRelations($validated);
 
-        // Find or create satuan kecil
-        $satuanKecil = Satuan::firstOrCreate(['nama_satuan' => $validated['satuan_kecil']]);
+            Obat::create(array_merge(
+                collect($validated)->only(['nama_obat', 'isi_per_satuan', 'harga_jual'])->all(),
+                $relations,
+                ['is_active' => true]
+            ));
+        });
 
-        // Create obat
-        Obat::create([
-            'nama_obat' => $validated['nama_obat'],
-            'kategori_id' => $kategori->id,
-            'satuan_besar_id' => $satuanBesar->id,
-            'satuan_kecil_id' => $satuanKecil->id,
-            'isi_per_satuan' => $validated['isi_per_satuan'],
-            'harga_jual' => $validated['harga_jual'],
-            'is_active' => true,
-            'created_at' => now(),
-        ]);
+        return inertia()->back()
+            ->with('success', 'Obat berhasil ditambahkan');
+    }
 
-        return redirect()->back()->with('success', 'Obat berhasil ditambahkan');
+    public function update(UpdateObatRequest $request, Obat $obat)
+    {
+        $validated = $request->validated();
+
+        DB::transaction(function () use ($validated, $obat) {
+            $relations = $this->resolveRelations($validated);
+
+            $obat->update(array_merge(
+                collect($validated)->only(['nama_obat', 'isi_per_satuan', 'harga_jual'])->all(),
+                $relations
+            ));
+        });
+
+        return inertia()->back()
+            ->with('success', 'Obat berhasil diperbarui');
+    }
+
+    public function destroy(Obat $obat)
+    {
+        $obat->delete();
+
+        return inertia()->back()
+            ->with('success', 'Obat berhasil dihapus');
     }
 }

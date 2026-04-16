@@ -3,7 +3,6 @@
 import { Check, ChevronsUpDown, Plus } from 'lucide-react';
 import { useState } from 'react';
 
-
 import { Button } from '@/components/ui/button';
 import {
     Command,
@@ -26,7 +25,7 @@ export const title = 'Create New Option Inline';
 
 interface ComboboxProps {
     value: string;
-    onValueChange: (value: string) => void;
+    onValueChange?: (value: string) => void;
     onBlur?: () => void;
     initialItems?: string[];
     placeholder?: string;
@@ -62,7 +61,7 @@ const Combobox = ({
                 setOpen(false);
                 setSearch('');
                 setItems([...items, search]);
-                onValueChange(search);
+                onValueChange?.(search);
             } finally {
                 setIsCreating(false);
             }
@@ -121,7 +120,7 @@ const Combobox = ({
                                 <CommandItem
                                     key={item}
                                     onSelect={(currentValue) => {
-                                        onValueChange(
+                                        onValueChange?.(
                                             currentValue === value
                                                 ? ''
                                                 : currentValue,
@@ -170,7 +169,7 @@ const Combobox = ({
 
 // Props khusus untuk TanStack Form
 export interface TanStackComboboxProps {
-    field: any;
+    field?: any;
     label: string;
     placeholder?: string;
     initialItems?: string[];
@@ -179,12 +178,13 @@ export interface TanStackComboboxProps {
     onCreate?: (value: string) => Promise<void> | void;
 }
 
-// Type guard untuk mengecek apakah props mengandung field TanStack Form
-function isTanStackField(props: any): props is TanStackComboboxProps {
-    return props.field && typeof props.field.handleChange === 'function';
+interface ComboboxLabelAndHelperProps extends TanStackComboboxProps {
+    value?: string;
+    onValueChange?: (value: string) => void;
+    helperText?: string;
 }
 
-const ComboboxLabelAndHelper = (props: TanStackComboboxProps) => {
+const ComboboxLabelAndHelper = (props: ComboboxLabelAndHelperProps) => {
     const {
         field,
         label,
@@ -193,9 +193,16 @@ const ComboboxLabelAndHelper = (props: TanStackComboboxProps) => {
         className,
         creatable,
         onCreate,
+        value,
+        onValueChange,
+        helperText,
     } = props;
-    const hasError = field.state.meta.errors.length > 0;
-    const errorMessage = field.state.meta.errors.join(', ');
+
+    const isFieldMode =
+        field && typeof field.handleChange === 'function' && field.state;
+    const currentValue = isFieldMode ? field.state.value : value || '';
+    const hasError = isFieldMode && field.state.meta.errors.length > 0;
+    const errorMessage = isFieldMode ? field.state.meta.errors.join(', ') : '';
 
     return (
         <div className={`w-full space-y-2 ${className || ''}`}>
@@ -203,9 +210,11 @@ const ComboboxLabelAndHelper = (props: TanStackComboboxProps) => {
                 {label}
             </Label>
             <Combobox
-                value={field.state.value}
-                onValueChange={field.handleChange}
-                onBlur={field.handleBlur}
+                value={currentValue}
+                onValueChange={
+                    isFieldMode ? field.handleChange : onValueChange!
+                }
+                onBlur={isFieldMode ? field.handleBlur : undefined}
                 initialItems={initialItems}
                 placeholder={placeholder}
                 className={
@@ -221,9 +230,14 @@ const ComboboxLabelAndHelper = (props: TanStackComboboxProps) => {
                     {errorMessage}
                 </p>
             )}
+            {helperText && !errorMessage && (
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                    {helperText}
+                </p>
+            )}
         </div>
     );
 };
 
-export { ComboboxLabelAndHelper };
+export { Combobox, ComboboxLabelAndHelper };
 export default Combobox;

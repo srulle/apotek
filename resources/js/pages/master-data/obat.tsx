@@ -1,10 +1,11 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { useForm } from '@tanstack/react-form';
 import type { ColumnDef } from '@tanstack/react-table';
-import { ClipboardPlus, Pencil } from 'lucide-react';
+import { ClipboardPlus, Pencil, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import DataTable from '@/components/datatable/datatable';
+import { DeleteConfirm } from '@/components/delete-confirm';
 import { ComboboxLabelAndHelper } from '@/components/input/combobox';
 import { InputLabelAndHelper } from '@/components/input/input-label-and-helper';
 import { Modal } from '@/components/modal';
@@ -84,6 +85,8 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                 return new Intl.NumberFormat('id-ID', {
                     style: 'currency',
                     currency: 'IDR',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
                 }).format(row.original.harga_jual);
             },
         },
@@ -92,6 +95,7 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
             header: () => <div className="text-center">Aksi</div>,
             cell: ({ row }) => {
                 const item = row.original;
+
                 return (
                     <div className="flex justify-center gap-1">
                         <Button
@@ -102,6 +106,50 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                         >
                             <Pencil size={14} />
                         </Button>
+                        <DeleteConfirm
+                            title="Hapus Obat"
+                            description={`Apakah Anda yakin ingin menghapus obat "${item.nama_obat}"? Tindakan ini tidak dapat dibatalkan.`}
+                            isLoading={deleteLoading === item.id}
+                            onConfirm={() => {
+                                setDeleteLoading(item.id);
+
+                                const promise = new Promise(
+                                    (resolve, reject) => {
+                                        router.delete(
+                                            `/master-data/obat/${item.id}`,
+                                            {
+                                                onSuccess: () => {
+                                                    setDeleteLoading(null);
+                                                    resolve(true);
+                                                },
+                                                onError: () => {
+                                                    setDeleteLoading(null);
+                                                    reject(
+                                                        new Error(
+                                                            'Gagal menghapus obat',
+                                                        ),
+                                                    );
+                                                },
+                                            },
+                                        );
+                                    },
+                                );
+
+                                toast.promise(promise, {
+                                    loading: 'Menghapus obat...',
+                                    success: 'Obat berhasil dihapus',
+                                    error: (err) => err.message,
+                                });
+                            }}
+                        >
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 w-6 cursor-pointer border-destructive! p-2 text-destructive! hover:bg-destructive/10! focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40"
+                            >
+                                <Trash2 size={14} />
+                            </Button>
+                        </DeleteConfirm>
                     </div>
                 );
             },
@@ -112,28 +160,40 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
     const [editObat, setEditObat] = useState<Obat | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    // State untuk delete
+    const [deleteLoading, setDeleteLoading] = useState<number | null>(null);
+
     const createItem = async (
         url: string,
         data: Record<string, any>,
         successMessage: string,
+        loadingMessage: string,
         errorKey: string,
     ) => {
-        return new Promise<void>((resolve, reject) => {
+        const promise = new Promise<void>((resolve, reject) => {
             router.post(url, data, {
                 preserveState: true,
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.success(successMessage);
                     resolve();
                 },
                 onError: (errors: any) => {
-                    toast.error(
-                        errors[errorKey] || `Gagal menambahkan ${errorKey}`,
+                    reject(
+                        new Error(
+                            errors[errorKey] || `Gagal menambahkan ${errorKey}`,
+                        ),
                     );
-                    reject(new Error(errors[errorKey]));
                 },
             });
         });
+
+        toast.promise(promise, {
+            loading: loadingMessage,
+            success: successMessage,
+            error: (err) => err.message,
+        });
+
+        return promise;
     };
 
     const handleEdit = (obat: Obat) => {
@@ -164,23 +224,16 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
             harga_jual: '',
         },
         onSubmit: async ({ value }) => {
-            return new Promise<void>((resolve, reject) => {
-                const method = editObat ? 'put' : 'post';
-                const url = editObat
-                    ? `/master-data/obat/${editObat.id}`
-                    : '/master-data/obat';
-                const successMessage = editObat
-                    ? 'Obat berhasil diperbarui'
-                    : 'Obat berhasil ditambahkan';
-                const errorMessage = editObat
-                    ? 'Gagal memperbarui obat'
-                    : 'Gagal menambahkan obat';
+            const method = editObat ? 'put' : 'post';
+            const url = editObat
+                ? `/master-data/obat/${editObat.id}`
+                : '/master-data/obat';
 
+            const promise = new Promise<void>((resolve, reject) => {
                 router[method](url, value, {
                     preserveState: true,
                     preserveScroll: true,
                     onSuccess: () => {
-                        toast.success(successMessage);
                         form.reset();
                         setEditObat(null);
                         setIsModalOpen(false);
@@ -188,12 +241,30 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                     },
                     onError: (errors: any) => {
                         const errorMessage =
-                            Object.values(errors).join(', ') || errorMessage;
-                        toast.error(errorMessage);
+                            Object.values(errors).join(', ') ||
+                            (editObat
+                                ? 'Gagal memperbarui obat'
+                                : 'Gagal menambahkan obat');
                         reject(new Error(errorMessage));
                     },
                 });
             });
+
+            toast.promise(promise, {
+                loading: editObat
+                    ? 'Memperbarui data obat...'
+                    : 'Menambahkan data obat...',
+                success: editObat
+                    ? 'Obat berhasil diperbarui'
+                    : 'Obat berhasil ditambahkan',
+                error: (err) =>
+                    err.message ||
+                    (editObat
+                        ? 'Gagal memperbarui obat'
+                        : 'Gagal menambahkan obat'),
+            });
+
+            return promise;
         },
     });
 
@@ -207,6 +278,7 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                         open={isModalOpen}
                         onOpenChange={(open) => {
                             setIsModalOpen(open);
+
                             if (!open) {
                                 setEditObat(null);
                                 form.reset();
@@ -317,6 +389,7 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                                                 '/master-data/kategori-obat',
                                                 { nama_kategori: value },
                                                 'Kategori obat berhasil ditambahkan',
+                                                'Menambahkan kategori obat...',
                                                 'nama_kategori',
                                             )
                                         }
@@ -341,41 +414,15 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                                         placeholder="Pilih satuan besar"
                                         initialItems={satuan}
                                         creatable={true}
-                                        onCreate={async (value) => {
-                                            return new Promise(
-                                                (resolve, reject) => {
-                                                    router.post(
-                                                        '/master-data/satuan',
-                                                        {
-                                                            nama_satuan: value,
-                                                        },
-                                                        {
-                                                            preserveState: true,
-                                                            preserveScroll: true,
-                                                            onSuccess: () => {
-                                                                toast.success(
-                                                                    'Satuan berhasil ditambahkan',
-                                                                );
-                                                                resolve();
-                                                            },
-                                                            onError: (
-                                                                errors,
-                                                            ) => {
-                                                                toast.error(
-                                                                    errors.nama_satuan ||
-                                                                        'Gagal menambahkan satuan',
-                                                                );
-                                                                reject(
-                                                                    new Error(
-                                                                        errors.nama_satuan,
-                                                                    ),
-                                                                );
-                                                            },
-                                                        },
-                                                    );
-                                                },
-                                            );
-                                        }}
+                                        onCreate={(value) =>
+                                            createItem(
+                                                '/master-data/satuan',
+                                                { nama_satuan: value },
+                                                'Satuan berhasil ditambahkan',
+                                                'Menambahkan satuan...',
+                                                'nama_satuan',
+                                            )
+                                        }
                                     />
                                 )}
                             </form.Field>
@@ -397,41 +444,15 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                                         placeholder="Pilih satuan kecil"
                                         initialItems={satuan}
                                         creatable={true}
-                                        onCreate={async (value) => {
-                                            return new Promise(
-                                                (resolve, reject) => {
-                                                    router.post(
-                                                        '/master-data/satuan',
-                                                        {
-                                                            nama_satuan: value,
-                                                        },
-                                                        {
-                                                            preserveState: true,
-                                                            preserveScroll: true,
-                                                            onSuccess: () => {
-                                                                toast.success(
-                                                                    'Satuan berhasil ditambahkan',
-                                                                );
-                                                                resolve();
-                                                            },
-                                                            onError: (
-                                                                errors,
-                                                            ) => {
-                                                                toast.error(
-                                                                    errors.nama_satuan ||
-                                                                        'Gagal menambahkan satuan',
-                                                                );
-                                                                reject(
-                                                                    new Error(
-                                                                        errors.nama_satuan,
-                                                                    ),
-                                                                );
-                                                            },
-                                                        },
-                                                    );
-                                                },
-                                            );
-                                        }}
+                                        onCreate={(value) =>
+                                            createItem(
+                                                '/master-data/satuan',
+                                                { nama_satuan: value },
+                                                'Satuan berhasil ditambahkan',
+                                                'Menambahkan satuan...',
+                                                'nama_satuan',
+                                            )
+                                        }
                                     />
                                 )}
                             </form.Field>
