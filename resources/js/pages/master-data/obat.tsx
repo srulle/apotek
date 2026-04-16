@@ -1,8 +1,8 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { useForm } from '@tanstack/react-form';
 import type { ColumnDef } from '@tanstack/react-table';
-import { ClipboardPlus } from 'lucide-react';
-import { useState } from 'react';
+import { ClipboardPlus, Pencil } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import DataTable from '@/components/datatable/datatable';
 import { ComboboxLabelAndHelper } from '@/components/input/combobox';
@@ -87,9 +87,30 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                 }).format(row.original.harga_jual);
             },
         },
+        {
+            id: 'actions',
+            header: () => <div className="text-center">Aksi</div>,
+            cell: ({ row }) => {
+                const item = row.original;
+                return (
+                    <div className="flex justify-center gap-1">
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEdit(item)}
+                            className="h-6 w-6 cursor-pointer p-2"
+                        >
+                            <Pencil size={14} />
+                        </Button>
+                    </div>
+                );
+            },
+        },
     ];
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [selectedObat, setSelectedObat] = useState<Obat[]>([]);
+    const [editObat, setEditObat] = useState<Obat | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const createItem = async (
         url: string,
@@ -115,6 +136,24 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
         });
     };
 
+    const handleEdit = (obat: Obat) => {
+        setEditObat(obat);
+        setIsModalOpen(true);
+    };
+
+    useEffect(() => {
+        if (isModalOpen && editObat) {
+            form.reset({
+                nama_obat: editObat.nama_obat,
+                kategori_obat: editObat.kategori.nama_kategori,
+                satuan_besar: editObat.satuan_besar.nama_satuan,
+                satuan_kecil: editObat.satuan_kecil.nama_satuan,
+                isi_per_satuan: editObat.isi_per_satuan.toString(),
+                harga_jual: editObat.harga_jual.toString(),
+            });
+        }
+    }, [isModalOpen, editObat]);
+
     const form = useForm({
         defaultValues: {
             nama_obat: '',
@@ -126,18 +165,30 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
         },
         onSubmit: async ({ value }) => {
             return new Promise<void>((resolve, reject) => {
-                router.post('/master-data/obat', value, {
+                const method = editObat ? 'put' : 'post';
+                const url = editObat
+                    ? `/master-data/obat/${editObat.id}`
+                    : '/master-data/obat';
+                const successMessage = editObat
+                    ? 'Obat berhasil diperbarui'
+                    : 'Obat berhasil ditambahkan';
+                const errorMessage = editObat
+                    ? 'Gagal memperbarui obat'
+                    : 'Gagal menambahkan obat';
+
+                router[method](url, value, {
                     preserveState: true,
                     preserveScroll: true,
                     onSuccess: () => {
-                        toast.success('Obat berhasil ditambahkan');
+                        toast.success(successMessage);
                         form.reset();
+                        setEditObat(null);
+                        setIsModalOpen(false);
                         resolve();
                     },
                     onError: (errors: any) => {
                         const errorMessage =
-                            Object.values(errors).join(', ') ||
-                            'Gagal menambahkan obat';
+                            Object.values(errors).join(', ') || errorMessage;
                         toast.error(errorMessage);
                         reject(new Error(errorMessage));
                     },
@@ -153,6 +204,14 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                 <div className="space-y-2">
                     <h1 className="font-semibold">Obat</h1>
                     <Modal
+                        open={isModalOpen}
+                        onOpenChange={(open) => {
+                            setIsModalOpen(open);
+                            if (!open) {
+                                setEditObat(null);
+                                form.reset();
+                            }
+                        }}
                         trigger={
                             <Button
                                 className="w-fit"
@@ -164,6 +223,9 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                                         await router.reload({
                                             only: ['kategoriObat', 'satuan'],
                                         });
+                                        setEditObat(null);
+                                        form.reset();
+                                        setIsModalOpen(true);
                                     } finally {
                                         setIsRefreshing(false);
                                     }
@@ -174,10 +236,13 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                             </Button>
                         }
                         size="6xl"
-                        title="Tambah Data Obat"
+                        title={editObat ? 'Ubah Data Obat' : 'Tambah Data Obat'}
                         persistent={true}
-                        description="Isi form berikut untuk menambah data obat baru."
-                        onClose={() => form.reset()}
+                        description={
+                            editObat
+                                ? 'Ubah data obat yang dipilih.'
+                                : 'Isi form berikut untuk menambah data obat baru.'
+                        }
                         footer={
                             <>
                                 <DialogClose asChild>
@@ -198,8 +263,12 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                                             onClick={form.handleSubmit}
                                         >
                                             {isSubmitting
-                                                ? 'Menyimpan...'
-                                                : 'Simpan'}
+                                                ? editObat
+                                                    ? 'Memperbarui...'
+                                                    : 'Menyimpan...'
+                                                : editObat
+                                                  ? 'Simpan Perubahan'
+                                                  : 'Simpan'}
                                         </Button>
                                     )}
                                 </form.Subscribe>
