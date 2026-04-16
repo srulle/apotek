@@ -22,5 +22,9 @@ class DatabaseSeeder extends Seeder
             'name' => 'Asrul Azhar',
             'password' => Hash::make('00000000'),
         ]);
+
+        $this->call(KategoriObatSeeder::class);
+        $this->call(SatuanSeeder::class);
+        $this->call(ObatSeeder::class);
     }
 }
