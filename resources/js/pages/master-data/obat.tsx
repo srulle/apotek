@@ -56,6 +56,9 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
             accessorKey: 'kategori.nama_kategori',
             header: 'Kategori Obat',
             cell: ({ row }) => row.original.kategori?.nama_kategori || '-',
+            meta: {
+                filterable: true,
+            },
         },
         {
             accessorKey: 'satuan_besar.nama_satuan',
@@ -75,7 +78,7 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
             accessorKey: 'harga_jual',
             header: 'Harga Jual',
             meta: {
-                sortIconType: 'numeric'
+                sortIconType: 'numeric',
             },
             cell: ({ row }) => {
                 return new Intl.NumberFormat('id-ID', {
@@ -436,6 +439,8 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                             initialPagination={{ pageIndex: 0, pageSize: 10 }}
                             emptyMessage="Belum ada data obat"
                             enableRowSelection
+                            enableGlobalFilter
+                            searchPlaceholder="Cari nama obat, kategori, satuan..."
                             onSelectionChange={setSelectedObat}
                         />
                     </div>

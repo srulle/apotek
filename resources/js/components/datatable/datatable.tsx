@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useState, useMemo } from 'react';
 
 import {
     ChevronFirstIcon,
@@ -12,6 +12,9 @@ import {
     ArrowDownAZ,
     ArrowUp01,
     ArrowDown10,
+    SearchIcon,
+    CheckIcon,
+    ChevronsUpDownIcon,
 } from 'lucide-react';
 
 import type {
@@ -31,7 +34,21 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from '@/components/ui/command';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
 import {
     Pagination,
     PaginationContent,
@@ -65,6 +82,8 @@ export interface DataTableProps<T> {
     className?: string;
     enableRowSelection?: boolean;
     onSelectionChange?: (selectedRows: T[]) => void;
+    enableGlobalFilter?: boolean;
+    searchPlaceholder?: string;
 }
 
 const DataTable = <T,>({
@@ -77,6 +96,8 @@ const DataTable = <T,>({
     className = '',
     enableRowSelection = false,
     onSelectionChange,
+    enableGlobalFilter = false,
+    searchPlaceholder = 'Cari...',
 }: DataTableProps<T>) => {
     const id = useId();
 
@@ -84,10 +105,88 @@ const DataTable = <T,>({
         useState<PaginationState>(initialPagination);
     const [sorting, setSorting] = useState<SortingState>(initialSorting);
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+    const [globalFilter, setGlobalFilter] = useState<string>('');
+    const [columnFilters, setColumnFilters] = useState<
+        Record<string, string[]>
+    >({});
+
+    // Helper to get nested value
+    const getNestedValue = (obj: any, path: string) => {
+        return path.split('.').reduce((prev, curr) => prev?.[curr], obj);
+    };
+
+    // Add filterFn to filterable columns - MEMOIZED
+    const processedColumns = useMemo(() => {
+        return columns.map((col) => {
+            if ((col.meta as any)?.filterable) {
+                return {
+                    ...col,
+                    filterFn: 'multiSelect',
+                };
+            }
+            return col;
+        });
+    }, [columns]);
+
+    // Get filterable columns from column meta - MEMOIZED
+    const filterableColumns = useMemo(() => {
+        return processedColumns
+            .filter((col) => (col.meta as any)?.filterable)
+            .map((col) => ({
+                id: col.id || ((col as any).accessorKey as string),
+                label:
+                    typeof col.header === 'string'
+                        ? col.header
+                        : col.id || ((col as any).accessorKey as string),
+                accessorKey: (col as any).accessorKey as string,
+                values: Array.from(
+                    new Set(
+                        data.map((row) =>
+                            String(
+                                getNestedValue(
+                                    row,
+                                    (col as any).accessorKey as string,
+                                ),
+                            ),
+                        ),
+                    ),
+                ).filter(Boolean),
+            }));
+    }, [processedColumns, data]);
+
+    // Manual filtering - MEMOIZED untuk menghindari infinite render
+    const filteredData = useMemo(() => {
+        return data.filter((row) => {
+            // Check global filter
+            if (globalFilter && globalFilter.trim()) {
+                const searchTerm = globalFilter.toLowerCase().trim();
+                const matchesSearch = processedColumns.some((col: any) => {
+                    const accessorKey = col.accessorKey;
+                    if (!accessorKey) return false;
+                    const value = getNestedValue(row, accessorKey);
+                    return String(value).toLowerCase().includes(searchTerm);
+                });
+                if (!matchesSearch) return false;
+            }
+
+            // Check column filters
+            for (const [columnId, filterValues] of Object.entries(
+                columnFilters,
+            )) {
+                if (filterValues.length === 0) continue;
+                const value = getNestedValue(row, columnId);
+                if (!filterValues.includes(String(value))) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
+    }, [data, globalFilter, columnFilters, processedColumns]);
 
     const table = useReactTable({
-        data,
-        columns,
+        data: filteredData,
+        columns: processedColumns as ColumnDef<T>[],
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
         onSortingChange: setSorting,
@@ -96,10 +195,12 @@ const DataTable = <T,>({
         onPaginationChange: setPagination,
         enableRowSelection: enableRowSelection,
         onRowSelectionChange: setRowSelection,
+        onGlobalFilterChange: setGlobalFilter,
         state: {
             sorting,
             pagination,
             rowSelection,
+            globalFilter,
         },
     });
 
@@ -110,10 +211,132 @@ const DataTable = <T,>({
                 .rows.map((row) => row.original);
             onSelectionChange(selectedRows);
         }
-    }, [rowSelection, table, onSelectionChange]);
+    }, [rowSelection, onSelectionChange]);
 
     return (
         <div className="space-y-4 md:w-full">
+            <div className="flex flex-wrap items-center gap-3">
+                {enableGlobalFilter && (
+                    <div className="relative w-full max-w-2xl">
+                        <SearchIcon className="absolute top-1/2 left-3 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            type="text"
+                            value={globalFilter ?? ''}
+                            onChange={(e) =>
+                                setGlobalFilter(String(e.target.value))
+                            }
+                            className="pl-10"
+                            placeholder={searchPlaceholder}
+                        />
+                    </div>
+                )}
+
+                {filterableColumns.map((column) => {
+                    const selectedValues = columnFilters[column.id] || [];
+                    const [isOpen, setIsOpen] = useState(false);
+
+                    return (
+                        <Popover
+                            key={column.id}
+                            open={isOpen}
+                            onOpenChange={setIsOpen}
+                        >
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    aria-expanded={isOpen}
+                                    className="h-auto min-h-8 w-fit justify-between hover:bg-transparent"
+                                >
+                                    {selectedValues.length > 0 ? (
+                                        <span className="flex items-center gap-2">
+                                            <Badge
+                                                variant="outline"
+                                                className="rounded-sm"
+                                            >
+                                                {selectedValues.length}
+                                            </Badge>
+                                            {column.label}
+                                        </span>
+                                    ) : (
+                                        <span className="text-muted-foreground">
+                                            {column.label}
+                                        </span>
+                                    )}
+                                    <ChevronsUpDownIcon
+                                        className="ml-2 shrink-0 text-muted-foreground/80"
+                                        aria-hidden="true"
+                                    />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-(--radix-popper-anchor-width) p-0">
+                                <Command>
+                                    <CommandInput
+                                        placeholder={`Cari ${column.label.toLowerCase()}...`}
+                                    />
+                                    <CommandList>
+                                        <CommandEmpty>
+                                            Tidak ada data.
+                                        </CommandEmpty>
+                                        <CommandGroup>
+                                            {column.values.map((value) => (
+                                                <CommandItem
+                                                    key={value}
+                                                    value={value}
+                                                    onSelect={() => {
+                                                        setColumnFilters(
+                                                            (prev) => {
+                                                                const current =
+                                                                    prev[
+                                                                        column
+                                                                            .id
+                                                                    ] || [];
+                                                                const updated =
+                                                                    current.includes(
+                                                                        value,
+                                                                    )
+                                                                        ? current.filter(
+                                                                              (
+                                                                                  v,
+                                                                              ) =>
+                                                                                  v !==
+                                                                                  value,
+                                                                          )
+                                                                        : [
+                                                                              ...current,
+                                                                              value,
+                                                                          ];
+                                                                return {
+                                                                    ...prev,
+                                                                    [column.id]:
+                                                                        updated,
+                                                                };
+                                                            },
+                                                        );
+                                                    }}
+                                                >
+                                                    <span className="truncate">
+                                                        {value}
+                                                    </span>
+                                                    {selectedValues.includes(
+                                                        value,
+                                                    ) && (
+                                                        <CheckIcon
+                                                            size={16}
+                                                            className="ml-auto"
+                                                        />
+                                                    )}
+                                                </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
+                    );
+                })}
+            </div>
+
             <div className="rounded-md border">
                 <Table>
                     <TableHeader>
