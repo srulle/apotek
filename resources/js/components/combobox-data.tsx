@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckIcon, ChevronsUpDownIcon, InfoIcon } from 'lucide-react';
+import { SquareCheckBig, ChevronsUpDownIcon } from 'lucide-react';
 import { useId, useState, forwardRef, useCallback, useMemo } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -49,86 +49,12 @@ interface ComboboxDataProps {
     disabled?: boolean;
     id?: string;
     multiple?: boolean;
+    renderPopoverContent?: (
+        item: ComboboxItem,
+        onSelectItem: () => void,
+        onClosePopover: () => void,
+    ) => React.ReactNode;
 }
-
-// Sub-component untuk tombol info dan popover detail item
-const ItemInfoPopover = ({
-    item,
-    groupTitle,
-    popoverKey,
-    isOpen,
-    onOpenChange,
-    onSelectItem,
-}: {
-    item: ComboboxItem;
-    groupTitle?: string;
-    popoverKey: string;
-    isOpen: boolean;
-    onOpenChange: (open: boolean) => void;
-    onSelectItem: () => void;
-}) => {
-    return (
-        <Popover open={isOpen} onOpenChange={onOpenChange}>
-            <PopoverTrigger asChild>
-                <Button
-                    className="size-6 shrink-0"
-                    onClick={(e) => e.stopPropagation()}
-                    size="icon"
-                    variant="ghost"
-                >
-                    <InfoIcon className="size-4" />
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80">
-                <div className="grid gap-4">
-                    <div className="space-y-2">
-                        <h4 className="leading-none font-medium">
-                            Informasi Obat
-                        </h4>
-                        <p className="text-sm text-muted-foreground">
-                            Detail informasi obat
-                        </p>
-                    </div>
-                    <div className="grid gap-3">
-                        <div className="grid grid-cols-3 items-center gap-4">
-                            <Label className="text-sm font-medium">Nama</Label>
-                            <div className="col-span-2 text-sm">
-                                {item.label}
-                            </div>
-                        </div>
-                        {groupTitle && (
-                            <div className="grid grid-cols-3 items-center gap-4">
-                                <Label className="text-sm font-medium">
-                                    Kategori
-                                </Label>
-                                <div className="col-span-2 text-sm">
-                                    {groupTitle}
-                                </div>
-                            </div>
-                        )}
-                        <div className="grid grid-cols-3 items-start gap-4">
-                            <Label className="text-sm font-medium">Unit</Label>
-                            <div className="col-span-2 text-sm">
-                                {item.subtitle}
-                            </div>
-                        </div>
-                    </div>
-                    <div className="flex justify-end">
-                        <Button
-                            size="sm"
-                            onClick={() => {
-                                onSelectItem();
-                                onOpenChange(false);
-                            }}
-                        >
-                            OK
-                        </Button>
-                    </div>
-                </div>
-            </PopoverContent>
-        </Popover>
-    );
-};
 
 const ComboboxData = forwardRef<HTMLButtonElement, ComboboxDataProps>(
     (
@@ -144,6 +70,7 @@ const ComboboxData = forwardRef<HTMLButtonElement, ComboboxDataProps>(
             disabled = false,
             id: customId,
             multiple = false,
+            renderPopoverContent,
         },
         ref,
     ) => {
@@ -171,6 +98,7 @@ const ComboboxData = forwardRef<HTMLButtonElement, ComboboxDataProps>(
             if (multiple) {
                 return Array.isArray(value) ? value : value ? [value] : [];
             }
+
             return Array.isArray(value)
                 ? value.slice(0, 1)
                 : value
@@ -214,46 +142,124 @@ const ComboboxData = forwardRef<HTMLButtonElement, ComboboxDataProps>(
                     : `no-group-${item.id}`;
 
                 return (
-                    <CommandItem
-                        className="flex items-start justify-between gap-2 py-3"
+                    <Popover
                         key={item.id}
-                        value={item.label}
-                        onSelect={() => handleSelectItem(item)}
+                        open={popoverOpen === popoverKey}
+                        onOpenChange={(open) =>
+                            setPopoverOpen(open ? popoverKey : null)
+                        }
                     >
-                        <div className="flex items-start gap-2">
-                            <CheckIcon
-                                className={`mt-0.5 size-4 shrink-0 ${
-                                    selectedValues.includes(item.id)
-                                        ? 'opacity-100'
-                                        : 'opacity-0'
-                                }`}
-                            />
-                            <div className="flex min-w-0 flex-1 flex-col gap-0.5 pl-4">
-                                <span className="truncate font-medium">
-                                    {item.label}
-                                </span>
-                                {item.subtitle && (
-                                    <span className="truncate text-xs text-muted-foreground italic">
-                                        {item.subtitle}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
+                        <PopoverTrigger asChild>
+                            <CommandItem
+                                className="flex cursor-pointer items-start justify-between gap-2 py-1.5"
+                                value={item.label}
+                                onSelect={() => {
+                                    // Buka popover ketika item di klik
+                                    setPopoverOpen(
+                                        popoverOpen === popoverKey
+                                            ? null
+                                            : popoverKey,
+                                    );
+                                }}
+                            >
+                                <div className="flex items-center gap-2">
+                                    <SquareCheckBig
+                                        className={`size-5 shrink-0 ${
+                                            selectedValues.includes(item.id)
+                                                ? 'opacity-100'
+                                                : 'opacity-0'
+                                        }`}
+                                    />
+                                    <div className="flex min-w-0 flex-1 flex-col gap-0.5 pl-4">
+                                        <span className="truncate font-medium">
+                                            {item.label}
+                                        </span>
+                                        {item.subtitle && (
+                                            <span className="-mt-1 truncate text-xs text-muted-foreground italic">
+                                                {item.subtitle}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </CommandItem>
+                        </PopoverTrigger>
 
-                        <ItemInfoPopover
-                            item={item}
-                            groupTitle={groupTitle}
-                            popoverKey={popoverKey}
-                            isOpen={popoverOpen === popoverKey}
-                            onOpenChange={(open) =>
-                                setPopoverOpen(open ? popoverKey : null)
-                            }
-                            onSelectItem={() => handleSelectItem(item)}
-                        />
-                    </CommandItem>
+                        <PopoverContent className="w-90 p-3">
+                            {renderPopoverContent ? (
+                                renderPopoverContent(
+                                    item,
+                                    () => {
+                                        handleSelectItem(item);
+                                        setPopoverOpen(null);
+                                    },
+                                    () => setPopoverOpen(null),
+                                )
+                            ) : (
+                                <div className="grid gap-3">
+                                    <div className="space-y-1">
+                                        <h4 className="leading-none font-medium">
+                                            {item.label}
+                                        </h4>
+                                        <p className="text-sm text-muted-foreground">
+                                            Masukkan jumlah pembelian
+                                        </p>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <div>
+                                            <Label className="text-sm font-medium">
+                                                Jumlah Beli
+                                            </Label>
+                                            <input
+                                                type="number"
+                                                className="mt-1 w-full rounded-md border p-2"
+                                                defaultValue="1"
+                                                min="1"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <Label className="text-sm font-medium">
+                                                Harga Beli
+                                            </Label>
+                                            <input
+                                                type="number"
+                                                className="mt-1 w-full rounded-md border p-2"
+                                                placeholder="Masukkan harga beli"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-end gap-2 pt-2">
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() => setPopoverOpen(null)}
+                                        >
+                                            Batal
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            onClick={() => {
+                                                handleSelectItem(item);
+                                                setPopoverOpen(null);
+                                            }}
+                                        >
+                                            Tambahkan
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+                        </PopoverContent>
+                    </Popover>
                 );
             },
-            [selectedValues, handleSelectItem, popoverOpen],
+            [
+                selectedValues,
+                handleSelectItem,
+                popoverOpen,
+                renderPopoverContent,
+            ],
         );
 
         return (
@@ -310,7 +316,7 @@ const ComboboxData = forwardRef<HTMLButtonElement, ComboboxDataProps>(
                     >
                         <Command>
                             <CommandInput placeholder={searchPlaceholder} />
-                            <CommandList>
+                            <CommandList onScroll={() => setPopoverOpen(null)}>
                                 <CommandEmpty>{emptyMessage}</CommandEmpty>
 
                                 {isGrouped ? (

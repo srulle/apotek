@@ -5,6 +5,7 @@ use App\Http\Controllers\ObatController;
 use App\Http\Controllers\SatuanController;
 use App\Http\Controllers\SuplierController;
 use App\Models\Obat;
+use App\Models\Satuan;
 use App\Models\Suplier;
 use Illuminate\Support\Facades\Route;
 
@@ -17,6 +18,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('transaksi/pembelian', function () {
         return inertia('transaksi/pembelian', [
             'suplier' => fn () => Suplier::orderBy('nama_supplier', 'asc')->pluck('nama_supplier'),
+            'satuan' => fn () => Satuan::orderBy('nama_satuan', 'asc')->pluck('nama_satuan'),
             'obat' => fn () => Obat::with(['satuanBesar', 'satuanKecil', 'kategori'])
                 ->where('is_active', true)
                 ->orderBy('nama_obat', 'asc')
@@ -28,6 +30,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
                         'id' => $obat->id,
                         'label' => $obat->nama_obat,
                         'subtitle' => 'Isi dalam 1 '.($obat->satuanBesar?->nama_satuan ?? 'N/A').' adalah '.$obat->isi_per_satuan.' '.($obat->satuanKecil?->nama_satuan ?? 'N/A'),
+                        'satuan_besar' => $obat->satuanBesar?->nama_satuan,
+                        'satuan_kecil' => $obat->satuanKecil?->nama_satuan,
                     ])->toArray(),
                 ])
                 ->values()
