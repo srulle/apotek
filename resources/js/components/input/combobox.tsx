@@ -202,7 +202,9 @@ const ComboboxLabelAndHelper = (props: ComboboxLabelAndHelperProps) => {
         field && typeof field.handleChange === 'function' && field.state;
     const currentValue = isFieldMode ? field.state.value : value || '';
     const hasError = isFieldMode && field.state.meta.errors.length > 0;
-    const errorMessage = isFieldMode ? field.state.meta.errors.join(', ') : '';
+    const errorMessage = isFieldMode
+        ? field.state.meta.errors.map((e: any) => e.message || e).join(', ')
+        : '';
 
     return (
         <div className={`w-full space-y-2 ${className || ''}`}>

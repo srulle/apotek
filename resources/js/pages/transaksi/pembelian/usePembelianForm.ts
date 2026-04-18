@@ -1,13 +1,46 @@
+import { useForm } from '@tanstack/react-form';
+import { zodValidator } from '@tanstack/zod-form-adapter';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { z } from 'zod';
 import { createSupplier as createSupplierService } from './services/supplierService';
 
+const pembelianFormSchema = z.object({
+    tanggalTransaksi: z.date({
+        required_error: 'Tanggal transaksi wajib dipilih',
+    }),
+    nomorFaktur: z.string().min(3, 'Nomor faktur minimal 3 karakter'),
+    supplier: z.string().min(1, 'Supplier wajib dipilih'),
+});
+
 export const usePembelianForm = () => {
-    const [tanggalTransaksi, setTanggalTransaksi] = useState<Date | undefined>(
-        new Date(),
-    );
-    const [supplier, setSupplier] = useState<string>('');
     const [selectedObat, setSelectedObat] = useState<(string | number)[]>([]);
+    const [obatFormData, setObatFormData] = useState<
+        Record<string | number, any>
+    >({});
+
+    const form = useForm({
+        validatorAdapter: zodValidator(),
+        validators: {
+            onChange: pembelianFormSchema,
+        },
+        defaultValues: {
+            tanggalTransaksi: new Date(),
+            nomorFaktur: '',
+            supplier: '',
+        },
+    });
+
+    const obatDetailForm = useForm({
+        defaultValues: {
+            batch: '',
+            expiredDate: undefined,
+            satuan: '',
+            jumlah: 1,
+            hargaBeli: 0,
+            konversi: 0,
+        },
+    });
 
     const createSupplier = async (value: string) => {
         const promise = createSupplierService(value);
@@ -21,10 +54,12 @@ export const usePembelianForm = () => {
         return promise;
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
+        await form.handleSubmit();
         console.log('=== Nilai Form Pembelian ===');
-        console.log('Tanggal Transaksi:', tanggalTransaksi);
-        console.log('Supplier:', supplier);
+        console.log('Tanggal Transaksi:', form.state.values.tanggalTransaksi);
+        console.log('Nomor Faktur:', form.state.values.nomorFaktur);
+        console.log('Supplier:', form.state.values.supplier);
         console.log(
             'Obat Dipilih:',
             selectedObat.map((id) => ({
@@ -40,12 +75,12 @@ export const usePembelianForm = () => {
     };
 
     return {
-        tanggalTransaksi,
-        setTanggalTransaksi,
-        supplier,
-        setSupplier,
+        form,
         selectedObat,
         setSelectedObat,
+        obatFormData,
+        setObatFormData,
+        obatDetailForm,
         createSupplier,
         handleSubmit,
     };

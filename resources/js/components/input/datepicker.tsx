@@ -31,6 +31,9 @@ export interface DatePickerProps {
     formatString?: string;
     minDate?: Date;
     maxDate?: Date;
+    fromYear?: number;
+    toYear?: number;
+    field?: any;
 }
 
 const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
@@ -44,9 +47,18 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
             formatString = 'd MMMM, yyyy',
             minDate,
             maxDate,
+            fromYear = new Date().getFullYear() - 100,
+            toYear = new Date().getFullYear() + 10,
+            field,
         },
         ref,
     ) => {
+        // Support TanStack Form field
+        if (field) {
+            value = field.state.value;
+            onChange = field.handleChange;
+        }
+
         const [month, setMonth] = useState<Date>(value || new Date());
 
         const handleCalendarChange = (
@@ -140,6 +152,8 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
                         disabled={disabled}
                         fromDate={minDate}
                         toDate={maxDate}
+                        fromYear={fromYear}
+                        toYear={toYear}
                     />
                 </PopoverContent>
             </Popover>

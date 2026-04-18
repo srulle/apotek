@@ -1,13 +1,6 @@
 import { MinusIcon, PlusIcon } from 'lucide-react';
-import type {
-    InputHTMLAttributes} from 'react';
-import {
-    useId,
-    forwardRef,
-    useState,
-    useEffect,
-    useCallback,
-} from 'react';
+import type { InputHTMLAttributes } from 'react';
+import { useId, forwardRef, useState, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -77,7 +70,9 @@ const InputLabelAndHelper = forwardRef<
         } = props;
         const id = field.name || generatedId;
         const hasError = field.state.meta.errors.length > 0;
-        const errorMessage = field.state.meta.errors.join(', ');
+        const errorMessage = field.state.meta.errors
+            .map((e: any) => e.message || e)
+            .join(', ');
 
         const [internalValue, setInternalValue] = useState(
             field.state.value || '',

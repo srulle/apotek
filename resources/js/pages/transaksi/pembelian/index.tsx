@@ -29,7 +29,7 @@ export default function Transaksi({
         <>
             <Head title="Pembelian" />
             <div className="m-2 flex flex-1 flex-col overflow-auto rounded-xl border border-sidebar-border/70 p-2 md:m-4 md:p-4 dark:border-sidebar-border">
-                <div className="max-w-4xl space-y-2">
+                <div className="max-w-5xl space-y-2">
                     <Tabs defaultValue="tambah" className="w-full">
                         <TabsList>
                             <TabsTrigger value="tambah" className="gap-2">

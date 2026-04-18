@@ -24,6 +24,8 @@ type ModalSize =
     | '7xl'
     | 'full';
 
+type BackdropBlur = 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+
 interface ModalProps {
     children: ReactNode;
     trigger: ReactNode;
@@ -34,6 +36,7 @@ interface ModalProps {
     onOpenChange?: (open: boolean) => void;
     onClose?: () => void;
     size?: ModalSize;
+    blur?: BackdropBlur;
     persistent?: boolean;
     className?: string;
 }
@@ -53,6 +56,16 @@ const sizeClasses: Record<ModalSize, string> = {
     full: '!max-w-full',
 };
 
+const backdropBlurClasses: Record<BackdropBlur, string> = {
+    none: '',
+    xs: 'backdrop-blur-xs',
+    sm: 'backdrop-blur-sm',
+    md: 'backdrop-blur-md',
+    lg: 'backdrop-blur-lg',
+    xl: 'backdrop-blur-xl',
+    '2xl': 'backdrop-blur-2xl',
+};
+
 export function Modal({
     children,
     trigger,
@@ -63,6 +76,7 @@ export function Modal({
     onOpenChange,
     onClose,
     size = 'md',
+    blur = 'none',
     persistent = false,
     className = '',
 }: ModalProps) {
@@ -77,7 +91,7 @@ export function Modal({
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>{trigger}</DialogTrigger>
-            <DialogOverlay className="backdrop-blur-xs" />
+            <DialogOverlay className={backdropBlurClasses[blur]} />
             <DialogContent
                 className={`top-0 mx-auto mt-6 translate-y-0 ${sizeClasses[size]} ${className}`}
                 onInteractOutside={(e) => {
