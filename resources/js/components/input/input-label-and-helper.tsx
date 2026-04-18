@@ -3,6 +3,7 @@ import type { InputHTMLAttributes } from 'react';
 import { useId, forwardRef, useState, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { cn } from "@/lib/utils"
 
 // Helper functions for currency formatting
 function formatCurrencyIndonesia(value: string | number): string {
@@ -132,7 +133,10 @@ const InputLabelAndHelper = forwardRef<
             <div className={`w-full space-y-2 ${className || ''}`}>
                 <Label
                     htmlFor={id}
-                    className={hasError ? 'text-destructive' : ''}
+                    className={cn(
+                        'truncate',
+                        hasError ? 'text-destructive' : '',
+                    )}
                 >
                     {label}
                 </Label>
@@ -316,7 +320,10 @@ const InputLabelAndHelper = forwardRef<
     return (
         <div className={`w-full space-y-2 ${className || ''}`}>
             {label && (
-                <Label htmlFor={id} className={error ? 'text-destructive' : ''}>
+                <Label
+                    htmlFor={id}
+                    className={cn('truncate', error ? 'text-destructive' : '')}
+                >
                     {label}
                 </Label>
             )}

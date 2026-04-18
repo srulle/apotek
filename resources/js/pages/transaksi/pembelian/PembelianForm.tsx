@@ -1,10 +1,9 @@
+import { Trash2 } from 'lucide-react';
 import ComboboxData from '@/components/combobox-data';
-import PurchaseItemDetailForm from './components/PurchaseItemDetailForm';
 import { ComboboxLabelAndHelper } from '@/components/input/combobox';
 import DatePicker from '@/components/input/datepicker';
 import { InputLabelAndHelper } from '@/components/input/input-label-and-helper';
 import { Button } from '@/components/ui/button';
-import { Trash2 } from 'lucide-react';
 import {
     Card,
     CardContent,
@@ -19,7 +18,9 @@ import {
     TableHead,
     TableHeader,
     TableRow,
+    TableFooter,
 } from '@/components/ui/table';
+import PurchaseItemDetailForm from './components/PurchaseItemDetailForm';
 import { usePembelianForm } from './usePembelianForm';
 
 interface PembelianFormProps {
@@ -61,24 +62,22 @@ export default function PembelianForm({
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-4">
+                <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-4">
                     <form.Field name="tanggalTransaksi">
                         {(field) => (
-                            <div>
-                                <label className="mb-1.5 block text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                    Tanggal Transaksi
-                                </label>
-                                <DatePicker
-                                    field={field}
-                                    placeholder="Pilih tanggal transaksi"
-                                />
-                            </div>
+                            <DatePicker
+                                className="min-h-22.5 md:min-h-0"
+                                field={field}
+                                label="Tanggal Transaksi"
+                                placeholder="Pilih tanggal transaksi"
+                            />
                         )}
                     </form.Field>
 
                     <form.Field name="supplier">
                         {(field) => (
                             <ComboboxLabelAndHelper
+                                className="min-h-22.5"
                                 label="Supplier"
                                 placeholder="Pilih supplier"
                                 initialItems={suplier}
@@ -92,6 +91,7 @@ export default function PembelianForm({
                     <form.Field name="nomorFaktur">
                         {(field) => (
                             <InputLabelAndHelper
+                                className="min-h-22.5"
                                 label="Nomor Faktur"
                                 placeholder="Masukkan nomor faktur"
                                 field={field}
@@ -99,7 +99,7 @@ export default function PembelianForm({
                         )}
                     </form.Field>
 
-                    <Button size="sm" className="w-full" onClick={handleSubmit}>
+                    <Button className="mt-6 w-full" onClick={handleSubmit}>
                         Tampilkan Nilai
                     </Button>
                 </div>
@@ -113,7 +113,7 @@ export default function PembelianForm({
                             </h4>
                             <Table className="[&_th]:py-1s [&_td]:py-0.5">
                                 <TableHeader>
-                                    <TableRow>
+                                    <TableRow className="bg-muted/50">
                                         <TableHead className="w-10">
                                             No
                                         </TableHead>
@@ -159,6 +159,11 @@ export default function PembelianForm({
                                                               formData.expiredDate,
                                                           ).toLocaleDateString(
                                                               'id-ID',
+                                                              {
+                                                                  day: 'numeric',
+                                                                  month: 'long',
+                                                                  year: 'numeric',
+                                                              },
                                                           )
                                                         : '-'}
                                                 </TableCell>
@@ -169,7 +174,18 @@ export default function PembelianForm({
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     {formData.totalHarga
-                                                        ? `Rp ${formData.totalHarga.toLocaleString('id-ID')}`
+                                                        ? new Intl.NumberFormat(
+                                                              'id-ID',
+                                                              {
+                                                                  style: 'currency',
+                                                                  currency:
+                                                                      'IDR',
+                                                                  minimumFractionDigits: 2,
+                                                                  maximumFractionDigits: 2,
+                                                              },
+                                                          ).format(
+                                                              formData.totalHarga,
+                                                          )
                                                         : '-'}
                                                 </TableCell>
                                                 <TableCell className="text-center">
@@ -195,7 +211,122 @@ export default function PembelianForm({
                                         );
                                     })}
                                 </TableBody>
+                                <TableFooter>
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={5}
+                                            className="text-center font-medium"
+                                        >
+                                            Total Pembelian
+                                        </TableCell>
+                                        <TableCell className="text-right font-bold">
+                                            {selectedObat.reduce<number>(
+                                                (total, id) => {
+                                                    const formData =
+                                                        obatFormData[id] || {};
+
+                                                    return (
+                                                        total +
+                                                        (Number(
+                                                            formData.totalHarga,
+                                                        ) || 0)
+                                                    );
+                                                },
+                                                0,
+                                            ) > 0
+                                                ? new Intl.NumberFormat(
+                                                      'id-ID',
+                                                      {
+                                                          style: 'currency',
+                                                          currency: 'IDR',
+                                                          minimumFractionDigits: 2,
+                                                          maximumFractionDigits: 2,
+                                                      },
+                                                  ).format(
+                                                      selectedObat.reduce<number>(
+                                                          (total, id) => {
+                                                              const formData =
+                                                                  obatFormData[
+                                                                      id
+                                                                  ] || {};
+
+                                                              return (
+                                                                  total +
+                                                                  (Number(
+                                                                      formData.totalHarga,
+                                                                  ) || 0)
+                                                              );
+                                                          },
+                                                          0,
+                                                      ),
+                                                  )
+                                                : '-'}
+                                        </TableCell>
+                                        <TableCell></TableCell>
+                                    </TableRow>
+                                </TableFooter>
                             </Table>
+                        </div>
+                    )}
+
+                    {selectedObat.length > 0 && (
+                        <div className="mt-6 flex justify-end gap-3">
+                            <Button
+                                variant="outline"
+                                onClick={() => {
+                                    // Reset form and clear selections
+                                    setSelectedObat([]);
+                                    setObatFormData({});
+                                }}
+                            >
+                                Batal
+                            </Button>
+                            <Button
+                                onClick={() => {
+                                    // Data header pembelian
+                                    const headerData = {
+                                        nomor_faktur:
+                                            form.getFieldValue('nomorFaktur'),
+                                        tanggal_transaksi:
+                                            form.getFieldValue(
+                                                'tanggalTransaksi',
+                                            ),
+                                        suplier_id:
+                                            form.getFieldValue('supplier'),
+                                        user_id: 1, // Placeholder, sesuaikan dengan user login
+                                    };
+
+                                    // Data detail obat
+                                    const itemsData = selectedObat.map((id) => {
+                                        const selectedObatItem = obat
+                                            .flatMap((g) => g.items)
+                                            .find((i) => i.id === id);
+                                        const formData = obatFormData[id] || {};
+
+                                        return {
+                                            obat_id: selectedObatItem?.id,
+                                            nomor_batch: formData.batch,
+                                            tanggal_expired:
+                                                formData.expiredDate,
+                                            satuan: formData.satuan,
+                                            jumlah_beli: formData.jumlahBeli,
+                                            harga_beli: formData.totalHarga,
+                                        };
+                                    });
+
+                                    console.log('=== DATA PEMBELIAN ===');
+                                    console.log(
+                                        'Header:',
+                                        JSON.stringify(headerData, null, 2),
+                                    );
+                                    console.log(
+                                        'Items:',
+                                        JSON.stringify(itemsData, null, 2),
+                                    );
+                                }}
+                            >
+                                Simpan
+                            </Button>
                         </div>
                     )}
 

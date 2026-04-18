@@ -56,19 +56,21 @@ export const usePembelianForm = () => {
     const handleSubmit = async () => {
         await form.handleSubmit();
         console.log('=== Nilai Form Pembelian ===');
-        console.log('Tanggal Transaksi:', form.state.values.tanggalTransaksi);
-        console.log('Nomor Faktur:', form.state.values.nomorFaktur);
-        console.log('Supplier:', form.state.values.supplier);
+        console.log('Form values:', JSON.stringify(form.state.values, null, 2));
         console.log(
             'Obat Dipilih:',
-            selectedObat.map((id) => ({
-                id: id as number,
-                jumlah: 1, // default
-                totalHarga: 0, // default
-                batch: '', // default
-                expiredDate: undefined, // default
-                satuan: '', // default
-            })),
+            JSON.stringify(
+                selectedObat.map((id) => ({
+                    id: id as number,
+                    jumlah: 1, // default
+                    totalHarga: 0, // default
+                    batch: '', // default
+                    expiredDate: undefined, // default
+                    satuan: '', // default
+                })),
+                null,
+                2,
+            ),
         );
         console.log('=========================');
     };
