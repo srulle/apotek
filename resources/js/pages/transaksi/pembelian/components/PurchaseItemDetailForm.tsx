@@ -7,43 +7,39 @@ import { ComboboxLabelAndHelper } from '@/components/input/combobox';
 import DatePicker from '@/components/input/datepicker';
 import { InputLabelAndHelper } from '@/components/input/input-label-and-helper';
 import { Button } from '@/components/ui/button';
-import type { ComboboxItem } from '../types';
+import type { ComboboxItem } from '@/components/combobox-data/types';
 
-interface ApotekItemPopoverProps {
+interface PurchaseItemDetailFormProps {
     item: ComboboxItem;
     onSelectItem: (data: any) => void;
     onClosePopover: () => void;
     satuan?: string[];
 }
 
-const ApotekItemPopover = ({
+const PurchaseItemDetailForm = ({
     item,
     onSelectItem,
     onClosePopover,
     satuan = [],
-}: ApotekItemPopoverProps) => {
+}: PurchaseItemDetailFormProps) => {
     const obatDetailSchema = z.object({
         batch: z.string().min(1, 'Nomor batch wajib diisi'),
         expiredDate: z.date({
             required_error: 'Tanggal kadaluarsa wajib dipilih',
         }),
         satuan: z.string().min(1, 'Satuan wajib dipilih'),
-        jumlah: z.coerce.number().int().min(1, 'Jumlah minimal 1'),
-        hargaBeli: z.coerce.number().min(1, 'Harga beli wajib diisi'),
+        jumlahBeli: z.coerce.number().int().min(1, 'Jumlah minimal 1'),
+        totalHarga: z.coerce.number().min(1, 'Total harga wajib diisi'),
         konversi: z.coerce.number().optional(),
     });
 
     const form = useForm({
-        validatorAdapter: zodValidator(),
-        validators: {
-            onChange: obatDetailSchema,
-        },
         defaultValues: {
             batch: '',
-            expiredDate: undefined,
+            expiredDate: new Date(),
             satuan: item.satuan_besar || '',
-            jumlah: 1,
-            hargaBeli: 0,
+            jumlahBeli: 1,
+            totalHarga: 0,
             konversi: 0,
         },
         onSubmit: async ({ value }) => {
@@ -71,7 +67,12 @@ const ApotekItemPopover = ({
             </div>
 
             <div className="space-y-3">
-                <form.Field name="batch">
+                <form.Field
+                    name="batch"
+                    validators={{
+                        onChange: z.string().min(1, 'Nomor batch wajib diisi'),
+                    }}
+                >
                     {(field) => (
                         <InputLabelAndHelper
                             label="Nomor Batch"
@@ -81,7 +82,14 @@ const ApotekItemPopover = ({
                     )}
                 </form.Field>
 
-                <form.Field name="expiredDate">
+                <form.Field
+                    name="expiredDate"
+                    validators={{
+                        onChange: z.date({
+                            required_error: 'Tanggal kadaluarsa wajib dipilih',
+                        }),
+                    }}
+                >
                     {(field) => (
                         <>
                             <label className="mb-1.5 block text-sm leading-none font-medium">
@@ -97,7 +105,12 @@ const ApotekItemPopover = ({
                     )}
                 </form.Field>
 
-                <form.Field name="satuan">
+                <form.Field
+                    name="satuan"
+                    validators={{
+                        onChange: z.string().min(1, 'Satuan wajib dipilih'),
+                    }}
+                >
                     {(field) => (
                         <ComboboxLabelAndHelper
                             label="Satuan Besar Saat Pembelian"
@@ -108,21 +121,66 @@ const ApotekItemPopover = ({
                     )}
                 </form.Field>
 
-                <form.Field name="jumlah">
-                    {(field) => (
-                        <InputLabelAndHelper
-                            label="Jumlah Beli"
-                            type="number"
-                            min={1}
-                            field={field}
-                        />
-                    )}
-                </form.Field>
+                <form.Subscribe selector={(state) => state.values.satuan}>
+                    {(satuanValue) =>
+                        satuanValue &&
+                        item.satuan_kecil &&
+                        satuanValue !== (item.satuan_besar || '') && (
+                            <form.Field
+                                name="konversi"
+                                validators={{
+                                    onChange: z.coerce
+                                        .number()
+                                        .min(1, 'Konversi minimal 1'),
+                                }}
+                            >
+                                {(field) => (
+                                    <InputLabelAndHelper
+                                        label={`Berapa jumlah '${item.satuan_kecil}' dalam 1 '${satuanValue}'`}
+                                        type="number"
+                                        min={1}
+                                        field={field}
+                                    />
+                                )}
+                            </form.Field>
+                        )
+                    }
+                </form.Subscribe>
 
-                <form.Field name="hargaBeli">
+                <form.Subscribe selector={(state) => state.values.satuan}>
+                    {(satuanValue) => (
+                        <form.Field
+                            name="jumlahBeli"
+                            validators={{
+                                onChange: z.coerce
+                                    .number()
+                                    .int()
+                                    .min(1, 'Jumlah minimal 1'),
+                            }}
+                        >
+                            {(field) => (
+                                <InputLabelAndHelper
+                                    label={`Jumlah Beli (${satuanValue || 'satuan'})`}
+                                    type="number"
+                                    min={1}
+                                    field={field}
+                                />
+                            )}
+                        </form.Field>
+                    )}
+                </form.Subscribe>
+
+                <form.Field
+                    name="totalHarga"
+                    validators={{
+                        onChange: z.coerce
+                            .number()
+                            .min(1, 'Harga beli wajib diisi'),
+                    }}
+                >
                     {(field) => (
                         <InputLabelAndHelper
-                            label="Harga Beli"
+                            label="Total Harga"
                             type="currency"
                             placeholder="Masukkan harga beli"
                             field={field}
@@ -158,4 +216,4 @@ const ApotekItemPopover = ({
     );
 };
 
-export default ApotekItemPopover;
+export default PurchaseItemDetailForm;

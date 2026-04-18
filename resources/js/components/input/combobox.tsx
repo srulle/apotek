@@ -86,6 +86,10 @@ const Combobox = ({
                 align="start"
                 className="w-full p-0 duration-400 data-[state=open]:slide-in-from-bottom-10 data-[state=open]:zoom-in-100"
                 style={{ width: 'var(--radix-popover-trigger-width)' }}
+                onWheel={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchMove={(e) => e.stopPropagation()}
+                onTouchEnd={(e) => e.stopPropagation()}
             >
                 <Command>
                     <CommandInput

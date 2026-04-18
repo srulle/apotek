@@ -20,7 +20,6 @@ export const usePembelianForm = () => {
     >({});
 
     const form = useForm({
-        validatorAdapter: zodValidator(),
         validators: {
             onChange: pembelianFormSchema,
         },
@@ -37,7 +36,7 @@ export const usePembelianForm = () => {
             expiredDate: undefined,
             satuan: '',
             jumlah: 1,
-            hargaBeli: 0,
+            totalHarga: 0,
             konversi: 0,
         },
     });
@@ -65,7 +64,7 @@ export const usePembelianForm = () => {
             selectedObat.map((id) => ({
                 id: id as number,
                 jumlah: 1, // default
-                hargaBeli: 0, // default
+                totalHarga: 0, // default
                 batch: '', // default
                 expiredDate: undefined, // default
                 satuan: '', // default

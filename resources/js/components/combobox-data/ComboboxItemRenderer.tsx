@@ -6,7 +6,7 @@ import { useCallback } from 'react';
 import { Modal } from '@/components/modal';
 import { CommandItem } from '@/components/ui/command';
 
-import ApotekItemPopover from './presets/ApotekItemPopover';
+import PurchaseItemDetailForm from '@/pages/transaksi/pembelian/components/PurchaseItemDetailForm';
 import type { ComboboxItem } from './types';
 
 interface ComboboxItemRendererProps {
@@ -90,7 +90,7 @@ const ComboboxItemRenderer = ({
             {renderPopoverContent ? (
                 renderPopoverContent(item, onSelectItem, onClose)
             ) : (
-                <ApotekItemPopover
+                <PurchaseItemDetailForm
                     item={item}
                     onSelectItem={onSelectItem}
                     onClosePopover={onClose}

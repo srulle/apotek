@@ -1,9 +1,10 @@
 import ComboboxData from '@/components/combobox-data';
-import ApotekItemPopover from '@/components/combobox-data/presets/ApotekItemPopover';
+import PurchaseItemDetailForm from './components/PurchaseItemDetailForm';
 import { ComboboxLabelAndHelper } from '@/components/input/combobox';
 import DatePicker from '@/components/input/datepicker';
 import { InputLabelAndHelper } from '@/components/input/input-label-and-helper';
 import { Button } from '@/components/ui/button';
+import { Trash2 } from 'lucide-react';
 import {
     Card,
     CardContent,
@@ -45,6 +46,8 @@ export default function PembelianForm({
         form,
         selectedObat,
         setSelectedObat,
+        obatFormData,
+        setObatFormData,
         createSupplier,
         handleSubmit,
     } = usePembelianForm();
@@ -115,11 +118,17 @@ export default function PembelianForm({
                                             No
                                         </TableHead>
                                         <TableHead>Nama Obat</TableHead>
-                                        <TableHead className="w-32 text-center">
-                                            Jumlah
+                                        <TableHead className="w-32">
+                                            Nomor Batch
                                         </TableHead>
-                                        <TableHead className="w-40 text-right">
-                                            Harga Beli
+                                        <TableHead className="w-32">
+                                            Tanggal Expired
+                                        </TableHead>
+                                        <TableHead className="w-32 text-center">
+                                            Jumlah Beli
+                                        </TableHead>
+                                        <TableHead className="w-32 text-right">
+                                            Total Harga
                                         </TableHead>
                                         <TableHead className="w-24 text-center">
                                             Aksi
@@ -131,6 +140,7 @@ export default function PembelianForm({
                                         const selectedObatItem = obat
                                             .flatMap((g) => g.items)
                                             .find((i) => i.id === id);
+                                        const formData = obatFormData[id] || {};
 
                                         return (
                                             <TableRow key={id}>
@@ -140,17 +150,33 @@ export default function PembelianForm({
                                                 <TableCell className="font-medium">
                                                     {selectedObatItem?.label}
                                                 </TableCell>
+                                                <TableCell>
+                                                    {formData.batch || '-'}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {formData.expiredDate
+                                                        ? new Date(
+                                                              formData.expiredDate,
+                                                          ).toLocaleDateString(
+                                                              'id-ID',
+                                                          )
+                                                        : '-'}
+                                                </TableCell>
                                                 <TableCell className="text-center">
-                                                    1
+                                                    {formData.jumlahBeli
+                                                        ? `${formData.jumlahBeli} ${formData.satuan || 'satuan'}`
+                                                        : '-'}
                                                 </TableCell>
                                                 <TableCell className="text-right">
-                                                    -
+                                                    {formData.totalHarga
+                                                        ? `Rp ${formData.totalHarga.toLocaleString('id-ID')}`
+                                                        : '-'}
                                                 </TableCell>
                                                 <TableCell className="text-center">
                                                     <Button
                                                         size="sm"
                                                         variant="ghost"
-                                                        className="h-7 w-7 p-0"
+                                                        className="cursor-pointer border-destructive! p-2 text-destructive! hover:bg-destructive/10! focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40"
                                                         onClick={() =>
                                                             setSelectedObat(
                                                                 (prev) =>
@@ -162,7 +188,7 @@ export default function PembelianForm({
                                                             )
                                                         }
                                                     >
-                                                        ✕
+                                                        <Trash2 className="h-4 w-4" />
                                                     </Button>
                                                 </TableCell>
                                             </TableRow>
@@ -188,12 +214,18 @@ export default function PembelianForm({
                         onChange={(value) =>
                             setSelectedObat(Array.isArray(value) ? value : [])
                         }
+                        onItemSelect={(item) => {
+                            setObatFormData((prev) => ({
+                                ...prev,
+                                [item.id]: item,
+                            }));
+                        }}
                         placeholder="Pilih obat yang akan dibeli"
                         searchPlaceholder="Cari nama obat..."
                         className="w-full"
                         multiple={true}
                         renderPopoverContent={(item, onSelect, onClose) => (
-                            <ApotekItemPopover
+                            <PurchaseItemDetailForm
                                 item={item}
                                 onSelectItem={onSelect}
                                 onClosePopover={onClose}

@@ -19,6 +19,7 @@ export interface ComboboxDataProps {
         value: string | number | (string | number)[] | null,
         item?: ComboboxItem | ComboboxItem[],
     ) => void;
+    onItemSelect?: (item: ComboboxItem) => void;
     placeholder?: string;
     searchPlaceholder?: string;
     emptyMessage?: string;

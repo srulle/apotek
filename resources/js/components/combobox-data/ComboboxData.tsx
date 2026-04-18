@@ -28,6 +28,7 @@ const ComboboxData = forwardRef<HTMLButtonElement, ComboboxDataProps>(
             items,
             value,
             onChange,
+            onItemSelect,
             placeholder = 'Pilih data',
             searchPlaceholder = 'Cari data...',
             emptyMessage = 'Data tidak ditemukan.',
@@ -90,10 +91,11 @@ const ComboboxData = forwardRef<HTMLButtonElement, ComboboxDataProps>(
                         .map((id) => allItems.find((i) => i.id === id))
                         .filter(Boolean) as ComboboxItem[];
 
-                    onChange?.(newValues, newItems, item);
+                    onChange?.(newValues, newItems);
+                    onItemSelect?.(item);
                 } else {
                     const newValue = value === item.id ? null : item.id;
-                    onChange?.(newValue, newValue ? item : undefined, item);
+                    onChange?.(newValue, item);
                     setOpen(false);
                 }
             },
