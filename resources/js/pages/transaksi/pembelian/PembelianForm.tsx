@@ -1,3 +1,5 @@
+'use client';
+
 import { Trash2 } from 'lucide-react';
 import ComboboxData from '@/components/combobox-data';
 import { ComboboxLabelAndHelper } from '@/components/input/combobox';
@@ -24,7 +26,7 @@ import PurchaseItemDetailForm from './components/PurchaseItemDetailForm';
 import { usePembelianForm } from './usePembelianForm';
 
 interface PembelianFormProps {
-    suplier: string[];
+    suppliers: Array<{ id: number; nama_supplier: string }>;
     obat: Array<{
         title: string;
         items: Array<{
@@ -39,7 +41,7 @@ interface PembelianFormProps {
 }
 
 export default function PembelianForm({
-    suplier,
+    suppliers,
     obat,
     satuan = [],
 }: PembelianFormProps) {
@@ -51,6 +53,9 @@ export default function PembelianForm({
         setObatFormData,
         createSupplier,
         handleSubmit,
+        showItemForm,
+        setShowItemForm,
+        handleSavePembelian,
     } = usePembelianForm();
 
     return (
@@ -66,7 +71,7 @@ export default function PembelianForm({
                     <form.Field name="tanggalTransaksi">
                         {(field) => (
                             <DatePicker
-                                className="min-h-22.5 md:min-h-0"
+                                className="md:min-h-[90px]"
                                 field={field}
                                 label="Tanggal Transaksi"
                                 placeholder="Pilih tanggal transaksi"
@@ -77,10 +82,13 @@ export default function PembelianForm({
                     <form.Field name="supplier">
                         {(field) => (
                             <ComboboxLabelAndHelper
-                                className="min-h-22.5"
+                                className="md:min-h-[90px]"
                                 label="Supplier"
                                 placeholder="Pilih supplier"
-                                initialItems={suplier}
+                                initialItems={suppliers.map((s) => ({
+                                    value: s.id,
+                                    label: s.nama_supplier,
+                                }))}
                                 field={field}
                                 creatable={true}
                                 onCreate={createSupplier}
@@ -91,7 +99,7 @@ export default function PembelianForm({
                     <form.Field name="nomorFaktur">
                         {(field) => (
                             <InputLabelAndHelper
-                                className="min-h-22.5"
+                                className="md:min-h-[90px]"
                                 label="Nomor Faktur"
                                 placeholder="Masukkan nomor faktur"
                                 field={field}
@@ -99,272 +107,253 @@ export default function PembelianForm({
                         )}
                     </form.Field>
 
-                    <Button className="mt-6 w-full" onClick={handleSubmit}>
-                        Tampilkan Nilai
+                    <Button
+                        className="mt-2 w-full md:mt-6"
+                        onClick={handleSubmit}
+                    >
+                        Pilih Item
                     </Button>
                 </div>
 
-                <div className="mt-6">
-                    {selectedObat.length > 0 && (
-                        <div className="mb-6">
-                            <hr className="mb-5 border-muted-foreground/20" />
-                            <h4 className="mb-2 text-sm font-medium">
-                                Daftar Obat Yang Dipilih
-                            </h4>
-                            <Table className="[&_th]:py-1s [&_td]:py-0.5">
-                                <TableHeader>
-                                    <TableRow className="bg-muted/50">
-                                        <TableHead className="w-10">
-                                            No
-                                        </TableHead>
-                                        <TableHead>Nama Obat</TableHead>
-                                        <TableHead className="w-32">
-                                            Nomor Batch
-                                        </TableHead>
-                                        <TableHead className="w-32">
-                                            Tanggal Expired
-                                        </TableHead>
-                                        <TableHead className="w-32 text-center">
-                                            Jumlah Beli
-                                        </TableHead>
-                                        <TableHead className="w-32 text-right">
-                                            Total Harga
-                                        </TableHead>
-                                        <TableHead className="w-24 text-center">
-                                            Aksi
-                                        </TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {selectedObat.map((id, index) => {
-                                        const selectedObatItem = obat
-                                            .flatMap((g) => g.items)
-                                            .find((i) => i.id === id);
-                                        const formData = obatFormData[id] || {};
+                {showItemForm && (
+                    <div className="mt-6">
+                        {selectedObat.length > 0 && (
+                            <div className="mb-6">
+                                <hr className="mb-5 border-muted-foreground/20" />
+                                <h4 className="mb-2 text-sm font-medium">
+                                    Daftar Obat Yang Dipilih
+                                </h4>
+                                <Table className="[&_th]:py-1s [&_td]:py-0.5">
+                                    <TableHeader>
+                                        <TableRow className="bg-muted/50">
+                                            <TableHead className="w-10">
+                                                No
+                                            </TableHead>
+                                            <TableHead>Nama Obat</TableHead>
+                                            <TableHead className="w-32">
+                                                Nomor Batch
+                                            </TableHead>
+                                            <TableHead className="w-32">
+                                                Tanggal Expired
+                                            </TableHead>
+                                            <TableHead className="w-32 text-center">
+                                                Jumlah Beli
+                                            </TableHead>
+                                            <TableHead className="w-32 text-right">
+                                                Total Harga
+                                            </TableHead>
+                                            <TableHead className="w-24 text-center">
+                                                Aksi
+                                            </TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {selectedObat.map((entry, index) => {
+                                            const selectedObatItem = obat
+                                                .flatMap((g) => g.items)
+                                                .find((i) => i.id === entry.id);
+                                            const formData =
+                                                obatFormData[entry.uniqueId] ||
+                                                {};
 
-                                        return (
-                                            <TableRow key={id}>
-                                                <TableCell>
-                                                    {index + 1}
-                                                </TableCell>
-                                                <TableCell className="font-medium">
-                                                    {selectedObatItem?.label}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {formData.batch || '-'}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {formData.expiredDate
-                                                        ? new Date(
-                                                              formData.expiredDate,
-                                                          ).toLocaleDateString(
-                                                              'id-ID',
-                                                              {
-                                                                  day: 'numeric',
-                                                                  month: 'long',
-                                                                  year: 'numeric',
-                                                              },
-                                                          )
-                                                        : '-'}
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    {formData.jumlahBeli
-                                                        ? `${formData.jumlahBeli} ${formData.satuan || 'satuan'}`
-                                                        : '-'}
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    {formData.totalHarga
-                                                        ? new Intl.NumberFormat(
-                                                              'id-ID',
-                                                              {
-                                                                  style: 'currency',
-                                                                  currency:
-                                                                      'IDR',
-                                                                  minimumFractionDigits: 2,
-                                                                  maximumFractionDigits: 2,
-                                                              },
-                                                          ).format(
-                                                              formData.totalHarga,
-                                                          )
-                                                        : '-'}
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        className="cursor-pointer border-destructive! p-2 text-destructive! hover:bg-destructive/10! focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40"
-                                                        onClick={() =>
-                                                            setSelectedObat(
-                                                                (prev) =>
-                                                                    prev.filter(
-                                                                        (v) =>
-                                                                            v !==
-                                                                            id,
-                                                                    ),
-                                                            )
+                                            return (
+                                                <TableRow key={entry.uniqueId}>
+                                                    <TableCell>
+                                                        {index + 1}
+                                                    </TableCell>
+                                                    <TableCell className="font-medium">
+                                                        {
+                                                            selectedObatItem?.label
                                                         }
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })}
-                                </TableBody>
-                                <TableFooter>
-                                    <TableRow>
-                                        <TableCell
-                                            colSpan={5}
-                                            className="text-center font-medium"
-                                        >
-                                            Total Pembelian
-                                        </TableCell>
-                                        <TableCell className="text-right font-bold">
-                                            {selectedObat.reduce<number>(
-                                                (total, id) => {
-                                                    const formData =
-                                                        obatFormData[id] || {};
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {formData.batch || '-'}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {formData.expiredDate
+                                                            ? new Date(
+                                                                  formData.expiredDate,
+                                                              ).toLocaleDateString(
+                                                                  'id-ID',
+                                                                  {
+                                                                      day: 'numeric',
+                                                                      month: 'long',
+                                                                      year: 'numeric',
+                                                                  },
+                                                              )
+                                                            : '-'}
+                                                    </TableCell>
+                                                    <TableCell className="text-center">
+                                                        {formData.jumlahBeli
+                                                            ? `${formData.jumlahBeli} ${formData.satuan || 'satuan'}`
+                                                            : '-'}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        {formData.totalHarga
+                                                            ? new Intl.NumberFormat(
+                                                                  'id-ID',
+                                                                  {
+                                                                      style: 'currency',
+                                                                      currency:
+                                                                          'IDR',
+                                                                      minimumFractionDigits: 2,
+                                                                      maximumFractionDigits: 2,
+                                                                  },
+                                                              ).format(
+                                                                  formData.totalHarga,
+                                                              )
+                                                            : '-'}
+                                                    </TableCell>
+                                                    <TableCell className="text-center">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            className="cursor-pointer border-destructive! p-2 text-destructive! hover:bg-destructive/10! focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40"
+                                                            onClick={() =>
+                                                                setSelectedObat(
+                                                                    (prev) =>
+                                                                        prev.filter(
+                                                                            (
+                                                                                v,
+                                                                            ) =>
+                                                                                v.uniqueId !==
+                                                                                entry.uniqueId,
+                                                                        ),
+                                                                )
+                                                            }
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
+                                    </TableBody>
+                                    <TableFooter>
+                                        <TableRow>
+                                            <TableCell
+                                                colSpan={5}
+                                                className="text-right font-medium"
+                                            >
+                                                Total Pembelian
+                                            </TableCell>
+                                            <TableCell className="text-right font-bold">
+                                                {selectedObat.reduce<number>(
+                                                    (total, entry) => {
+                                                        const formData =
+                                                            obatFormData[
+                                                                entry.uniqueId
+                                                            ] || {};
 
-                                                    return (
-                                                        total +
-                                                        (Number(
-                                                            formData.totalHarga,
-                                                        ) || 0)
-                                                    );
-                                                },
-                                                0,
-                                            ) > 0
-                                                ? new Intl.NumberFormat(
-                                                      'id-ID',
-                                                      {
-                                                          style: 'currency',
-                                                          currency: 'IDR',
-                                                          minimumFractionDigits: 2,
-                                                          maximumFractionDigits: 2,
-                                                      },
-                                                  ).format(
-                                                      selectedObat.reduce<number>(
-                                                          (total, id) => {
-                                                              const formData =
-                                                                  obatFormData[
-                                                                      id
-                                                                  ] || {};
-
-                                                              return (
-                                                                  total +
-                                                                  (Number(
-                                                                      formData.totalHarga,
-                                                                  ) || 0)
-                                                              );
+                                                        return (
+                                                            total +
+                                                            (Number(
+                                                                formData.totalHarga,
+                                                            ) || 0)
+                                                        );
+                                                    },
+                                                    0,
+                                                ) > 0
+                                                    ? new Intl.NumberFormat(
+                                                          'id-ID',
+                                                          {
+                                                              style: 'currency',
+                                                              currency: 'IDR',
+                                                              minimumFractionDigits: 2,
+                                                              maximumFractionDigits: 2,
                                                           },
-                                                          0,
-                                                      ),
-                                                  )
-                                                : '-'}
-                                        </TableCell>
-                                        <TableCell></TableCell>
-                                    </TableRow>
-                                </TableFooter>
-                            </Table>
-                        </div>
-                    )}
+                                                      ).format(
+                                                          selectedObat.reduce<number>(
+                                                              (
+                                                                  total,
+                                                                  entry,
+                                                              ) => {
+                                                                  const formData =
+                                                                      obatFormData[
+                                                                          entry
+                                                                              .uniqueId
+                                                                      ] || {};
 
-                    {selectedObat.length > 0 && (
-                        <div className="mt-6 flex justify-end gap-3">
-                            <Button
-                                variant="outline"
-                                onClick={() => {
-                                    // Reset form and clear selections
-                                    setSelectedObat([]);
-                                    setObatFormData({});
-                                }}
-                            >
-                                Batal
-                            </Button>
-                            <Button
-                                onClick={() => {
-                                    // Data header pembelian
-                                    const headerData = {
-                                        nomor_faktur:
-                                            form.getFieldValue('nomorFaktur'),
-                                        tanggal_transaksi:
-                                            form.getFieldValue(
-                                                'tanggalTransaksi',
-                                            ),
-                                        suplier_id:
-                                            form.getFieldValue('supplier'),
-                                        user_id: 1, // Placeholder, sesuaikan dengan user login
-                                    };
-
-                                    // Data detail obat
-                                    const itemsData = selectedObat.map((id) => {
-                                        const selectedObatItem = obat
-                                            .flatMap((g) => g.items)
-                                            .find((i) => i.id === id);
-                                        const formData = obatFormData[id] || {};
-
-                                        return {
-                                            obat_id: selectedObatItem?.id,
-                                            nomor_batch: formData.batch,
-                                            tanggal_expired:
-                                                formData.expiredDate,
-                                            satuan: formData.satuan,
-                                            jumlah_beli: formData.jumlahBeli,
-                                            harga_beli: formData.totalHarga,
-                                        };
-                                    });
-
-                                    console.log('=== DATA PEMBELIAN ===');
-                                    console.log(
-                                        'Header:',
-                                        JSON.stringify(headerData, null, 2),
-                                    );
-                                    console.log(
-                                        'Items:',
-                                        JSON.stringify(itemsData, null, 2),
-                                    );
-                                }}
-                            >
-                                Simpan
-                            </Button>
-                        </div>
-                    )}
-
-                    <hr className="my-6 border-muted-foreground/20" />
-
-                    <ComboboxData
-                        label="Pilih Obat"
-                        items={obat.map((group) => ({
-                            ...group,
-                            items: group.items.map((item) => ({
-                                ...item,
-                                subtitle: item.satuan_besar || item.subtitle,
-                            })),
-                        }))}
-                        value={selectedObat}
-                        onChange={(value) =>
-                            setSelectedObat(Array.isArray(value) ? value : [])
-                        }
-                        onItemSelect={(item) => {
-                            setObatFormData((prev) => ({
-                                ...prev,
-                                [item.id]: item,
-                            }));
-                        }}
-                        placeholder="Pilih obat yang akan dibeli"
-                        searchPlaceholder="Cari nama obat..."
-                        className="w-full"
-                        multiple={true}
-                        renderPopoverContent={(item, onSelect, onClose) => (
-                            <PurchaseItemDetailForm
-                                item={item}
-                                onSelectItem={onSelect}
-                                onClosePopover={onClose}
-                                satuan={satuan}
-                            />
+                                                                  return (
+                                                                      total +
+                                                                      (Number(
+                                                                          formData.totalHarga,
+                                                                      ) || 0)
+                                                                  );
+                                                              },
+                                                              0,
+                                                          ),
+                                                      )
+                                                    : '-'}
+                                            </TableCell>
+                                            <TableCell></TableCell>
+                                        </TableRow>
+                                    </TableFooter>
+                                </Table>
+                            </div>
                         )}
-                    />
-                </div>
+
+                        {selectedObat.length > 0 && (
+                            <div className="mt-6 flex justify-end gap-3">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        // Reset form and clear selections
+                                        setSelectedObat([]);
+                                        setObatFormData({});
+                                        setShowItemForm(false);
+                                    }}
+                                >
+                                    Batal
+                                </Button>
+                                <Button onClick={handleSavePembelian}>
+                                    Simpan
+                                </Button>
+                            </div>
+                        )}
+
+                        <hr className="my-6 border-muted-foreground/20" />
+
+                        <ComboboxData
+                            label="Pilih Obat"
+                            items={obat.map((group) => ({
+                                ...group,
+                                items: group.items.map((item) => ({
+                                    ...item,
+                                    subtitle:
+                                        item.satuan_besar || item.subtitle,
+                                })),
+                            }))}
+                            value={selectedObat}
+                            onChange={(value) =>
+                                setSelectedObat(
+                                    value as Array<{
+                                        id: number;
+                                        uniqueId: string;
+                                    }>,
+                                )
+                            }
+                            onItemSelect={(item: any) => {
+                                setObatFormData((prev) => ({
+                                    ...prev,
+                                    [item.uniqueId]: item,
+                                }));
+                            }}
+                            placeholder="Pilih obat yang akan dibeli"
+                            searchPlaceholder="Cari nama obat..."
+                            className="w-full"
+                            multiple={true}
+                            renderPopoverContent={(item, onSelect, onClose) => (
+                                <PurchaseItemDetailForm
+                                    item={item}
+                                    onSelectItem={onSelect}
+                                    onClosePopover={onClose}
+                                    satuan={satuan}
+                                />
+                            )}
+                        />
+                    </div>
+                )}
             </CardContent>
         </Card>
     );

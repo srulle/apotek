@@ -63,11 +63,14 @@ const ComboboxData = forwardRef<HTMLButtonElement, ComboboxDataProps>(
         // Handle multi-select vs single-select
         const selectedValues = useMemo(() => {
             if (multiple) {
-                return Array.isArray(value) ? value : value ? [value] : [];
+                if (Array.isArray(value)) {
+                    return value.map((v: any) => v.id ?? v);
+                }
+                return [];
             }
 
             return Array.isArray(value)
-                ? value.slice(0, 1)
+                ? (value as any[]).slice(0, 1)
                 : value
                   ? [value]
                   : [];
@@ -82,24 +85,24 @@ const ComboboxData = forwardRef<HTMLButtonElement, ComboboxDataProps>(
         const handleSelectItem = useCallback(
             (item: ComboboxItem & Record<string, any>) => {
                 if (multiple) {
-                    const isSelected = selectedValues.includes(item.id);
-                    const newValues = isSelected
-                        ? selectedValues.filter((v) => v !== item.id)
-                        : [...selectedValues, item.id];
+                    // Selalu tambahkan item dengan uniqueId, bahkan jika sudah selected (untuk duplikat)
+                    const uniqueId = `item-${item.id}-${Date.now()}-${Math.random()}`;
+                    const newEntry = { id: item.id, uniqueId };
+                    const newValues = [...value, newEntry];
 
                     const newItems = newValues
-                        .map((id) => allItems.find((i) => i.id === id))
+                        .map((v) => allItems.find((i) => i.id === v.id))
                         .filter(Boolean) as ComboboxItem[];
 
                     onChange?.(newValues, newItems);
-                    onItemSelect?.(item);
+                    onItemSelect?.({ uniqueId, ...item });
                 } else {
                     const newValue = value === item.id ? null : item.id;
                     onChange?.(newValue, item);
                     setOpen(false);
                 }
             },
-            [multiple, selectedValues, allItems, onChange, value],
+            [multiple, value, allItems, onChange, onItemSelect],
         );
 
         return (
@@ -188,6 +191,9 @@ const ComboboxData = forwardRef<HTMLButtonElement, ComboboxDataProps>(
                                                             renderPopoverContent={
                                                                 renderPopoverContent
                                                             }
+                                                            closeCombobox={() =>
+                                                                setOpen(false)
+                                                            }
                                                         />
                                                     ))}
                                                 </CommandGroup>
@@ -222,6 +228,9 @@ const ComboboxData = forwardRef<HTMLButtonElement, ComboboxDataProps>(
                                                     renderPopoverContent={
                                                         renderPopoverContent
                                                     }
+                                                    closeCombobox={() =>
+                                                        setOpen(false)
+                                                    }
                                                 />
                                             ),
                                         )}
@@ -230,6 +239,40 @@ const ComboboxData = forwardRef<HTMLButtonElement, ComboboxDataProps>(
                             </CommandList>
                         </Command>
                     </PopoverContent>
+
+                    {/* ✅ Modal dirender LUAR Popover agar tidak ikut tertutup ketika Combobox ditutup */}
+                    {isGrouped &&
+                        (items as ComboboxGroup[]).flatMap((group) =>
+                            group.items.map((item) => (
+                                <ComboboxItemRenderer
+                                    key={`modal-${group.title}-${item.id}`}
+                                    item={item}
+                                    groupTitle={group.title}
+                                    selectedValues={selectedValues}
+                                    popoverOpen={popoverOpen}
+                                    setPopoverOpen={setPopoverOpen}
+                                    handleSelectItem={handleSelectItem}
+                                    renderPopoverContent={renderPopoverContent}
+                                    closeCombobox={() => setOpen(false)}
+                                    renderOnlyModal={true}
+                                />
+                            )),
+                        )}
+
+                    {!isGrouped &&
+                        (items as ComboboxItem[]).map((item) => (
+                            <ComboboxItemRenderer
+                                key={`modal-${item.id}`}
+                                item={item}
+                                selectedValues={selectedValues}
+                                popoverOpen={popoverOpen}
+                                setPopoverOpen={setPopoverOpen}
+                                handleSelectItem={handleSelectItem}
+                                renderPopoverContent={renderPopoverContent}
+                                closeCombobox={() => setOpen(false)}
+                                renderOnlyModal={true}
+                            />
+                        ))}
                 </Popover>
             </div>
         );

@@ -27,7 +27,7 @@ interface ComboboxProps {
     value: string;
     onValueChange?: (value: string) => void;
     onBlur?: () => void;
-    initialItems?: string[];
+    initialItems?: string[] | Array<{ value: string | number; label: string }>;
     placeholder?: string;
     className?: string;
     creatable?: boolean;
@@ -45,7 +45,11 @@ const Combobox = ({
     onCreate,
 }: ComboboxProps) => {
     const [open, setOpen] = useState(false);
-    const [items, setItems] = useState(initialItems);
+    const [items, setItems] = useState(
+        initialItems?.map((item: any) =>
+            typeof item === 'object' && 'label' in item ? item.label : item,
+        ) ?? [],
+    );
     const [search, setSearch] = useState('');
     const [isCreating, setIsCreating] = useState(false);
 
@@ -73,13 +77,15 @@ const Combobox = ({
             <PopoverTrigger asChild>
                 <Button
                     aria-expanded={open}
-                    className={cn('w-full justify-between', className)}
+                    className={cn('w-full justify-between gap-2', className)}
                     role="combobox"
                     variant="outline"
                     onBlur={onBlur}
                 >
-                    {value || placeholder}
-                    <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
+                    <span className="min-w-0 flex-1 truncate text-left">
+                        {value || placeholder}
+                    </span>
+                    <ChevronsUpDown className="size-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
             <PopoverContent
@@ -176,7 +182,7 @@ export interface TanStackComboboxProps {
     field?: any;
     label: string;
     placeholder?: string;
-    initialItems?: string[];
+    initialItems?: string[] | Array<{ value: string | number; label: string }>;
     className?: string;
     creatable?: boolean;
     onCreate?: (value: string) => Promise<void> | void;
@@ -210,20 +216,64 @@ const ComboboxLabelAndHelper = (props: ComboboxLabelAndHelperProps) => {
         ? field.state.meta.errors.map((e: any) => e.message || e).join(', ')
         : '';
 
+    // Handle object initialItems {value, label}
+    const isObjectItems =
+        initialItems &&
+        initialItems.length > 0 &&
+        typeof initialItems[0] === 'object';
+    const itemsAsStrings = isObjectItems
+        ? (
+              initialItems as Array<{ value: string | number; label: string }>
+          ).map((item) => item.label)
+        : (initialItems as string[]);
+
+    // Find label for current value if using object items
+    let displayValue = currentValue;
+
+    if (isObjectItems && currentValue) {
+        const foundItem = (
+            initialItems as Array<{ value: string | number; label: string }>
+        ).find((item) => item.value.toString() === currentValue.toString());
+
+        if (foundItem) {
+            displayValue = foundItem.label;
+        }
+    }
+
+    const handleValueChange = (selectedLabel: string) => {
+        if (isObjectItems) {
+            // Find the corresponding value for the selected label
+            const foundItem = (
+                initialItems as Array<{ value: string | number; label: string }>
+            ).find((item) => item.label === selectedLabel);
+            const selectedValue = foundItem
+                ? foundItem.value.toString()
+                : selectedLabel;
+
+            if (isFieldMode) {
+                field.handleChange(selectedValue);
+            } else {
+                onValueChange!(selectedValue);
+            }
+        } else {
+            if (isFieldMode) {
+                field.handleChange(selectedLabel);
+            } else {
+                onValueChange!(selectedLabel);
+            }
+        }
+    };
+
     return (
         <div className={`w-full space-y-2 ${className || ''}`}>
-            <Label
-                className={cn('truncate', hasError ? 'text-destructive' : '')}
-            >
+            <Label className={hasError ? 'text-destructive' : ''}>
                 {label}
             </Label>
             <Combobox
-                value={currentValue}
-                onValueChange={
-                    isFieldMode ? field.handleChange : onValueChange!
-                }
+                value={displayValue}
+                onValueChange={handleValueChange}
                 onBlur={isFieldMode ? field.handleBlur : undefined}
-                initialItems={initialItems}
+                initialItems={itemsAsStrings}
                 placeholder={placeholder}
                 className={
                     hasError

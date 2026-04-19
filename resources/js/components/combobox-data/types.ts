@@ -14,12 +14,9 @@ export interface ComboboxGroup {
 
 export interface ComboboxDataProps {
     items: ComboboxItem[] | ComboboxGroup[];
-    value?: string | number | (string | number)[];
-    onChange?: (
-        value: string | number | (string | number)[] | null,
-        item?: ComboboxItem | ComboboxItem[],
-    ) => void;
-    onItemSelect?: (item: ComboboxItem) => void;
+    value?: any;
+    onChange?: (value: any, item?: ComboboxItem | ComboboxItem[]) => void;
+    onItemSelect?: (item: any) => void;
     placeholder?: string;
     searchPlaceholder?: string;
     emptyMessage?: string;

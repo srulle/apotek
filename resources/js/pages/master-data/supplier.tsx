@@ -8,13 +8,13 @@ import { DeleteConfirm } from '@/components/delete-confirm';
 import { OneFieldForm } from '@/components/input/one-field-form';
 import { Button } from '@/components/ui/button';
 
-type Suplier = {
+type Supplier = {
     id: number;
     nama_supplier: string;
 };
 
-export default function Suplier() {
-    const { suplier } = usePage<{ suplier: Suplier[] }>().props;
+export default function Supplier() {
+    const { suppliers } = usePage<{ suppliers: Supplier[] }>().props;
 
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [namaSupplier, setNamaSupplier] = useState('');
@@ -32,7 +32,7 @@ export default function Suplier() {
     const [deleteLoading, setDeleteLoading] = useState<number | null>(null);
 
     const handleEdit = (
-        item: Suplier,
+        item: Supplier,
         event: React.MouseEvent<HTMLButtonElement>,
     ) => {
         setEditId(item.id);
@@ -43,12 +43,12 @@ export default function Suplier() {
 
     const handleUpdate = (value: string) => {
         if (!editId) {
-return;
-}
+            return;
+        }
 
         const promise = new Promise((resolve, reject) => {
             router.put(
-                `/master-data/suplier/${editId}`,
+                `/master-data/supplier/${editId}`,
                 { nama_supplier: value },
                 {
                     onSuccess: () => {
@@ -67,16 +67,16 @@ return;
         });
 
         toast.promise(promise, {
-            loading: 'Memperbarui suplier...',
-            success: 'Suplier berhasil diperbarui',
-            error: (err) => err.message || 'Gagal memperbarui suplier',
+            loading: 'Memperbarui supplier...',
+            success: 'Supplier berhasil diperbarui',
+            error: (err) => err.message || 'Gagal memperbarui supplier',
         });
     };
 
-    const columns: ColumnDef<Suplier>[] = [
+    const columns: ColumnDef<Supplier>[] = [
         {
             accessorKey: 'nama_supplier',
-            header: 'Nama Suplier',
+            header: 'Nama Supplier',
             cell: ({ row }) => {
                 const value = row.getValue<string>('nama_supplier');
 
@@ -105,8 +105,8 @@ return;
                             <Pencil />
                         </Button>
                         <DeleteConfirm
-                            title="Hapus Suplier"
-                            description={`Apakah Anda yakin ingin menghapus suplier "${item.nama_supplier}"? Tindakan ini tidak dapat dibatalkan.`}
+                            title="Hapus Supplier"
+                            description={`Apakah Anda yakin ingin menghapus supplier "${item.nama_supplier}"? Tindakan ini tidak dapat dibatalkan.`}
                             isLoading={deleteLoading === item.id}
                             onConfirm={() => {
                                 setDeleteLoading(item.id);
@@ -114,7 +114,7 @@ return;
                                 const promise = new Promise(
                                     (resolve, reject) => {
                                         router.delete(
-                                            `/master-data/suplier/${item.id}`,
+                                            `/master-data/supplier/${item.id}`,
                                             {
                                                 onSuccess: () => {
                                                     setDeleteLoading(null);
@@ -124,7 +124,7 @@ return;
                                                     setDeleteLoading(null);
                                                     reject(
                                                         new Error(
-                                                            'Gagal menghapus suplier',
+                                                            'Gagal menghapus supplier',
                                                         ),
                                                     );
                                                 },
@@ -134,8 +134,8 @@ return;
                                 );
 
                                 toast.promise(promise, {
-                                    loading: 'Menghapus suplier...',
-                                    success: 'Suplier berhasil dihapus',
+                                    loading: 'Menghapus supplier...',
+                                    success: 'Supplier berhasil dihapus',
                                     error: (err) => err.message,
                                 });
                             }}
@@ -157,7 +157,7 @@ return;
     const handleSubmit = (value: string) => {
         const promise = new Promise((resolve, reject) => {
             router.post(
-                '/master-data/suplier',
+                '/master-data/supplier',
                 { nama_supplier: value },
                 {
                     onSuccess: () => {
@@ -174,31 +174,31 @@ return;
         });
 
         toast.promise(promise, {
-            loading: 'Menambahkan suplier...',
-            success: 'Suplier berhasil ditambahkan',
-            error: (err) => err.message || 'Gagal menambahkan suplier',
+            loading: 'Menambahkan supplier...',
+            success: 'Supplier berhasil ditambahkan',
+            error: (err) => err.message || 'Gagal menambahkan supplier',
         });
     };
 
     return (
         <>
-            <Head title="Suplier" />
+            <Head title="Supplier" />
             <div className="m-2 flex flex-1 flex-col overflow-auto rounded-xl border border-sidebar-border/70 p-2 md:m-4 md:p-4 dark:border-sidebar-border">
                 <div className="space-y-2">
-                    <h1 className="font-semibold">Suplier</h1>
+                    <h1 className="font-semibold">Supplier</h1>
 
                     <OneFieldForm
                         open={isFormOpen}
                         onOpenChange={setIsFormOpen}
                         trigger={
                             <Button className="w-fit">
-                                <ClipboardPlus/>
-                                Tambah Suplier
+                                <ClipboardPlus />
+                                Tambah Supplier
                             </Button>
                         }
-                        title="Tambah Suplier"
-                        label="Nama Suplier"
-                        placeholder="Masukkan nama suplier"
+                        title="Tambah Supplier"
+                        label="Nama Supplier"
+                        placeholder="Masukkan nama supplier"
                         align="start"
                         value={namaSupplier}
                         onChange={setNamaSupplier}
@@ -211,10 +211,10 @@ return;
                     />
 
                     <SimpleDatatable
-                        data={suplier || []}
+                        data={suppliers || []}
                         columns={columns}
                         pageSize={10}
-                        emptyMessage="Belum ada suplier"
+                        emptyMessage="Belum ada supplier"
                         className="max-w-md"
                     />
                 </div>
@@ -224,9 +224,9 @@ return;
             <OneFieldForm
                 open={editId !== null}
                 onOpenChange={(open: boolean) => !open && setEditId(null)}
-                title="Ubah Suplier"
-                label="Nama Suplier"
-                placeholder="Masukkan nama suplier"
+                title="Ubah Supplier"
+                label="Nama Supplier"
+                placeholder="Masukkan nama supplier"
                 value={editValue}
                 onChange={setEditValue}
                 onSubmit={handleUpdate}
@@ -241,15 +241,15 @@ return;
     );
 }
 
-Suplier.layout = {
+Supplier.layout = {
     breadcrumbs: [
         {
             title: 'Master Data',
             href: null,
         },
         {
-            title: 'Suplier',
-            href: '/master-data/suplier',
+            title: 'Supplier',
+            href: '/master-data/supplier',
         },
     ],
 };

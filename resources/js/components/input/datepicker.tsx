@@ -5,10 +5,10 @@ import { id } from 'date-fns/locale';
 import { CalendarIcon } from 'lucide-react';
 import type { ChangeEvent, ChangeEventHandler } from 'react';
 import { useState, forwardRef, useId } from 'react';
-import { Label } from '@/components/ui/label';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+import { Label } from '@/components/ui/label';
 import {
     Popover,
     PopoverContent,

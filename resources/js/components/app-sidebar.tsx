@@ -28,7 +28,7 @@ import {
     obat,
     kategoriObat,
     satuan,
-    suplier,
+    supplier,
     stokBatch,
 } from '@/routes';
 import { penjualan, pembelian } from '@/routes/transaksi';
@@ -68,8 +68,8 @@ const mainNavItems: NavItem[] = [
                 href: obat(),
             },
             {
-                title: 'Suplier',
-                href: suplier(),
+                title: 'Supplier',
+                href: supplier(),
             },
             {
                 title: 'Kategori Obat',

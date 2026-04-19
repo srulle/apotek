@@ -25,6 +25,6 @@ class SupplierSeeder extends Seeder
             ['nama_supplier' => 'PT Combiphar'],
         ];
 
-        DB::table('suplier')->insert($supplier);
+        DB::table('supplier')->insert($supplier);
     }
 }

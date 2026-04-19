@@ -1,33 +1,10 @@
 import { MinusIcon, PlusIcon } from 'lucide-react';
 import type { InputHTMLAttributes } from 'react';
 import { useId, forwardRef, useState, useEffect, useCallback } from 'react';
+import { NumericFormat } from 'react-number-format';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { cn } from "@/lib/utils"
-
-// Helper functions for currency formatting
-function formatCurrencyIndonesia(value: string | number): string {
-    const num =
-        typeof value === 'string'
-            ? parseFloat(value.replace(/[^\d.,]/g, '').replace(',', '.')) || 0
-            : value;
-
-    return new Intl.NumberFormat('id-ID', {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
-    }).format(num);
-}
-
-function parseCurrencyToNumber(value: string): string {
-    // Remove Rp. prefix and format, then convert to number string for backend
-    const cleaned = value
-        .replace(/Rp\.?\s*/, '')
-        .replace(/\./g, '')
-        .replace(',', '.');
-    const num = parseFloat(cleaned) || 0;
-
-    return num.toFixed(2);
-}
+import { cn } from '@/lib/utils';
 
 export interface InputLabelAndHelperProps extends InputHTMLAttributes<HTMLInputElement> {
     label?: string;
@@ -80,9 +57,7 @@ const InputLabelAndHelper = forwardRef<
         );
 
         useEffect(() => {
-            if (type === 'currency' && field.state.value) {
-                setInternalValue(formatCurrencyIndonesia(field.state.value));
-            } else {
+            if (type !== 'currency') {
                 setInternalValue(field.state.value || '');
             }
         }, [field.state.value, type]);
@@ -95,16 +70,6 @@ const InputLabelAndHelper = forwardRef<
                     newValue = newValue.replace(/[^0-9]/g, '');
                     // Hilangkan leading zeros kecuali jika hanya 0
                     newValue = newValue.replace(/^0+(?=\d)/, '');
-                } else if (type === 'currency') {
-                    // Allow numbers, dots, commas for currency input
-                    newValue = newValue.replace(/[^0-9.,]/g, '');
-                    // Format for display
-                    const formatted = formatCurrencyIndonesia(newValue);
-                    setInternalValue(formatted);
-                    // Send parsed value to backend
-                    field.handleChange(parseCurrencyToNumber(newValue));
-
-                    return;
                 }
 
                 setInternalValue(newValue);
@@ -146,6 +111,7 @@ const InputLabelAndHelper = forwardRef<
                     >
                         <button
                             type="button"
+                            tabIndex={-1}
                             onClick={handleDecrement}
                             className="-ms-px flex aspect-square h-[inherit] items-center justify-center rounded-l-md border border-input bg-background text-sm text-muted-foreground transition-[color,box-shadow] hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                         >
@@ -164,6 +130,7 @@ const InputLabelAndHelper = forwardRef<
                         />
                         <button
                             type="button"
+                            tabIndex={-1}
                             onClick={handleIncrement}
                             className="-me-px flex aspect-square h-[inherit] items-center justify-center rounded-r-md border border-input bg-background text-sm text-muted-foreground transition-[color,box-shadow] hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                         >
@@ -178,14 +145,19 @@ const InputLabelAndHelper = forwardRef<
                         <span className="flex items-center justify-center border-r border-input bg-background px-3 py-2 text-sm text-muted-foreground">
                             Rp.
                         </span>
-                        <Input
-                            ref={ref}
+                        <NumericFormat
                             id={id}
-                            type="text"
                             placeholder={placeholder}
-                            value={internalValue}
-                            onChange={handleInputChange}
+                            value={field.state.value || ''}
+                            onValueChange={(values) => {
+                                field.handleChange(values.floatValue || 0);
+                            }}
                             onBlur={field.handleBlur}
+                            thousandSeparator="."
+                            decimalSeparator=","
+                            decimalScale={2}
+                            allowNegative={false}
+                            customInput={Input}
                             className="w-full grow border-0 px-3 py-2 tabular-nums shadow-none outline-none selection:bg-primary selection:text-primary-foreground focus-visible:ring-0"
                         />
                     </div>
@@ -236,9 +208,7 @@ const InputLabelAndHelper = forwardRef<
     const [internalValue, setInternalValue] = useState(propValue || '');
 
     useEffect(() => {
-        if (type === 'currency' && propValue && typeof propValue === 'string') {
-            setInternalValue(formatCurrencyIndonesia(propValue));
-        } else {
+        if (type !== 'currency') {
             setInternalValue(propValue || '');
         }
     }, [propValue, type]);
@@ -251,26 +221,6 @@ const InputLabelAndHelper = forwardRef<
                 newValue = newValue.replace(/[^0-9]/g, '');
                 // Hilangkan leading zeros kecuali jika hanya 0
                 newValue = newValue.replace(/^0+(?=\d)/, '');
-            } else if (type === 'currency') {
-                // Allow numbers, dots, commas for currency input
-                newValue = newValue.replace(/[^0-9.,]/g, '');
-                // Format for display
-                const formatted = formatCurrencyIndonesia(newValue);
-                setInternalValue(formatted);
-
-                // Send parsed value to onChange
-                if (propOnChange) {
-                    const syntheticEvent = {
-                        ...e,
-                        target: {
-                            ...e.target,
-                            value: parseCurrencyToNumber(newValue),
-                        },
-                    } as React.ChangeEvent<HTMLInputElement>;
-                    propOnChange(syntheticEvent);
-                }
-
-                return;
             }
 
             setInternalValue(newValue);
@@ -333,6 +283,7 @@ const InputLabelAndHelper = forwardRef<
                 >
                     <button
                         type="button"
+                        tabIndex={-1}
                         onClick={handleDecrement}
                         className="-ms-px flex aspect-square h-[inherit] items-center justify-center rounded-l-md border border-input bg-background text-sm text-muted-foreground transition-[color,box-shadow] hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                     >
@@ -350,6 +301,7 @@ const InputLabelAndHelper = forwardRef<
                     />
                     <button
                         type="button"
+                        tabIndex={-1}
                         onClick={handleIncrement}
                         className="-me-px flex aspect-square h-[inherit] items-center justify-center rounded-r-md border border-input bg-background text-sm text-muted-foreground transition-[color,box-shadow] hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                     >
@@ -364,14 +316,31 @@ const InputLabelAndHelper = forwardRef<
                     <span className="flex items-center justify-center border-r border-input bg-background px-3 py-2 text-sm text-muted-foreground">
                         Rp.
                     </span>
-                    <Input
-                        ref={ref}
+                    <NumericFormat
                         id={id}
-                        type="text"
-                        value={internalValue}
-                        onChange={handleInputChange}
+                        value={
+                            typeof propValue === 'string' ||
+                            typeof propValue === 'number'
+                                ? propValue
+                                : ''
+                        }
+                        onValueChange={(values) => {
+                            if (propOnChange) {
+                                const syntheticEvent = {
+                                    target: { value: values.floatValue || 0 },
+                                } as unknown as React.ChangeEvent<HTMLInputElement>;
+                                propOnChange(syntheticEvent);
+                            }
+                        }}
+                        thousandSeparator="."
+                        decimalSeparator=","
+                        decimalScale={2}
+                        allowNegative={false}
+                        customInput={Input}
                         className="w-full grow border-0 px-3 py-2 tabular-nums shadow-none outline-none selection:bg-primary selection:text-primary-foreground focus-visible:ring-0"
-                        {...inputProps}
+                        placeholder={inputProps.placeholder}
+                        disabled={inputProps.disabled}
+                        readOnly={inputProps.readOnly}
                     />
                 </div>
             ) : (

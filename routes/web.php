@@ -3,10 +3,10 @@
 use App\Http\Controllers\KategoriObatController;
 use App\Http\Controllers\ObatController;
 use App\Http\Controllers\SatuanController;
-use App\Http\Controllers\SuplierController;
+use App\Http\Controllers\SupplierController;
 use App\Models\Obat;
 use App\Models\Satuan;
-use App\Models\Suplier;
+use App\Models\Supplier;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login')->name('home');
@@ -17,7 +17,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('transaksi/penjualan', 'transaksi/penjualan')->name('transaksi.penjualan');
     Route::get('transaksi/pembelian', function () {
         return inertia('transaksi/pembelian', [
-            'suplier' => fn () => Suplier::orderBy('nama_supplier', 'asc')->pluck('nama_supplier'),
+            'suppliers' => fn () => Supplier::orderBy('nama_supplier', 'asc')->get(['id', 'nama_supplier']),
             'satuan' => fn () => Satuan::orderBy('nama_satuan', 'asc')->pluck('nama_satuan'),
             'obat' => fn () => Obat::with(['satuanBesar', 'satuanKecil', 'kategori'])
                 ->where('is_active', true)
@@ -32,6 +32,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                         'subtitle' => 'Isi dalam 1 '.($obat->satuanBesar?->nama_satuan ?? 'N/A').' adalah '.$obat->isi_per_satuan.' '.($obat->satuanKecil?->nama_satuan ?? 'N/A'),
                         'satuan_besar' => $obat->satuanBesar?->nama_satuan,
                         'satuan_kecil' => $obat->satuanKecil?->nama_satuan,
+                        'isi_per_satuan' => $obat->isi_per_satuan,
                     ])->toArray(),
                 ])
                 ->values()
@@ -54,10 +55,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('master-data/satuan', [SatuanController::class, 'store'])->name('satuan.store');
     Route::put('master-data/satuan/{satuan}', [SatuanController::class, 'update'])->name('satuan.update');
     Route::delete('master-data/satuan/{satuan}', [SatuanController::class, 'destroy'])->name('satuan.destroy');
-    Route::get('master-data/suplier', [SuplierController::class, 'index'])->name('suplier');
-    Route::post('master-data/suplier', [SuplierController::class, 'store'])->name('suplier.store');
-    Route::put('master-data/suplier/{suplier}', [SuplierController::class, 'update'])->name('suplier.update');
-    Route::delete('master-data/suplier/{suplier}', [SuplierController::class, 'destroy'])->name('suplier.destroy');
+    Route::get('master-data/supplier', [SupplierController::class, 'index'])->name('supplier');
+    Route::post('master-data/supplier', [SupplierController::class, 'store'])->name('supplier.store');
+    Route::put('master-data/supplier/{supplier}', [SupplierController::class, 'update'])->name('supplier.update');
+    Route::delete('master-data/supplier/{supplier}', [SupplierController::class, 'destroy'])->name('supplier.destroy');
 });
 
 require __DIR__.'/settings.php';

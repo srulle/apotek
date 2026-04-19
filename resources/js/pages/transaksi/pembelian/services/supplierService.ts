@@ -3,7 +3,7 @@ import { router } from '@inertiajs/react';
 export const createSupplier = async (namaSupplier: string): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
         router.post(
-            '/master-data/suplier',
+            '/master-data/suppliers',
             {
                 nama_supplier: namaSupplier,
             },

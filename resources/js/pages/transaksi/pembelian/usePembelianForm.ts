@@ -2,6 +2,7 @@ import { useForm } from '@tanstack/react-form';
 import { zodValidator } from '@tanstack/zod-form-adapter';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { ulid } from 'ulid';
 import { z } from 'zod';
 import { createSupplier as createSupplierService } from './services/supplierService';
 
@@ -14,10 +15,11 @@ const pembelianFormSchema = z.object({
 });
 
 export const usePembelianForm = () => {
-    const [selectedObat, setSelectedObat] = useState<(string | number)[]>([]);
-    const [obatFormData, setObatFormData] = useState<
-        Record<string | number, any>
-    >({});
+    const [selectedObat, setSelectedObat] = useState<
+        Array<{ id: number; uniqueId: string }>
+    >([]);
+    const [obatFormData, setObatFormData] = useState<Record<string, any>>({});
+    const [showItemForm, setShowItemForm] = useState(false);
 
     const form = useForm({
         validators: {
@@ -55,24 +57,87 @@ export const usePembelianForm = () => {
 
     const handleSubmit = async () => {
         await form.handleSubmit();
-        console.log('=== Nilai Form Pembelian ===');
-        console.log('Form values:', JSON.stringify(form.state.values, null, 2));
-        console.log(
-            'Obat Dipilih:',
-            JSON.stringify(
-                selectedObat.map((id) => ({
-                    id: id as number,
-                    jumlah: 1, // default
-                    totalHarga: 0, // default
-                    batch: '', // default
-                    expiredDate: undefined, // default
-                    satuan: '', // default
-                })),
-                null,
-                2,
-            ),
-        );
-        console.log('=========================');
+
+        if (form.state.isValid) {
+            setShowItemForm(true);
+            console.log('=== Nilai Form Pembelian ===');
+            console.log(
+                'Form values:',
+                JSON.stringify(form.state.values, null, 2),
+            );
+            console.log(
+                'Obat Dipilih:',
+                JSON.stringify(
+                    selectedObat.map((entry) => ({
+                        id: entry.id,
+                        uniqueId: entry.uniqueId,
+                        jumlah: 1, // default
+                        totalHarga: 0, // default
+                        batch: '', // default
+                        expiredDate: undefined, // default
+                        satuan: '', // default
+                    })),
+                    null,
+                    2,
+                ),
+            );
+            console.log('=========================');
+        }
+    };
+
+    const handleSavePembelian = async () => {
+        // Generate ULID UNTUK PK PEMBELIAN HANYA SEKALI DISINI
+        const pembelianId = ulid();
+
+        // Prepare HEADER PEMBELIAN - SESUAI FILLABLE Model Pembelian.php
+        const header = {
+            nomor_faktur: form.getFieldValue('nomorFaktur'),
+            supplier_id: form.getFieldValue('supplier'),
+            tanggal_pembelian: form.getFieldValue('tanggalTransaksi'),
+            user_id: 1,
+        };
+
+        // Prepare DETAIL PEMBELIAN - SESUAI FILLABLE Model PembelianDetail.php
+        const items = selectedObat.map((entry) => {
+            const formData = obatFormData[entry.uniqueId] || {};
+
+            // ✅ Pilih nilai pengali: gunakan konversi jika ada, jika tidak gunakan isi_per_satuan
+            const pengali =
+                formData.konversi && Number(formData.konversi) > 0
+                    ? Number(formData.konversi)
+                    : Number(formData.isi_per_satuan) || 1;
+
+            // ✅ Hitung total jumlah beli
+            const jumlahTotal = Number(formData.jumlahBeli) * pengali;
+            // ✅ Hitung harga per satuan terkecil
+            const hargaPerSatuan =
+                jumlahTotal > 0 ? Number(formData.totalHarga) / jumlahTotal : 0;
+
+            return {
+                pembelian_id: pembelianId,
+                obat_id: entry.id,
+                nomor_batch: formData.batch,
+                tanggal_expired: formData.expiredDate,
+                jumlah_beli: jumlahTotal,
+                harga_beli: hargaPerSatuan,
+            };
+        });
+
+        // Data lengkap siap disimpan, PK dan FK 100% sama
+        const dataPembelian = {
+            header,
+            items,
+        };
+
+        console.log('✅ Data siap disimpan ke database:');
+        console.log('Header Pembelian:');
+        console.log(JSON.stringify(header, null, 2));
+        console.log('Detail Pembelian:');
+        console.log(JSON.stringify(items, null, 2));
+
+        toast.success('Data siap dikirim ke backend');
+
+        return dataPembelian;
     };
 
     return {
@@ -84,5 +149,8 @@ export const usePembelianForm = () => {
         obatDetailForm,
         createSupplier,
         handleSubmit,
+        showItemForm,
+        setShowItemForm,
+        handleSavePembelian,
     };
 };

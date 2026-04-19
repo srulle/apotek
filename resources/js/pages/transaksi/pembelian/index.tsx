@@ -6,7 +6,7 @@ import PembelianForm from './PembelianForm';
 import PembelianList from './PembelianList';
 
 interface PembelianPageProps {
-    suplier: string[];
+    suppliers: Array<{ id: number; nama_supplier: string }>;
     obat: Array<{
         title: string;
         items: Array<{
@@ -21,7 +21,7 @@ interface PembelianPageProps {
 }
 
 export default function Transaksi({
-    suplier,
+    suppliers,
     obat,
     satuan,
 }: PembelianPageProps) {
@@ -43,7 +43,7 @@ export default function Transaksi({
                         </TabsList>
                         <TabsContent value="tambah">
                             <PembelianForm
-                                suplier={suplier}
+                                suppliers={suppliers}
                                 obat={obat}
                                 satuan={satuan}
                             />

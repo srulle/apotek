@@ -3,11 +3,11 @@
 import { useForm } from '@tanstack/react-form';
 import { zodValidator } from '@tanstack/zod-form-adapter';
 import { z } from 'zod';
+import type { ComboboxItem } from '@/components/combobox-data/types';
 import { ComboboxLabelAndHelper } from '@/components/input/combobox';
 import DatePicker from '@/components/input/datepicker';
 import { InputLabelAndHelper } from '@/components/input/input-label-and-helper';
 import { Button } from '@/components/ui/button';
-import type { ComboboxItem } from '@/components/combobox-data/types';
 
 interface PurchaseItemDetailFormProps {
     item: ComboboxItem;
@@ -43,6 +43,7 @@ const PurchaseItemDetailForm = ({
             konversi: 0,
         },
         onSubmit: async ({ value }) => {
+            // ✅ Tambahkan item ke selected list dan simpan detail
             onSelectItem({
                 id: item.id,
                 ...value,
