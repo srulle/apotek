@@ -3,7 +3,7 @@ import { ClipboardPlus, ClipboardList } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { transaksi } from '@/routes';
 import PembelianForm from './PembelianForm';
-import PembelianList from './PembelianList';
+import PembelianHistory from './PembelianHistory';
 
 interface PembelianPageProps {
     suppliers: Array<{ id: number; nama_supplier: string }>;
@@ -38,7 +38,7 @@ export default function Transaksi({
                             </TabsTrigger>
                             <TabsTrigger value="daftar" className="gap-2">
                                 <ClipboardList className="size-4" />
-                                Daftar Pembelian
+                                Riwayat Pembelian
                             </TabsTrigger>
                         </TabsList>
                         <TabsContent value="tambah">
@@ -49,7 +49,7 @@ export default function Transaksi({
                             />
                         </TabsContent>
                         <TabsContent value="daftar">
-                            <PembelianList />
+                            <PembelianHistory />
                         </TabsContent>
                     </Tabs>
                 </div>

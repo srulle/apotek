@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\KategoriObatController;
 use App\Http\Controllers\ObatController;
+use App\Http\Controllers\PembelianController;
 use App\Http\Controllers\SatuanController;
 use App\Http\Controllers\SupplierController;
 use App\Models\Obat;
@@ -39,6 +40,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->toArray(),
         ]);
     })->name('transaksi.pembelian');
+    Route::post('transaksi/pembelian', [PembelianController::class, 'store'])->name('transaksi.pembelian.store');
     Route::inertia('stok-batch', 'stok-batch')->name('stok-batch');
     Route::inertia('laporan', 'laporan')->name('laporan');
 

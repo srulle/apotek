@@ -1,5 +1,5 @@
+import { router } from '@inertiajs/react';
 import { useForm } from '@tanstack/react-form';
-import { zodValidator } from '@tanstack/zod-form-adapter';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { ulid } from 'ulid';
@@ -135,9 +135,27 @@ export const usePembelianForm = () => {
         console.log('Detail Pembelian:');
         console.log(JSON.stringify(items, null, 2));
 
-        toast.success('Data siap dikirim ke backend');
-
-        return dataPembelian;
+        // Kirim data ke backend menggunakan Inertia router
+        return new Promise<void>((resolve, reject) => {
+            router.post('/transaksi/pembelian', dataPembelian, {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    toast.success('Pembelian berhasil disimpan');
+                    // Reset form setelah sukses
+                    setSelectedObat([]);
+                    setObatFormData({});
+                    setShowItemForm(false);
+                    form.reset();
+                    resolve();
+                },
+                onError: (errors: any) => {
+                    console.error('Error saving pembelian:', errors);
+                    toast.error('Gagal menyimpan pembelian');
+                    reject(new Error('Gagal menyimpan pembelian'));
+                },
+            });
+        });
     };
 
     return {

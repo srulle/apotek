@@ -6,17 +6,17 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 
-export default function PembelianList() {
+export default function PembelianHistory() {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Daftar Pembelian</CardTitle>
+                <CardTitle>Riwayat Pembelian</CardTitle>
                 <CardDescription>
-                    Lihat dan kelola semua transaksi pembelian barang.
+                    Lihat dan kelola riwayat transaksi pembelian barang.
                 </CardDescription>
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
-                Menampilkan daftar semua transaksi pembelian.
+                Menampilkan riwayat semua transaksi pembelian.
             </CardContent>
         </Card>
     );
