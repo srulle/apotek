@@ -5,15 +5,18 @@ import type {
     PaginationState,
     SortingState,
     RowSelectionState,
+    ExpandedState,
 } from '@tanstack/react-table';
 import {
     flexRender,
     getCoreRowModel,
+    getExpandedRowModel,
     getPaginationRowModel,
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
 import {
+    ChevronDownIcon,
     ChevronFirstIcon,
     ChevronLastIcon,
     ChevronLeftIcon,
@@ -28,8 +31,6 @@ import {
     ChevronsUpDownIcon,
 } from 'lucide-react';
 import { useEffect, useId, useState, useMemo } from 'react';
-
-
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -84,6 +85,8 @@ export interface DataTableProps<T> {
     onSelectionChange?: (selectedRows: T[]) => void;
     enableGlobalFilter?: boolean;
     searchPlaceholder?: string;
+    enableRowExpansion?: boolean;
+    renderExpandedRow?: (row: T) => React.ReactNode;
 }
 
 const DataTable = <T,>({
@@ -98,6 +101,8 @@ const DataTable = <T,>({
     onSelectionChange,
     enableGlobalFilter = false,
     searchPlaceholder = 'Cari...',
+    enableRowExpansion = false,
+    renderExpandedRow,
 }: DataTableProps<T>) => {
     const id = useId();
 
@@ -109,6 +114,10 @@ const DataTable = <T,>({
     const [columnFilters, setColumnFilters] = useState<
         Record<string, string[]>
     >({});
+    const [expanded, setExpanded] = useState<ExpandedState>({});
+    const [popoverOpens, setPopoverOpens] = useState<Record<string, boolean>>(
+        {},
+    );
 
     // Helper to get nested value
     const getNestedValue = (obj: any, path: string) => {
@@ -165,8 +174,8 @@ const DataTable = <T,>({
                     const accessorKey = col.accessorKey;
 
                     if (!accessorKey) {
-return false;
-}
+                        return false;
+                    }
 
                     const value = getNestedValue(row, accessorKey);
 
@@ -174,8 +183,8 @@ return false;
                 });
 
                 if (!matchesSearch) {
-return false;
-}
+                    return false;
+                }
             }
 
             // Check column filters
@@ -183,8 +192,8 @@ return false;
                 columnFilters,
             )) {
                 if (filterValues.length === 0) {
-continue;
-}
+                    continue;
+                }
 
                 const value = getNestedValue(row, columnId);
 
@@ -209,11 +218,14 @@ continue;
         enableRowSelection: enableRowSelection,
         onRowSelectionChange: setRowSelection,
         onGlobalFilterChange: setGlobalFilter,
+        getExpandedRowModel: getExpandedRowModel(),
+        onExpandedChange: setExpanded,
         state: {
             sorting,
             pagination,
             rowSelection,
             globalFilter,
+            expanded,
         },
     });
 
@@ -224,10 +236,10 @@ continue;
                 .rows.map((row) => row.original);
             onSelectionChange(selectedRows);
         }
-    }, [rowSelection, onSelectionChange]);
+    }, [rowSelection, onSelectionChange, table]);
 
     return (
-        <div className="space-y-4 md:w-full">
+        <div className={`space-y-4 md:w-full ${className}`}>
             <div className="flex flex-wrap items-center gap-3">
                 {enableGlobalFilter && (
                     <div className="relative w-full max-w-2xl">
@@ -246,7 +258,12 @@ continue;
 
                 {filterableColumns.map((column) => {
                     const selectedValues = columnFilters[column.id] || [];
-                    const [isOpen, setIsOpen] = useState(false);
+                    const isOpen = popoverOpens[column.id] || false;
+                    const setIsOpen = (open: boolean) =>
+                        setPopoverOpens((prev) => ({
+                            ...prev,
+                            [column.id]: open,
+                        }));
 
                     return (
                         <Popover
@@ -359,6 +376,9 @@ continue;
                                 key={headerGroup.id}
                                 className="hover:bg-transparent"
                             >
+                                {enableRowExpansion && (
+                                    <TableHead className="h-11 w-12"></TableHead>
+                                )}
                                 {enableRowSelection && (
                                     <TableHead className="h-11 w-12">
                                         <Checkbox
@@ -509,41 +529,88 @@ continue;
                     </TableHeader>
                     <TableBody>
                         {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => (
-                                <TableRow
-                                    key={row.id}
-                                    data-state={
-                                        row.getIsSelected() && 'selected'
-                                    }
-                                >
-                                    {enableRowSelection && (
-                                        <TableCell className="w-12">
-                                            <Checkbox
-                                                checked={row.getIsSelected()}
-                                                onCheckedChange={(value) =>
-                                                    row.toggleSelected(!!value)
+                            table.getRowModel().rows.flatMap((row) => {
+                                const rows = [
+                                    <TableRow
+                                        key={row.id}
+                                        data-state={
+                                            row.getIsSelected() && 'selected'
+                                        }
+                                    >
+                                        {enableRowExpansion && (
+                                            <TableCell className="w-12">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() =>
+                                                        row.toggleExpanded()
+                                                    }
+                                                    className="h-6 w-6 p-0"
+                                                >
+                                                    {row.getIsExpanded() ? (
+                                                        <ChevronDownIcon className="h-4 w-4" />
+                                                    ) : (
+                                                        <ChevronRightIcon className="h-4 w-4" />
+                                                    )}
+                                                </Button>
+                                            </TableCell>
+                                        )}
+                                        {enableRowSelection && (
+                                            <TableCell className="w-12">
+                                                <Checkbox
+                                                    checked={row.getIsSelected()}
+                                                    onCheckedChange={(value) =>
+                                                        row.toggleSelected(
+                                                            !!value,
+                                                        )
+                                                    }
+                                                    aria-label="Pilih baris"
+                                                />
+                                            </TableCell>
+                                        )}
+                                        {row.getVisibleCells().map((cell) => (
+                                            <TableCell key={cell.id}>
+                                                {flexRender(
+                                                    cell.column.columnDef.cell,
+                                                    cell.getContext(),
+                                                )}
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>,
+                                ];
+
+                                if (row.getIsExpanded() && renderExpandedRow) {
+                                    rows.push(
+                                        <TableRow key={`${row.id}-expanded`}>
+                                            <TableCell
+                                                colSpan={
+                                                    (enableRowExpansion
+                                                        ? 1
+                                                        : 0) +
+                                                    (enableRowSelection
+                                                        ? 1
+                                                        : 0) +
+                                                    columns.length
                                                 }
-                                                aria-label="Pilih baris"
-                                            />
-                                        </TableCell>
-                                    )}
-                                    {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext(),
-                                            )}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
+                                                className="bg-muted/50"
+                                            >
+                                                {renderExpandedRow(
+                                                    row.original,
+                                                )}
+                                            </TableCell>
+                                        </TableRow>,
+                                    );
+                                }
+
+                                return rows;
+                            })
                         ) : (
                             <TableRow>
                                 <TableCell
                                     colSpan={
-                                        enableRowSelection
-                                            ? columns.length + 1
-                                            : columns.length
+                                        (enableRowExpansion ? 1 : 0) +
+                                        (enableRowSelection ? 1 : 0) +
+                                        columns.length
                                     }
                                     className="h-24 text-center"
                                 >

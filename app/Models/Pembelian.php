@@ -35,8 +35,8 @@ class Pembelian extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function detail()
+    public function pembelianDetail()
     {
-        return $this->hasMany(PembelianDetail::class);
+        return $this->hasMany(PembelianDetail::class, 'pembelian_id');
     }
 }

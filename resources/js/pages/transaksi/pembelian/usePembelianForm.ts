@@ -151,8 +151,12 @@ export const usePembelianForm = () => {
                 },
                 onError: (errors: any) => {
                     console.error('Error saving pembelian:', errors);
-                    toast.error('Gagal menyimpan pembelian');
-                    reject(new Error('Gagal menyimpan pembelian'));
+                    const errorMessage =
+                        errors?.error ||
+                        errors?.message ||
+                        'Terjadi kesalahan saat menyimpan pembelian';
+                    toast.error(errorMessage);
+                    reject(new Error(errorMessage));
                 },
             });
         });

@@ -43,4 +43,9 @@ class Obat extends Model
     {
         return $this->belongsTo(Satuan::class, 'satuan_kecil_id');
     }
+
+    public function stok()
+    {
+        return $this->hasMany(Stok::class);
+    }
 }

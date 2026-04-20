@@ -4,10 +4,13 @@ use App\Http\Controllers\KategoriObatController;
 use App\Http\Controllers\ObatController;
 use App\Http\Controllers\PembelianController;
 use App\Http\Controllers\SatuanController;
+use App\Http\Controllers\StokController;
 use App\Http\Controllers\SupplierController;
 use App\Models\Obat;
+use App\Models\Pembelian;
 use App\Models\Satuan;
 use App\Models\Supplier;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login')->name('home');
@@ -16,7 +19,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
     Route::inertia('transaksi', 'transaksi')->name('transaksi');
     Route::inertia('transaksi/penjualan', 'transaksi/penjualan')->name('transaksi.penjualan');
-    Route::get('transaksi/pembelian', function () {
+    Route::get('transaksi/pembelian', function (Request $request) {
         return inertia('transaksi/pembelian', [
             'suppliers' => fn () => Supplier::orderBy('nama_supplier', 'asc')->get(['id', 'nama_supplier']),
             'satuan' => fn () => Satuan::orderBy('nama_satuan', 'asc')->pluck('nama_satuan'),
@@ -40,8 +43,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->toArray(),
         ]);
     })->name('transaksi.pembelian');
+
+    Route::get('api/transaksi/pembelian/history', function () {
+        return response()->json([
+            'pembelian' => Pembelian::with([
+                'supplier',
+                'user',
+                'pembelianDetail.obat.kategori',
+                'pembelianDetail.obat.satuanBesar',
+                'pembelianDetail.obat.satuanKecil',
+            ])
+                ->orderBy('created_at', 'desc')
+                ->get(),
+        ]);
+    });
     Route::post('transaksi/pembelian', [PembelianController::class, 'store'])->name('transaksi.pembelian.store');
-    Route::inertia('stok-batch', 'stok-batch')->name('stok-batch');
+    Route::get('stok', [StokController::class, 'index'])->name('stok');
     Route::inertia('laporan', 'laporan')->name('laporan');
 
     // Master Data

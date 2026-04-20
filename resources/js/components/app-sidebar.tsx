@@ -29,7 +29,7 @@ import {
     kategoriObat,
     satuan,
     supplier,
-    stokBatch,
+    stok,
 } from '@/routes';
 import { penjualan, pembelian } from '@/routes/transaksi';
 import type { NavItem } from '@/types';
@@ -55,8 +55,8 @@ const mainNavItems: NavItem[] = [
         ],
     },
     {
-        title: 'Stok Batch',
-        href: stokBatch(),
+        title: 'Stok',
+        href: stok(),
         icon: Package,
     },
     {
