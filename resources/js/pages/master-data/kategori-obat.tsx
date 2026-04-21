@@ -3,7 +3,7 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { ClipboardPlus, Pencil, Trash2 } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { toast } from 'sonner';
-import { SimpleDatatable } from '@/components/datatable/simple-datatable';
+import { SimpleDatatable } from '@/components/datatable/datatable';
 import { DeleteConfirm } from '@/components/delete-confirm';
 import { OneFieldForm } from '@/components/input/one-field-form';
 import { Button } from '@/components/ui/button';
@@ -43,8 +43,8 @@ export default function KategoriObat() {
 
     const handleUpdate = (value: string) => {
         if (!editId) {
-return;
-}
+            return;
+        }
 
         const promise = new Promise((resolve, reject) => {
             router.put(
@@ -120,11 +120,12 @@ return;
                                                     setDeleteLoading(null);
                                                     resolve(true);
                                                 },
-                                                onError: () => {
+                                                onError: (errors) => {
                                                     setDeleteLoading(null);
                                                     reject(
                                                         new Error(
-                                                            'Gagal menghapus kategori obat',
+                                                            errors.error ||
+                                                                'Gagal menghapus kategori obat',
                                                         ),
                                                     );
                                                 },

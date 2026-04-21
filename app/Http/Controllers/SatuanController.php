@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Obat;
 use App\Models\Satuan;
 use Illuminate\Http\Request;
 
@@ -9,7 +10,7 @@ class SatuanController extends Controller
 {
     public function index()
     {
-        $satuan = Satuan::orderBy('id', 'desc')->get();
+        $satuan = Satuan::orderBy('nama_satuan', 'asc')->get();
 
         return inertia('master-data/satuan', compact('satuan'));
     }
@@ -42,10 +43,25 @@ class SatuanController extends Controller
 
     public function destroy(Satuan $satuan)
     {
-        $satuan->delete();
+        try {
+            $obat = Obat::where('satuan_kecil_id', $satuan->id)
+                ->orWhere('satuan_besar_id', $satuan->id)
+                ->orWhere('satuan_penjualan_id', $satuan->id)
+                ->first();
 
-        return redirect()->back()
-            ->with('success', 'Satuan berhasil dihapus')
-            ->with('invalidate.cache', ['satuan']);
+            if ($obat) {
+                return redirect()->back()
+                    ->withErrors(['error' => 'Satuan tidak bisa dihapus karena masih digunakan oleh obat "'.$obat->nama_obat.'"']);
+            }
+
+            $satuan->delete();
+
+            return redirect()->back()
+                ->with('success', 'Satuan berhasil dihapus')
+                ->with('invalidate.cache', ['satuan']);
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withErrors(['error' => 'Terjadi kesalahan saat menghapus satuan']);
+        }
     }
 }

@@ -6,7 +6,9 @@ use App\Http\Requests\StoreObatRequest;
 use App\Http\Requests\UpdateObatRequest;
 use App\Models\KategoriObat;
 use App\Models\Obat;
+use App\Models\PembelianDetail;
 use App\Models\Satuan;
+use App\Models\Stok;
 use Illuminate\Support\Facades\DB;
 
 class ObatController extends Controller
@@ -67,9 +69,28 @@ class ObatController extends Controller
 
     public function destroy(Obat $obat)
     {
-        $obat->delete();
+        try {
+            // Check if obat is used in pembelian_detail
+            $pembelianDetail = PembelianDetail::where('obat_id', $obat->id)->with('pembelian')->first();
+            if ($pembelianDetail) {
+                return redirect()->back()
+                    ->withErrors(['error' => 'Obat tidak bisa dihapus karena masih ada sudah ada riwayat transaksi dengan nomor faktur "'.$pembelianDetail->pembelian->nomor_faktur.'"']);
+            }
 
-        return inertia()->back()
-            ->with('success', 'Obat berhasil dihapus');
+            // Check if obat has stock
+            $stok = Stok::where('obat_id', $obat->id)->first();
+            if ($stok) {
+                return redirect()->back()
+                    ->withErrors(['error' => 'Obat tidak bisa dihapus karena masih ada stok']);
+            }
+
+            $obat->delete();
+
+            return inertia()->back()
+                ->with('success', 'Obat berhasil dihapus');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withErrors(['error' => 'Terjadi kesalahan saat menghapus obat']);
+        }
     }
 }

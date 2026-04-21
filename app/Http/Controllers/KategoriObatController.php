@@ -3,13 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\KategoriObat;
+use App\Models\Obat;
 use Illuminate\Http\Request;
 
 class KategoriObatController extends Controller
 {
     public function index()
     {
-        $kategoriObat = KategoriObat::orderBy('id', 'desc')->get();
+        $kategoriObat = KategoriObat::orderBy('nama_kategori', 'asc')->get();
 
         return inertia('master-data/kategori-obat', compact('kategoriObat'));
     }
@@ -42,10 +43,22 @@ class KategoriObatController extends Controller
 
     public function destroy(KategoriObat $kategoriObat)
     {
-        $kategoriObat->delete();
+        try {
+            $obat = Obat::where('kategori_id', $kategoriObat->id)->first();
 
-        return redirect()->back()
-            ->with('success', 'Kategori obat berhasil dihapus')
-            ->with('invalidate.cache', ['kategoriObat']);
+            if ($obat) {
+                return redirect()->back()
+                    ->withErrors(['error' => 'Kategori obat tidak bisa dihapus karena masih digunakan oleh obat "'.$obat->nama_obat.'"']);
+            }
+
+            $kategoriObat->delete();
+
+            return redirect()->back()
+                ->with('success', 'Kategori obat berhasil dihapus')
+                ->with('invalidate.cache', ['kategoriObat']);
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withErrors(['error' => 'Terjadi kesalahan saat menghapus kategori obat']);
+        }
     }
 }

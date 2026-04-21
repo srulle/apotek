@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pembelian;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 
@@ -9,7 +10,7 @@ class SupplierController extends Controller
 {
     public function index()
     {
-        $suppliers = Supplier::orderBy('id', 'desc')->get();
+        $suppliers = Supplier::orderBy('nama_supplier', 'asc')->get();
 
         return inertia('master-data/supplier', compact('suppliers'));
     }
@@ -38,8 +39,21 @@ class SupplierController extends Controller
 
     public function destroy(Supplier $supplier)
     {
-        $supplier->delete();
+        try {
+            $pembelian = Pembelian::where('supplier_id', $supplier->id)->first();
 
-        return redirect()->back()->with('success', 'Supplier berhasil dihapus');
+            if ($pembelian) {
+                return redirect()->back()
+                    ->withErrors(['error' => 'Supplier tidak bisa dihapus karena masih digunakan di pembelian dengan nomor faktur"'.$pembelian->nomor_faktur.'"']);
+            }
+
+            $supplier->delete();
+
+            return redirect()->back()
+                ->with('success', 'Supplier berhasil dihapus');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withErrors(['error' => 'Terjadi kesalahan saat menghapus supplier']);
+        }
     }
 }

@@ -131,11 +131,12 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                                                     setDeleteLoading(null);
                                                     resolve(true);
                                                 },
-                                                onError: () => {
+                                                onError: (errors) => {
                                                     setDeleteLoading(null);
                                                     reject(
                                                         new Error(
-                                                            'Gagal menghapus obat',
+                                                            errors.error ||
+                                                                'Gagal menghapus obat',
                                                         ),
                                                     );
                                                 },

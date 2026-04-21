@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('obat_id')
                 ->constrained('obat')
                 ->cascadeOnUpdate()
-                ->restrictOnDelete();
+                ->cascadeOnDelete();
             $table->string('nomor_batch', 50);
             $table->date('tanggal_expired');
             $table->enum('jenis_transaksi', ['pembelian', 'penjualan']);

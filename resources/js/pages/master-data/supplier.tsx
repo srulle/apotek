@@ -3,7 +3,7 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { ClipboardPlus, Pencil, Trash2 } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { toast } from 'sonner';
-import { SimpleDatatable } from '@/components/datatable/simple-datatable';
+import { SimpleDatatable } from '@/components/datatable/datatable';
 import { DeleteConfirm } from '@/components/delete-confirm';
 import { OneFieldForm } from '@/components/input/one-field-form';
 import { Button } from '@/components/ui/button';
@@ -120,11 +120,12 @@ export default function Supplier() {
                                                     setDeleteLoading(null);
                                                     resolve(true);
                                                 },
-                                                onError: () => {
+                                                onError: (errors) => {
                                                     setDeleteLoading(null);
                                                     reject(
                                                         new Error(
-                                                            'Gagal menghapus supplier',
+                                                            errors.error ||
+                                                                'Gagal menghapus supplier',
                                                         ),
                                                     );
                                                 },
