@@ -14,7 +14,7 @@ class ObatController extends Controller
     public function index()
     {
         return inertia('master-data/obat', [
-            'obat' => Obat::with('kategori', 'satuanBesar', 'satuanKecil')->orderBy('created_at', 'desc')->get(),
+            'obat' => Obat::with('kategori', 'satuanBesar', 'satuanKecil', 'satuanPenjualan')->orderBy('created_at', 'desc')->get(),
             'kategoriObat' => fn () => KategoriObat::orderBy('nama_kategori', 'asc')->pluck('nama_kategori'),
             'satuan' => fn () => Satuan::orderBy('nama_satuan', 'asc')->pluck('nama_satuan'),
         ]);
@@ -26,6 +26,7 @@ class ObatController extends Controller
             'kategori_id' => KategoriObat::firstOrCreate(['nama_kategori' => $validated['kategori_obat']])->id,
             'satuan_besar_id' => Satuan::firstOrCreate(['nama_satuan' => $validated['satuan_besar']])->id,
             'satuan_kecil_id' => Satuan::firstOrCreate(['nama_satuan' => $validated['satuan_kecil']])->id,
+            'satuan_penjualan_id' => Satuan::firstOrCreate(['nama_satuan' => $validated['satuan_penjualan']])->id,
         ];
     }
 
@@ -37,7 +38,7 @@ class ObatController extends Controller
             $relations = $this->resolveRelations($validated);
 
             Obat::create(array_merge(
-                collect($validated)->only(['nama_obat', 'isi_per_satuan', 'harga_jual'])->all(),
+                collect($validated)->only(['nama_obat', 'jumlah_satuan_kecil_dalam_satuan_besar', 'jumlah_satuan_kecil_dalam_satuan_penjualan', 'harga_jual'])->all(),
                 $relations,
                 ['is_active' => true]
             ));
@@ -55,7 +56,7 @@ class ObatController extends Controller
             $relations = $this->resolveRelations($validated);
 
             $obat->update(array_merge(
-                collect($validated)->only(['nama_obat', 'isi_per_satuan', 'harga_jual'])->all(),
+                collect($validated)->only(['nama_obat', 'jumlah_satuan_kecil_dalam_satuan_besar', 'jumlah_satuan_kecil_dalam_satuan_penjualan', 'harga_jual'])->all(),
                 $relations
             ));
         });

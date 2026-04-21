@@ -28,7 +28,9 @@ type Obat = {
     kategori_id: number;
     satuan_besar_id: number;
     satuan_kecil_id: number;
-    isi_per_satuan: number;
+    satuan_penjualan_id: number;
+    jumlah_satuan_kecil_dalam_satuan_besar: number;
+    jumlah_satuan_kecil_dalam_satuan_penjualan: number;
     harga_jual: number;
     is_active: boolean;
     created_at: string;
@@ -36,6 +38,7 @@ type Obat = {
     kategori: Kategori;
     satuan_besar: Satuan;
     satuan_kecil: Satuan;
+    satuan_penjualan: Satuan;
 };
 
 interface ObatPageProps {
@@ -72,8 +75,14 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
             cell: ({ row }) => row.original.satuan_kecil?.nama_satuan || '-',
         },
         {
-            accessorKey: 'isi_per_satuan',
-            header: 'Isi',
+            accessorKey: 'satuan_penjualan.nama_satuan',
+            header: 'Satuan Penjualan',
+            cell: ({ row }) =>
+                row.original.satuan_penjualan?.nama_satuan || '-',
+        },
+        {
+            accessorKey: 'jumlah_satuan_kecil_dalam_satuan_besar',
+            header: 'Jumlah Kecil/Besar',
         },
         {
             accessorKey: 'harga_jual',
@@ -208,7 +217,11 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                 kategori_obat: editObat.kategori.nama_kategori,
                 satuan_besar: editObat.satuan_besar.nama_satuan,
                 satuan_kecil: editObat.satuan_kecil.nama_satuan,
-                isi_per_satuan: editObat.isi_per_satuan.toString(),
+                satuan_penjualan: editObat.satuan_penjualan.nama_satuan,
+                jumlah_satuan_kecil_dalam_satuan_besar:
+                    editObat.jumlah_satuan_kecil_dalam_satuan_besar.toString(),
+                jumlah_satuan_kecil_dalam_satuan_penjualan:
+                    editObat.jumlah_satuan_kecil_dalam_satuan_penjualan.toString(),
                 harga_jual: editObat.harga_jual.toString(),
             });
         }
@@ -220,7 +233,9 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
             kategori_obat: '',
             satuan_besar: '',
             satuan_kecil: '',
-            isi_per_satuan: '',
+            satuan_penjualan: '',
+            jumlah_satuan_kecil_dalam_satuan_besar: '',
+            jumlah_satuan_kecil_dalam_satuan_penjualan: '',
             harga_jual: '',
         },
         onSubmit: async ({ value }) => {
@@ -458,11 +473,41 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                             </form.Field>
 
                             <form.Field
-                                name="isi_per_satuan"
+                                name="satuan_penjualan"
                                 validators={{
                                     onChange: ({ value }) => {
                                         if (!value) {
-                                            return 'Isi Per Satuan harus diisi';
+                                            return 'Satuan Penjualan harus diisi';
+                                        }
+                                    },
+                                }}
+                            >
+                                {(field) => (
+                                    <ComboboxLabelAndHelper
+                                        field={field}
+                                        label="Satuan Penjualan"
+                                        placeholder="Pilih satuan penjualan"
+                                        initialItems={satuan}
+                                        creatable={true}
+                                        onCreate={(value) =>
+                                            createItem(
+                                                '/master-data/satuan',
+                                                { nama_satuan: value },
+                                                'Satuan berhasil ditambahkan',
+                                                'Menambahkan satuan...',
+                                                'nama_satuan',
+                                            )
+                                        }
+                                    />
+                                )}
+                            </form.Field>
+
+                            <form.Field
+                                name="jumlah_satuan_kecil_dalam_satuan_besar"
+                                validators={{
+                                    onChange: ({ value }) => {
+                                        if (!value) {
+                                            return 'Jumlah Satuan Kecil dalam Satuan Besar harus diisi';
                                         }
 
                                         if (isNaN(Number(value))) {
@@ -474,10 +519,35 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                                 {(field) => (
                                     <InputLabelAndHelper
                                         field={field}
-                                        label="Isi Per Satuan"
+                                        label="Jumlah Satuan Kecil dalam Satuan Besar"
                                         placeholder="Contoh: 10"
                                         type="number"
                                         helperText="Jumlah satuan kecil yang terdapat dalam 1 satuan besar"
+                                    />
+                                )}
+                            </form.Field>
+
+                            <form.Field
+                                name="jumlah_satuan_kecil_dalam_satuan_penjualan"
+                                validators={{
+                                    onChange: ({ value }) => {
+                                        if (!value) {
+                                            return 'Jumlah Satuan Kecil dalam Satuan Penjualan harus diisi';
+                                        }
+
+                                        if (isNaN(Number(value))) {
+                                            return 'Harus berupa angka';
+                                        }
+                                    },
+                                }}
+                            >
+                                {(field) => (
+                                    <InputLabelAndHelper
+                                        field={field}
+                                        label="Jumlah Satuan Kecil dalam Satuan Penjualan"
+                                        placeholder="Contoh: 1"
+                                        type="number"
+                                        helperText="Jumlah satuan kecil yang terdapat dalam 1 satuan penjualan"
                                     />
                                 )}
                             </form.Field>

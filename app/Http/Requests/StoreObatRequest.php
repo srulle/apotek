@@ -27,7 +27,9 @@ class StoreObatRequest extends FormRequest
             'kategori_obat' => 'required|string',
             'satuan_besar' => 'required|string',
             'satuan_kecil' => 'required|string',
-            'isi_per_satuan' => 'required|integer|min:1',
+            'satuan_penjualan' => 'required|string',
+            'jumlah_satuan_kecil_dalam_satuan_besar' => 'required|integer|min:1',
+            'jumlah_satuan_kecil_dalam_satuan_penjualan' => 'required|integer|min:1',
             'harga_jual' => 'required|numeric|min:0',
         ];
     }

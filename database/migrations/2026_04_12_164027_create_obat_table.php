@@ -17,7 +17,9 @@ return new class extends Migration
             $table->foreignId('kategori_id')->constrained('kategori_obat');
             $table->foreignId('satuan_besar_id')->constrained('satuan');
             $table->foreignId('satuan_kecil_id')->constrained('satuan');
-            $table->integer('isi_per_satuan')->unsigned();
+            $table->foreignId('satuan_penjualan_id')->constrained('satuan');
+            $table->integer('jumlah_satuan_kecil_dalam_satuan_besar')->unsigned();
+            $table->integer('jumlah_satuan_kecil_dalam_satuan_penjualan')->unsigned();
             $table->decimal('harga_jual', 12, 2);
             $table->boolean('is_active')->default(true);
             $table->timestamps();

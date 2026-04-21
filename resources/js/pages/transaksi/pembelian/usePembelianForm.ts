@@ -101,11 +101,12 @@ export const usePembelianForm = () => {
         const items = selectedObat.map((entry) => {
             const formData = obatFormData[entry.uniqueId] || {};
 
-            // ✅ Pilih nilai pengali: gunakan konversi jika ada, jika tidak gunakan isi_per_satuan
+            // ✅ Pilih nilai pengali: gunakan konversi jika ada, jika tidak gunakan jumlah_satuan_kecil_dalam_satuan_besar
             const pengali =
                 formData.konversi && Number(formData.konversi) > 0
                     ? Number(formData.konversi)
-                    : Number(formData.isi_per_satuan) || 1;
+                    : Number(formData.jumlah_satuan_kecil_dalam_satuan_besar) ||
+                      1;
 
             // ✅ Hitung total jumlah beli
             const jumlahTotal = Number(formData.jumlahBeli) * pengali;

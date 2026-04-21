@@ -1,36 +1,45 @@
 'use client';
 
 import { useForm } from '@tanstack/react-form';
-import { zodValidator } from '@tanstack/zod-form-adapter';
 import { z } from 'zod';
 import type { ComboboxItem } from '@/components/combobox-data/types';
-import { ComboboxLabelAndHelper } from '@/components/input/combobox';
 import DatePicker from '@/components/input/datepicker';
+import { ComboboxLabelAndHelper } from '@/components/input/combobox';
 import { InputLabelAndHelper } from '@/components/input/input-label-and-helper';
 import { Button } from '@/components/ui/button';
 
-interface PurchaseItemDetailFormProps {
-    item: ComboboxItem;
+interface SalesItemDetailFormProps {
+    item: ComboboxItem & {
+        stok?: Array<{
+            id: number;
+            nomor_batch: string;
+            tanggal_expired: string;
+            stok: number;
+        }>;
+        satuan_besar?: string;
+        satuan_kecil?: string;
+        isi_per_satuan?: number;
+    };
     onSelectItem: (data: any) => void;
     onClosePopover: () => void;
     satuan?: string[];
 }
 
-const PurchaseItemDetailForm = ({
+const SalesItemDetailForm = ({
     item,
     onSelectItem,
     onClosePopover,
     satuan = [],
-}: PurchaseItemDetailFormProps) => {
-    const obatDetailSchema = z.object({
+}: SalesItemDetailFormProps) => {
+    const penjualanDetailSchema = z.object({
         batch: z.string().min(1, 'Nomor batch wajib diisi'),
         expiredDate: z.date({
             required_error: 'Tanggal kadaluarsa wajib dipilih',
         }),
         satuan: z.string().min(1, 'Satuan wajib dipilih'),
-        jumlahBeli: z.coerce.number().int().min(1, 'Jumlah minimal 1'),
-        totalHarga: z.coerce.number().min(1, 'Total harga wajib diisi'),
-        konversi: z.coerce.number().optional(),
+        isiSatuan: z.coerce.number().min(1, 'Isi satuan minimal 1'),
+        jumlahJual: z.coerce.number().int().min(1, 'Jumlah minimal 1'),
+        hargaJual: z.coerce.number().min(1, 'Harga jual wajib diisi'),
     });
 
     const form = useForm({
@@ -38,12 +47,11 @@ const PurchaseItemDetailForm = ({
             batch: '',
             expiredDate: new Date(),
             satuan: item.satuan_besar || '',
-            jumlahBeli: 1,
-            totalHarga: 0,
-            konversi: item.jumlah_satuan_kecil_dalam_satuan_besar || 0,
+            isiSatuan: item.isi_per_satuan || 1,
+            jumlahJual: 1,
+            hargaJual: 0,
         },
         onSubmit: async ({ value }) => {
-            // ✅ Tambahkan item ke selected list dan simpan detail
             onSelectItem({
                 id: item.id,
                 ...value,
@@ -63,7 +71,7 @@ const PurchaseItemDetailForm = ({
             <div className="space-y-1">
                 <h4 className="leading-none font-medium">{item.label}</h4>
                 <p className="text-sm text-muted-foreground">
-                    Masukkan detail pembelian
+                    Masukkan detail penjualan
                 </p>
             </div>
 
@@ -99,7 +107,6 @@ const PurchaseItemDetailForm = ({
                             <DatePicker
                                 field={field}
                                 placeholder="Pilih tanggal kadaluarsa"
-                                minDate={new Date()}
                                 toYear={new Date().getFullYear() + 15}
                             />
                         </>
@@ -114,7 +121,7 @@ const PurchaseItemDetailForm = ({
                 >
                     {(field) => (
                         <ComboboxLabelAndHelper
-                            label="Satuan Besar Saat Pembelian"
+                            label="Satuan Jual"
                             placeholder="Pilih satuan"
                             initialItems={satuan}
                             field={field}
@@ -128,11 +135,11 @@ const PurchaseItemDetailForm = ({
                         item.satuan_kecil &&
                         satuanValue !== (item.satuan_besar || '') && (
                             <form.Field
-                                name="konversi"
+                                name="isiSatuan"
                                 validators={{
                                     onChange: z.coerce
                                         .number()
-                                        .min(1, 'Konversi minimal 1'),
+                                        .min(1, 'Isi satuan minimal 1'),
                                 }}
                             >
                                 {(field) => (
@@ -151,7 +158,7 @@ const PurchaseItemDetailForm = ({
                 <form.Subscribe selector={(state) => state.values.satuan}>
                     {(satuanValue) => (
                         <form.Field
-                            name="jumlahBeli"
+                            name="jumlahJual"
                             validators={{
                                 onChange: z.coerce
                                     .number()
@@ -161,7 +168,7 @@ const PurchaseItemDetailForm = ({
                         >
                             {(field) => (
                                 <InputLabelAndHelper
-                                    label={`Jumlah Beli (${satuanValue || 'satuan'})`}
+                                    label={`Jumlah Jual (${satuanValue || 'satuan'})`}
                                     type="number"
                                     min={1}
                                     field={field}
@@ -172,18 +179,18 @@ const PurchaseItemDetailForm = ({
                 </form.Subscribe>
 
                 <form.Field
-                    name="totalHarga"
+                    name="hargaJual"
                     validators={{
                         onChange: z.coerce
                             .number()
-                            .min(1, 'Harga beli wajib diisi'),
+                            .min(1, 'Harga jual wajib diisi'),
                     }}
                 >
                     {(field) => (
                         <InputLabelAndHelper
-                            label="Total Harga"
+                            label="Harga Jual"
                             type="currency"
-                            placeholder="Masukkan harga beli"
+                            placeholder="Masukkan harga jual"
                             field={field}
                         />
                     )}
@@ -217,4 +224,4 @@ const PurchaseItemDetailForm = ({
     );
 };
 
-export default PurchaseItemDetailForm;
+export default SalesItemDetailForm;

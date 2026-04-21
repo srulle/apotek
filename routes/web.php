@@ -3,6 +3,7 @@
 use App\Http\Controllers\KategoriObatController;
 use App\Http\Controllers\ObatController;
 use App\Http\Controllers\PembelianController;
+use App\Http\Controllers\PenjualanController;
 use App\Http\Controllers\SatuanController;
 use App\Http\Controllers\StokController;
 use App\Http\Controllers\SupplierController;
@@ -18,7 +19,8 @@ Route::redirect('/', '/login')->name('home');
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
     Route::inertia('transaksi', 'transaksi')->name('transaksi');
-    Route::inertia('transaksi/penjualan', 'transaksi/penjualan')->name('transaksi.penjualan');
+    Route::get('transaksi/penjualan', [PenjualanController::class, 'index'])->name('transaksi.penjualan');
+    Route::post('transaksi/penjualan', [PenjualanController::class, 'store'])->name('transaksi.penjualan.store');
     Route::get('transaksi/pembelian', function (Request $request) {
         return inertia('transaksi/pembelian', [
             'suppliers' => fn () => Supplier::orderBy('nama_supplier', 'asc')->get(['id', 'nama_supplier']),
@@ -26,17 +28,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'obat' => fn () => Obat::with(['satuanBesar', 'satuanKecil', 'kategori'])
                 ->where('is_active', true)
                 ->orderBy('nama_obat', 'asc')
-                ->get(['id', 'nama_obat', 'kategori_id', 'satuan_besar_id', 'satuan_kecil_id', 'isi_per_satuan'])
+                ->get(['id', 'nama_obat', 'kategori_id', 'satuan_besar_id', 'satuan_kecil_id', 'jumlah_satuan_kecil_dalam_satuan_besar'])
                 ->groupBy('kategori.nama_kategori')
                 ->map(fn ($obatGroup, $kategoriName) => [
                     'title' => $kategoriName,
                     'items' => $obatGroup->map(fn ($obat) => [
                         'id' => $obat->id,
                         'label' => $obat->nama_obat,
-                        'subtitle' => 'Isi dalam 1 '.($obat->satuanBesar?->nama_satuan ?? 'N/A').' adalah '.$obat->isi_per_satuan.' '.($obat->satuanKecil?->nama_satuan ?? 'N/A'),
+                        'subtitle' => 'Jumlah kecil dalam 1 '.($obat->satuanBesar?->nama_satuan ?? 'N/A').' adalah '.$obat->jumlah_satuan_kecil_dalam_satuan_besar.' '.($obat->satuanKecil?->nama_satuan ?? 'N/A'),
                         'satuan_besar' => $obat->satuanBesar?->nama_satuan,
                         'satuan_kecil' => $obat->satuanKecil?->nama_satuan,
-                        'isi_per_satuan' => $obat->isi_per_satuan,
+                        'jumlah_satuan_kecil_dalam_satuan_besar' => $obat->jumlah_satuan_kecil_dalam_satuan_besar,
                     ])->toArray(),
                 ])
                 ->values()

@@ -22,10 +22,6 @@ class SatuanSeeder extends Seeder
             ['nama_satuan' => 'Tube'],
             ['nama_satuan' => 'Pot'],
             ['nama_satuan' => 'Ampul'],
-            ['nama_satuan' => 'Gram'],
-            ['nama_satuan' => 'Lembar'],
-            ['nama_satuan' => 'Pak'],
-            ['nama_satuan' => 'Kaleng'],
         ];
 
         DB::table('satuan')->insert($satuan);

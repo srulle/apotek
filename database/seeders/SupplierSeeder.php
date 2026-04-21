@@ -13,16 +13,16 @@ class SupplierSeeder extends Seeder
     public function run(): void
     {
         $supplier = [
-            ['nama_supplier' => 'PT Kalbe Farma Tbk'],
-            ['nama_supplier' => 'PT Tempo Scan Pacific Tbk'],
-            ['nama_supplier' => 'PT Indofarma Tbk'],
-            ['nama_supplier' => 'PT Kimia Farma Tbk'],
-            ['nama_supplier' => 'PT Bayer Indonesia'],
-            ['nama_supplier' => 'PT Pfizer Indonesia'],
-            ['nama_supplier' => 'PT Novartis Indonesia'],
-            ['nama_supplier' => 'PT Sanofi Indonesia'],
-            ['nama_supplier' => 'PT Darya Varia Laboratoria Tbk'],
-            ['nama_supplier' => 'PT Combiphar'],
+            ['nama_supplier' => 'Kalbe Farma'],
+            ['nama_supplier' => 'Tempo Scan Pacific'],
+            ['nama_supplier' => 'Indofarma'],
+            ['nama_supplier' => 'Kimia Farma'],
+            ['nama_supplier' => 'Bayer Indonesia'],
+            ['nama_supplier' => 'Pfizer Indonesia'],
+            ['nama_supplier' => 'Novartis Indonesia'],
+            ['nama_supplier' => 'Sanofi Indonesia'],
+            ['nama_supplier' => 'Darya Varia Laboratoria'],
+            ['nama_supplier' => 'Combiphar'],
         ];
 
         DB::table('supplier')->insert($supplier);

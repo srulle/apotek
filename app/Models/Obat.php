@@ -16,13 +16,16 @@ class Obat extends Model
         'kategori_id',
         'satuan_besar_id',
         'satuan_kecil_id',
-        'isi_per_satuan',
+        'satuan_penjualan_id',
+        'jumlah_satuan_kecil_dalam_satuan_besar',
+        'jumlah_satuan_kecil_dalam_satuan_penjualan',
         'harga_jual',
         'is_active',
     ];
 
     protected $casts = [
-        'isi_per_satuan' => 'integer',
+        'jumlah_satuan_kecil_dalam_satuan_besar' => 'integer',
+        'jumlah_satuan_kecil_dalam_satuan_penjualan' => 'integer',
         'harga_jual' => 'decimal:2',
         'is_active' => 'boolean',
         'created_at' => 'datetime',
@@ -42,6 +45,11 @@ class Obat extends Model
     public function satuanKecil()
     {
         return $this->belongsTo(Satuan::class, 'satuan_kecil_id');
+    }
+
+    public function satuanPenjualan()
+    {
+        return $this->belongsTo(Satuan::class, 'satuan_penjualan_id');
     }
 
     public function stok()

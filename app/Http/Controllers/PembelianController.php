@@ -89,7 +89,20 @@ class PembelianController extends Controller
             DB::rollBack();
             // Handle database errors, especially integrity constraint violations
             if ($e->getCode() == 23000) { // Integrity constraint violation
-                return redirect()->back()->withErrors(['error' => 'Anda memasukan item yang sama dengan nomor batch yang sama di faktur pembelian yang sama']);
+                $errorMessage = $e->getMessage();
+
+                // Periksa apakah constraint yang dilanggar adalah dari tabel pembelian_detail
+                if (str_contains($errorMessage, 'pembelian_detail') || str_contains($errorMessage, 'unique_pembelian_detail_full')) {
+                    return redirect()->back()->withErrors(['error' => 'Anda memasukan item yang sama dengan nomor batch yang sama dan tanggal expired yang sama di faktur pembelian yang sama']);
+                }
+
+                // Jika constraint dari tabel stok (unique_obat_batch)
+                if (str_contains($errorMessage, 'stok') || str_contains($errorMessage, 'unique_obat_batch')) {
+                    return redirect()->back()->withErrors(['error' => 'Nomor batch sudah digunakan untuk obat ini dengan tanggal expired berbeda. Gunakan nomor batch yang berbeda atau ubah tanggal expired.']);
+                }
+
+                // Fallback untuk constraint violation lainnya
+                return redirect()->back()->withErrors(['error' => 'Terjadi kesalahan saat menyimpan data']);
             }
 
             // For other database errors

@@ -81,11 +81,11 @@ const mainNavItems: NavItem[] = [
             },
         ],
     },
-    {
-        title: 'Laporan',
-        href: laporan(),
-        icon: FileText,
-    },
+    // {
+    //     title: 'Laporan',
+    //     href: laporan(),
+    //     icon: FileText,
+    // },
 ];
 
 export function AppSidebar() {

@@ -32,7 +32,7 @@ return new class extends Migration
             $table->index('pembelian_id');
             $table->index('obat_id');
             $table->index('tanggal_expired');
-            $table->unique(['pembelian_id', 'obat_id', 'nomor_batch']);
+            $table->unique(['pembelian_id', 'obat_id', 'nomor_batch', 'tanggal_expired'], 'unique_pembelian_detail_full');
         });
     }
 
