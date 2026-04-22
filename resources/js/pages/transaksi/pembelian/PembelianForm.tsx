@@ -68,7 +68,7 @@ export default function PembelianForm({
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-4">
+                <div className="grid grid-cols-1 items-start gap-2 md:gap-4 md:grid-cols-4">
                     <form.Field name="tanggalTransaksi">
                         {(field) => (
                             <DatePicker

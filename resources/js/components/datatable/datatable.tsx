@@ -34,6 +34,7 @@ import { useEffect, useId, useState, useMemo } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ButtonGroup } from '@/components/ui/button-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
     Command,
@@ -43,6 +44,13 @@ import {
     CommandItem,
     CommandList,
 } from '@/components/ui/command';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -87,6 +95,8 @@ export interface DataTableProps<T> {
     searchPlaceholder?: string;
     enableRowExpansion?: boolean;
     renderExpandedRow?: (row: T) => React.ReactNode;
+    enableBulkDelete?: boolean;
+    onBulkDelete?: () => void | Promise<void>;
 }
 
 const DataTable = <T,>({
@@ -103,6 +113,8 @@ const DataTable = <T,>({
     searchPlaceholder = 'Cari...',
     enableRowExpansion = false,
     renderExpandedRow,
+    enableBulkDelete = false,
+    onBulkDelete,
 }: DataTableProps<T>) => {
     const id = useId();
 
@@ -215,6 +227,7 @@ const DataTable = <T,>({
         enableSortingRemoval: true,
         getPaginationRowModel: getPaginationRowModel(),
         onPaginationChange: setPagination,
+        autoResetPageIndex: false,
         enableRowSelection: enableRowSelection,
         onRowSelectionChange: setRowSelection,
         onGlobalFilterChange: setGlobalFilter,
@@ -240,132 +253,182 @@ const DataTable = <T,>({
 
     return (
         <div className={`space-y-4 md:w-full ${className}`}>
-            <div className="flex flex-wrap items-center gap-3">
-                {enableGlobalFilter && (
-                    <div className="relative w-full max-w-2xl">
-                        <SearchIcon className="absolute top-1/2 left-3 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                            type="text"
-                            value={globalFilter ?? ''}
-                            onChange={(e) =>
-                                setGlobalFilter(String(e.target.value))
-                            }
-                            className="pl-10"
-                            placeholder={searchPlaceholder}
-                        />
-                    </div>
-                )}
+            <div className="flex flex-wrap items-center justify-between gap-3 lg:flex-nowrap">
+                <div className="order-2 flex w-full flex-wrap items-center gap-3 md:min-w-3xl lg:order-1">
+                    {enableGlobalFilter && (
+                        <div className="relative w-full sm:max-w-sm">
+                            <SearchIcon className="absolute top-1/2 left-3 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                type="text"
+                                value={globalFilter ?? ''}
+                                onChange={(e) =>
+                                    setGlobalFilter(String(e.target.value))
+                                }
+                                className="pl-10"
+                                placeholder={searchPlaceholder}
+                            />
+                        </div>
+                    )}
 
-                {filterableColumns.map((column) => {
-                    const selectedValues = columnFilters[column.id] || [];
-                    const isOpen = popoverOpens[column.id] || false;
-                    const setIsOpen = (open: boolean) =>
-                        setPopoverOpens((prev) => ({
-                            ...prev,
-                            [column.id]: open,
-                        }));
+                    {filterableColumns.map((column) => {
+                        const selectedValues = columnFilters[column.id] || [];
+                        const isOpen = popoverOpens[column.id] || false;
+                        const setIsOpen = (open: boolean) =>
+                            setPopoverOpens((prev) => ({
+                                ...prev,
+                                [column.id]: open,
+                            }));
 
-                    return (
-                        <Popover
-                            key={column.id}
-                            open={isOpen}
-                            onOpenChange={setIsOpen}
-                        >
-                            <PopoverTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    role="combobox"
-                                    aria-expanded={isOpen}
-                                    className="h-auto min-h-8 w-fit justify-between hover:bg-transparent"
-                                >
-                                    {selectedValues.length > 0 ? (
+                        return (
+                            <Popover
+                                key={column.id}
+                                open={isOpen}
+                                onOpenChange={setIsOpen}
+                            >
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        aria-expanded={isOpen}
+                                        className="order-3 h-auto min-h-8 w-full min-w-[110px] justify-between hover:bg-transparent sm:w-fit lg:order-2"
+                                    >
                                         <span className="flex items-center gap-2">
                                             <Badge
                                                 variant="outline"
-                                                className="rounded-sm"
+                                                className="group flex h-5 w-6 shrink-0 cursor-pointer items-center justify-center rounded-sm transition-colors hover:text-destructive"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setColumnFilters(
+                                                        (prev) => ({
+                                                            ...prev,
+                                                            [column.id]: [],
+                                                        }),
+                                                    );
+                                                }}
+                                                title={
+                                                    selectedValues.length > 0
+                                                        ? 'Bersihkan filter'
+                                                        : ''
+                                                }
                                             >
-                                                {selectedValues.length}
+                                                {selectedValues.length > 0 ? (
+                                                    <>
+                                                        <span className="group-hover:hidden">
+                                                            {
+                                                                selectedValues.length
+                                                            }
+                                                        </span>
+                                                        <span className="hidden font-bold group-hover:block">
+                                                            ✕
+                                                        </span>
+                                                    </>
+                                                ) : (
+                                                    selectedValues.length
+                                                )}
                                             </Badge>
-                                            {column.label}
+                                            <span
+                                                className={
+                                                    selectedValues.length === 0
+                                                        ? 'text-muted-foreground'
+                                                        : ''
+                                                }
+                                            >
+                                                {column.label}
+                                            </span>
                                         </span>
-                                    ) : (
-                                        <span className="text-muted-foreground">
-                                            {column.label}
-                                        </span>
-                                    )}
-                                    <ChevronsUpDownIcon
-                                        className="ml-2 shrink-0 text-muted-foreground/80"
-                                        aria-hidden="true"
-                                    />
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-(--radix-popper-anchor-width) p-0">
-                                <Command>
-                                    <CommandInput
-                                        placeholder={`Cari ${column.label.toLowerCase()}...`}
-                                    />
-                                    <CommandList>
-                                        <CommandEmpty>
-                                            Tidak ada data.
-                                        </CommandEmpty>
-                                        <CommandGroup>
-                                            {column.values.map((value) => (
-                                                <CommandItem
-                                                    key={value}
-                                                    value={value}
-                                                    onSelect={() => {
-                                                        setColumnFilters(
-                                                            (prev) => {
-                                                                const current =
-                                                                    prev[
-                                                                        column
-                                                                            .id
-                                                                    ] || [];
-                                                                const updated =
-                                                                    current.includes(
-                                                                        value,
-                                                                    )
-                                                                        ? current.filter(
-                                                                              (
-                                                                                  v,
-                                                                              ) =>
-                                                                                  v !==
+                                        <ChevronsUpDownIcon
+                                            className="ml-2 shrink-0 text-muted-foreground/80"
+                                            aria-hidden="true"
+                                        />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-(--radix-popper-anchor-width) max-w-sm p-0">
+                                    <Command>
+                                        <CommandInput
+                                            placeholder={`Cari ${column.label.toLowerCase()}...`}
+                                        />
+                                        <CommandList>
+                                            <CommandEmpty>
+                                                Tidak ada data.
+                                            </CommandEmpty>
+                                            <CommandGroup>
+                                                {column.values.map((value) => (
+                                                    <CommandItem
+                                                        key={value}
+                                                        value={value}
+                                                        onSelect={() => {
+                                                            setColumnFilters(
+                                                                (prev) => {
+                                                                    const current =
+                                                                        prev[
+                                                                            column
+                                                                                .id
+                                                                        ] || [];
+                                                                    const updated =
+                                                                        current.includes(
+                                                                            value,
+                                                                        )
+                                                                            ? current.filter(
+                                                                                  (
+                                                                                      v,
+                                                                                  ) =>
+                                                                                      v !==
+                                                                                      value,
+                                                                              )
+                                                                            : [
+                                                                                  ...current,
                                                                                   value,
-                                                                          )
-                                                                        : [
-                                                                              ...current,
-                                                                              value,
-                                                                          ];
+                                                                              ];
 
-                                                                return {
-                                                                    ...prev,
-                                                                    [column.id]:
-                                                                        updated,
-                                                                };
-                                                            },
-                                                        );
-                                                    }}
-                                                >
-                                                    <span className="truncate">
-                                                        {value}
-                                                    </span>
-                                                    {selectedValues.includes(
-                                                        value,
-                                                    ) && (
-                                                        <CheckIcon
-                                                            size={16}
-                                                            className="ml-auto"
-                                                        />
-                                                    )}
-                                                </CommandItem>
-                                            ))}
-                                        </CommandGroup>
-                                    </CommandList>
-                                </Command>
-                            </PopoverContent>
-                        </Popover>
-                    );
-                })}
+                                                                    return {
+                                                                        ...prev,
+                                                                        [column.id]:
+                                                                            updated,
+                                                                    };
+                                                                },
+                                                            );
+                                                        }}
+                                                    >
+                                                        <span className="truncate">
+                                                            {value}
+                                                        </span>
+                                                        {selectedValues.includes(
+                                                            value,
+                                                        ) && (
+                                                            <CheckIcon
+                                                                size={16}
+                                                                className="ml-auto"
+                                                            />
+                                                        )}
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
+                        );
+                    })}
+                </div>
+
+                {enableRowSelection &&
+                    table.getSelectedRowModel().rows.length > 0 && (
+                        <div className="order-1 flex items-center gap-2 lg:order-3">
+                            <Badge variant="secondary" className="px-2 py-1">
+                                {table.getSelectedRowModel().rows.length}{' '}
+                                terpilih
+                            </Badge>
+                            {enableBulkDelete && onBulkDelete && (
+                                <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={onBulkDelete}
+                                >
+                                    Hapus Terpilih
+                                </Button>
+                            )}
+                        </div>
+                    )}
             </div>
 
             <div className="rounded-md border">
@@ -536,6 +599,11 @@ const DataTable = <T,>({
                                         data-state={
                                             row.getIsSelected() && 'selected'
                                         }
+                                        className={
+                                            row.getIsExpanded()
+                                                ? 'font-semibold'
+                                                : ''
+                                        }
                                     >
                                         {enableRowExpansion && (
                                             <TableCell className="w-12">
@@ -592,7 +660,7 @@ const DataTable = <T,>({
                                                         : 0) +
                                                     columns.length
                                                 }
-                                                className="bg-muted/50"
+                                                className="bg-muted/40"
                                             >
                                                 {renderExpandedRow(
                                                     row.original,
@@ -622,128 +690,135 @@ const DataTable = <T,>({
                 </Table>
             </div>
 
-            <div className="flex items-center justify-between gap-8">
-                <div className="flex items-center gap-3">
-                    {enableRowSelection &&
-                        table.getSelectedRowModel().rows.length > 0 && (
-                            <Badge variant="secondary" className="px-2 py-1">
-                                {table.getSelectedRowModel().rows.length}{' '}
-                                terpilih
-                            </Badge>
-                        )}
-                    <Label htmlFor={id} className="max-sm:sr-only">
-                        Rows per page
-                    </Label>
-                    <Select
-                        value={table.getState().pagination.pageSize.toString()}
-                        onValueChange={(value) => {
-                            table.setPageSize(Number(value));
-                        }}
-                    >
-                        <SelectTrigger
-                            id={id}
-                            className="w-fit whitespace-nowrap"
-                        >
-                            <SelectValue placeholder="Select number of results" />
-                        </SelectTrigger>
-                        <SelectContent className="[&_*[role=option]]:pr-8 [&_*[role=option]]:pl-2 [&_*[role=option]>span]:right-2 [&_*[role=option]>span]:left-auto">
-                            {pageSizeOptions.map((pageSize) => (
-                                <SelectItem
-                                    key={pageSize}
-                                    value={pageSize.toString()}
+            {table.getPageCount() > 1 && (
+                <div className="flex flex-col items-center justify-end gap-4 sm:flex-row">
+                    <div className="flex items-center gap-3">
+                        {enableRowSelection &&
+                            table.getSelectedRowModel().rows.length > 0 && (
+                                <Badge
+                                    variant="secondary"
+                                    className="px-2 py-1"
                                 >
-                                    {pageSize}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="flex grow justify-end text-sm whitespace-nowrap text-muted-foreground">
-                    <p
-                        className="text-sm whitespace-nowrap text-muted-foreground"
-                        aria-live="polite"
-                    >
-                        <span className="text-foreground">
-                            {table.getState().pagination.pageIndex *
-                                table.getState().pagination.pageSize +
-                                1}
-                            -
-                            {Math.min(
-                                Math.max(
-                                    table.getState().pagination.pageIndex *
-                                        table.getState().pagination.pageSize +
-                                        table.getState().pagination.pageSize,
-                                    0,
-                                ),
-                                table.getRowCount(),
+                                    {table.getSelectedRowModel().rows.length}{' '}
+                                    terpilih
+                                </Badge>
                             )}
-                        </span>{' '}
-                        of{' '}
-                        <span className="text-foreground">
-                            {table.getRowCount().toString()}
-                        </span>
-                    </p>
+                        {enableBulkDelete && onBulkDelete && (
+                            <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={onBulkDelete}
+                            >
+                                Hapus Terpilih
+                            </Button>
+                        )}
+                    </div>
+
+                    <div className="flex w-full justify-center sm:w-auto sm:grow-0 sm:justify-end">
+                        <ButtonGroup className="w-full sm:w-auto">
+                            <Button
+                                variant="outline"
+                                className="h-9 rounded-r-none px-3 disabled:pointer-events-none disabled:opacity-50"
+                                onClick={() => table.firstPage()}
+                                disabled={!table.getCanPreviousPage()}
+                                aria-label="Go to first page"
+                            >
+                                <ChevronFirstIcon
+                                    className="h-4 w-4"
+                                    aria-hidden="true"
+                                />
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="h-9 px-3 disabled:pointer-events-none disabled:opacity-50"
+                                onClick={() => table.previousPage()}
+                                disabled={!table.getCanPreviousPage()}
+                                aria-label="Go to previous page"
+                            >
+                                <ChevronLeftIcon
+                                    className="h-4 w-4"
+                                    aria-hidden="true"
+                                />
+                            </Button>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className="flex h-9 w-[160px] justify-center gap-2 tabular-nums"
+                                    >
+                                        <ChevronsUpDownIcon className="h-4 w-4 opacity-60" />
+                                        <span>
+                                            {table.getState().pagination
+                                                .pageIndex *
+                                                table.getState().pagination
+                                                    .pageSize +
+                                                1}
+                                            -
+                                            {Math.min(
+                                                (table.getState().pagination
+                                                    .pageIndex +
+                                                    1) *
+                                                    table.getState().pagination
+                                                        .pageSize,
+                                                table.getRowCount(),
+                                            )}
+                                            &nbsp;dari&nbsp;
+                                            {table.getRowCount()}
+                                        </span>
+                                        <ChevronsUpDownIcon className="h-4 w-4 opacity-60" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    align="center"
+                                    className="w-40"
+                                >
+                                    <DropdownMenuGroup>
+                                        {pageSizeOptions.map((size) => (
+                                            <DropdownMenuItem
+                                                key={size}
+                                                onClick={() =>
+                                                    table.setPageSize(size)
+                                                }
+                                                className="justify-between"
+                                            >
+                                                {size} baris
+                                                {table.getState().pagination
+                                                    .pageSize === size && (
+                                                    <CheckIcon className="h-4 w-4" />
+                                                )}
+                                            </DropdownMenuItem>
+                                        ))}
+                                    </DropdownMenuGroup>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                            <Button
+                                variant="outline"
+                                className="h-9 px-3 disabled:pointer-events-none disabled:opacity-50"
+                                onClick={() => table.nextPage()}
+                                disabled={!table.getCanNextPage()}
+                                aria-label="Go to next page"
+                            >
+                                <ChevronRightIcon
+                                    className="h-4 w-4"
+                                    aria-hidden="true"
+                                />
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="h-9 rounded-l-none px-3 disabled:pointer-events-none disabled:opacity-50"
+                                onClick={() => table.lastPage()}
+                                disabled={!table.getCanNextPage()}
+                                aria-label="Go to last page"
+                            >
+                                <ChevronLastIcon
+                                    className="h-4 w-4"
+                                    aria-hidden="true"
+                                />
+                            </Button>
+                        </ButtonGroup>
+                    </div>
                 </div>
-
-                <div>
-                    <Pagination>
-                        <PaginationContent>
-                            <PaginationItem>
-                                <Button
-                                    size="icon"
-                                    variant="outline"
-                                    className="disabled:pointer-events-none disabled:opacity-50"
-                                    onClick={() => table.firstPage()}
-                                    disabled={!table.getCanPreviousPage()}
-                                    aria-label="Go to first page"
-                                >
-                                    <ChevronFirstIcon aria-hidden="true" />
-                                </Button>
-                            </PaginationItem>
-
-                            <PaginationItem>
-                                <Button
-                                    size="icon"
-                                    variant="outline"
-                                    className="disabled:pointer-events-none disabled:opacity-50"
-                                    onClick={() => table.previousPage()}
-                                    disabled={!table.getCanPreviousPage()}
-                                    aria-label="Go to previous page"
-                                >
-                                    <ChevronLeftIcon aria-hidden="true" />
-                                </Button>
-                            </PaginationItem>
-
-                            <PaginationItem>
-                                <Button
-                                    size="icon"
-                                    variant="outline"
-                                    className="disabled:pointer-events-none disabled:opacity-50"
-                                    onClick={() => table.nextPage()}
-                                    disabled={!table.getCanNextPage()}
-                                    aria-label="Go to next page"
-                                >
-                                    <ChevronRightIcon aria-hidden="true" />
-                                </Button>
-                            </PaginationItem>
-
-                            <PaginationItem>
-                                <Button
-                                    size="icon"
-                                    variant="outline"
-                                    className="disabled:pointer-events-none disabled:opacity-50"
-                                    onClick={() => table.lastPage()}
-                                    disabled={!table.getCanNextPage()}
-                                    aria-label="Go to last page"
-                                >
-                                    <ChevronLastIcon aria-hidden="true" />
-                                </Button>
-                            </PaginationItem>
-                        </PaginationContent>
-                    </Pagination>
-                </div>
-            </div>
+            )}
         </div>
     );
 };

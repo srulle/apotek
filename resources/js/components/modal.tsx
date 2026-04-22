@@ -9,6 +9,7 @@ import {
     DialogTrigger,
     DialogOverlay,
 } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 type ModalSize =
     | 'xs'
@@ -93,7 +94,7 @@ export function Modal({
             <DialogTrigger asChild>{trigger}</DialogTrigger>
             <DialogOverlay className={backdropBlurClasses[blur]} />
             <DialogContent
-                className={`top-0 mx-auto mt-6 translate-y-0 ${sizeClasses[size]} ${className}`}
+                className={`top-0 mt-6 flex max-h-[min(700px,94vh)] translate-y-0 flex-col gap-0 p-0 ${sizeClasses[size]} ${className}`}
                 onInteractOutside={(e) => {
                     if (persistent) {
                         e.preventDefault();
@@ -105,16 +106,28 @@ export function Modal({
                     }
                 }}
             >
-                {(title || description) && (
-                    <DialogHeader>
-                        {title && <DialogTitle>{title}</DialogTitle>}
-                        {description && (
-                            <DialogDescription>{description}</DialogDescription>
-                        )}
-                    </DialogHeader>
-                )}
-                {children}
-                {footer && <DialogFooter>{footer}</DialogFooter>}
+                <ScrollArea className="flex max-h-full flex-col overflow-hidden">
+                    {(title || description) && (
+                        <DialogHeader className="contents space-y-0 text-left">
+                            {title && (
+                                <DialogTitle className="px-6 pt-6">
+                                    {title}
+                                </DialogTitle>
+                            )}
+                            {description && (
+                                <DialogDescription asChild>
+                                    <div className="p-6">{description}</div>
+                                </DialogDescription>
+                            )}
+                        </DialogHeader>
+                    )}
+                    <div className="px-4 md:px-6">{children}</div>
+                    {footer && (
+                        <DialogFooter className="px-4 md:px-6 pb-6 sm:justify-end">
+                            {footer}
+                        </DialogFooter>
+                    )}
+                </ScrollArea>
             </DialogContent>
         </Dialog>
     );

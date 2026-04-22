@@ -1,8 +1,24 @@
-import { useEffect, useState } from 'react';
 import { usePage } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { CalendarIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import DataTable from '@/components/datatable/datatable';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableFooter,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 
 type User = {
     id: number;
@@ -56,6 +72,7 @@ export default function PembelianHistory({
         if (!pembelian.length && !initialPembelian) {
             const fetchData = async () => {
                 setLoading(true);
+
                 try {
                     const response = await fetch(
                         '/api/transaksi/pembelian/history',
@@ -144,109 +161,126 @@ export default function PembelianHistory({
             );
         }
 
+        const totalPembelian = pembelianData.pembelian_detail.reduce(
+            (sum, detail) => sum + detail.jumlah_beli * detail.harga_beli,
+            0,
+        );
+
         return (
             <div className="p-4">
-                <h4 className="mb-3 font-medium">Detail Pembelian</h4>
-                <div className="overflow-x-auto">
-                    <table className="w-full border-collapse border border-gray-200 text-sm">
-                        <thead>
-                            <tr className="bg-gray-50">
-                                <th className="border border-gray-200 px-3 py-2 text-left">
-                                    Nama Obat
-                                </th>
-                                <th className="border border-gray-200 px-3 py-2 text-left">
-                                    No. Batch
-                                </th>
-                                <th className="border border-gray-200 px-3 py-2 text-left">
-                                    Tanggal Expired
-                                </th>
-                                <th className="border border-gray-200 px-3 py-2 text-right">
-                                    Jumlah Beli
-                                </th>
-                                <th className="border border-gray-200 px-3 py-2 text-right">
-                                    Harga Beli
-                                </th>
-                                <th className="border border-gray-200 px-3 py-2 text-right">
-                                    Total
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {pembelianData.pembelian_detail.map((detail) => (
-                                <tr
-                                    key={detail.id}
-                                    className="hover:bg-gray-50"
-                                >
-                                    <td className="border border-gray-200 px-3 py-2">
-                                        {detail.obat?.nama_obat || '-'}
-                                    </td>
-                                    <td className="border border-gray-200 px-3 py-2">
-                                        {detail.nomor_batch}
-                                    </td>
-                                    <td className="border border-gray-200 px-3 py-2">
-                                        <div className="flex items-center gap-2">
-                                            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                                            {new Date(
-                                                detail.tanggal_expired,
-                                            ).toLocaleDateString('id-ID', {
+                <Table>
+                    <TableHeader className="border-b">
+                        <TableRow>
+                            <TableHead className="w-12">No.</TableHead>
+                            <TableHead>Nama Obat</TableHead>
+                            <TableHead>No. Batch</TableHead>
+                            <TableHead>Tanggal Expired</TableHead>
+                            <TableHead className="text-center">
+                                Jumlah Beli
+                            </TableHead>
+                            <TableHead className="text-center">
+                                Harga Beli
+                            </TableHead>
+                            <TableHead className="text-right">Total</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {pembelianData.pembelian_detail.map((detail, index) => (
+                            <TableRow key={detail.id}>
+                                <TableCell className="text-center">
+                                    {index + 1}
+                                </TableCell>
+                                <TableCell>
+                                    {detail.obat?.nama_obat || '-'}
+                                </TableCell>
+                                <TableCell>{detail.nomor_batch}</TableCell>
+                                <TableCell>
+                                    <div className="flex items-center gap-2">
+                                        <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                                        {new Date(detail.tanggal_expired)
+                                            .toLocaleDateString('id-ID', {
                                                 day: '2-digit',
-                                                month: '2-digit',
+                                                month: 'long',
                                                 year: 'numeric',
-                                            })}
-                                        </div>
-                                    </td>
-                                    <td className="border border-gray-200 px-3 py-2 text-right">
-                                        {detail.jumlah_beli.toLocaleString(
-                                            'id-ID',
-                                        )}
-                                    </td>
-                                    <td className="border border-gray-200 px-3 py-2 text-right">
-                                        {new Intl.NumberFormat('id-ID', {
-                                            style: 'currency',
-                                            currency: 'IDR',
-                                            minimumFractionDigits: 0,
-                                            maximumFractionDigits: 0,
-                                        }).format(detail.harga_beli)}
-                                    </td>
-                                    <td className="border border-gray-200 px-3 py-2 text-right">
-                                        {new Intl.NumberFormat('id-ID', {
-                                            style: 'currency',
-                                            currency: 'IDR',
-                                            minimumFractionDigits: 0,
-                                            maximumFractionDigits: 0,
-                                        }).format(
-                                            detail.jumlah_beli *
-                                                detail.harga_beli,
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                                            })
+                                            .replace(
+                                                /(\w+) (\w+) (\d+)/,
+                                                '$1 $2, $3',
+                                            )}
+                                    </div>
+                                </TableCell>
+                                <TableCell className="text-center">
+                                    {detail.jumlah_beli.toLocaleString('id-ID')}
+                                </TableCell>
+                                <TableCell className="text-center">
+                                    {new Intl.NumberFormat('id-ID', {
+                                        style: 'currency',
+                                        currency: 'IDR',
+                                        minimumFractionDigits: 0,
+                                        maximumFractionDigits: 0,
+                                    }).format(detail.harga_beli)}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    {new Intl.NumberFormat('id-ID', {
+                                        style: 'currency',
+                                        currency: 'IDR',
+                                        minimumFractionDigits: 0,
+                                        maximumFractionDigits: 0,
+                                    }).format(
+                                        detail.jumlah_beli * detail.harga_beli,
+                                    )}
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                    <TableFooter>
+                        <TableRow>
+                            <TableCell colSpan={6} className="text-center">
+                                Total
+                            </TableCell>
+                            <TableCell className="text-right">
+                                {new Intl.NumberFormat('id-ID', {
+                                    style: 'currency',
+                                    currency: 'IDR',
+                                    minimumFractionDigits: 0,
+                                    maximumFractionDigits: 0,
+                                }).format(totalPembelian)}
+                            </TableCell>
+                        </TableRow>
+                    </TableFooter>
+                </Table>
             </div>
         );
     };
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center py-8">
-                <div className="text-muted-foreground">Memuat data...</div>
-            </div>
+            <Card>
+                <CardContent className="flex items-center justify-center py-8">
+                    <div className="text-muted-foreground">Memuat data...</div>
+                </CardContent>
+            </Card>
         );
     }
 
     return (
-        <div className="space-y-4">
-            <h3 className="text-lg font-medium">Riwayat Pembelian</h3>
-            <DataTable
-                data={pembelian}
-                columns={columns}
-                initialPagination={{ pageIndex: 0, pageSize: 10 }}
-                emptyMessage="Belum ada data pembelian"
-                enableRowExpansion
-                renderExpandedRow={renderExpandedRow}
-            />
-        </div>
+        <Card>
+            <CardHeader className="gap-0">
+                <CardTitle>Riwayat Pembelian</CardTitle>
+                <CardDescription>
+                    Riwayat transaksi pembelian yang telah dilakukan.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="-mt-4">
+                <DataTable
+                    data={pembelian}
+                    columns={columns}
+                    initialPagination={{ pageIndex: 0, pageSize: 10 }}
+                    emptyMessage="Belum ada data pembelian"
+                    enableRowExpansion
+                    renderExpandedRow={renderExpandedRow}
+                />
+            </CardContent>
+        </Card>
     );
 }

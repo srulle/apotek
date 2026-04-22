@@ -77,7 +77,10 @@ const Combobox = ({
             <PopoverTrigger asChild>
                 <Button
                     aria-expanded={open}
-                    className={cn('w-full justify-between gap-2', className)}
+                    className={cn(
+                        'w-full cursor-pointer justify-between gap-2',
+                        className,
+                    )}
                     role="combobox"
                     variant="outline"
                     onBlur={onBlur}

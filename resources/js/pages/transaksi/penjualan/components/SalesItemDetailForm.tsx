@@ -3,8 +3,8 @@
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 import type { ComboboxItem } from '@/components/combobox-data/types';
-import DatePicker from '@/components/input/datepicker';
 import { ComboboxLabelAndHelper } from '@/components/input/combobox';
+import DatePicker from '@/components/input/datepicker';
 import { InputLabelAndHelper } from '@/components/input/input-label-and-helper';
 import { Button } from '@/components/ui/button';
 
@@ -197,7 +197,7 @@ const SalesItemDetailForm = ({
                 </form.Field>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end gap-2 pb-6">
                 <Button
                     type="button"
                     size="sm"

@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useForm } from '@tanstack/react-form';
 import { Trash2 } from 'lucide-react';
-import DatePicker from '@/components/input/datepicker';
+import { useState } from 'react';
+import { z } from 'zod';
 import ComboboxData from '@/components/combobox-data';
+import DatePicker from '@/components/input/datepicker';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -21,8 +23,6 @@ import {
     TableRow,
     TableFooter,
 } from '@/components/ui/table';
-import { useForm } from '@tanstack/react-form';
-import { z } from 'zod';
 import SalesItemDetailForm from './components/SalesItemDetailForm';
 
 interface PenjualanFormProps {
@@ -270,6 +270,7 @@ export default function PenjualanForm({ obat, satuan }: PenjualanFormProps) {
                                                                     entry
                                                                         .uniqueId
                                                                 ];
+
                                                                 return newData;
                                                             },
                                                         );

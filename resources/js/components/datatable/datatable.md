@@ -9,6 +9,8 @@ Komponen DataTable yang powerful, fleksibel, dan terintegrasi penuh dengan TanSt
 ✅ **Advanced Column Filter** - Combobox multi select dengan badge count
 ✅ **Pagination** - Kontrol halaman dengan ukuran halaman dapat disesuaikan
 ✅ **Sorting** - Sorting otomatis dengan deteksi tipe data (teks/numerik)
+✅ **Row Expansion** - Tampilkan detail baris dengan expand/collapse
+✅ **SimpleDatatable** - Versi ringkas untuk kasus sederhana
 ✅ **Backward Compatible** - Semua fitur opsional, tidak merusak kode lama
 ✅ **UI Konsisten** - Menggunakan shadcn/ui system design
 ✅ **Type Safe** - Fully typed dengan TypeScript
@@ -61,6 +63,8 @@ const columns: ColumnDef<User>[] = [
 | `enableGlobalFilter` | `boolean`                     | `false`                         | Aktifkan fitur pencarian global    |
 | `searchPlaceholder`  | `string`                      | `'Cari...'`                     | Placeholder untuk input pencarian  |
 | `onSelectionChange`  | `(selectedRows: T[]) => void` | `undefined`                     | Callback ketika baris dipilih      |
+| `enableRowExpansion` | `boolean`                     | `false`                         | Aktifkan fitur expand baris        |
+| `renderExpandedRow`  | `(row: T) => React.ReactNode` | `undefined`                     | Render konten baris yang diexpand  |
 
 ---
 
@@ -179,6 +183,31 @@ Kustomisasi pagination:
 
 ---
 
+### 6. Row Expansion
+
+Fitur untuk menampilkan konten detail tambahan ketika baris di expand:
+
+```tsx
+<DataTable
+    data={users}
+    columns={columns}
+    enableRowExpansion
+    renderExpandedRow={(row) => (
+        <div className="p-4">
+            <p>Detail lengkap untuk user: {row.name}</p>
+            <p>Email: {row.email}</p>
+        </div>
+    )}
+/>
+```
+
+- Tombol expand otomatis di awal baris
+- Mendukung nesting konten apapun
+- Expand/Collapse dengan animasi smooth
+- Bisa digunakan bersamaan dengan row selection
+
+---
+
 ## 📋 ColumnDef Meta Options
 
 Opsi tambahan untuk setiap kolom:
@@ -268,14 +297,49 @@ export default function ProdukPage() {
                 columns={columns}
                 enableRowSelection
                 enableGlobalFilter
+                enableRowExpansion
                 initialPagination={{ pageIndex: 0, pageSize: 10 }}
                 searchPlaceholder="Cari nama produk, kategori..."
                 onSelectionChange={setSelectedProduk}
+                renderExpandedRow={(produk) => (
+                    <div className="p-3">
+                        Detail produk: {produk.nama_produk}
+                    </div>
+                )}
             />
         </div>
     );
 }
 ```
+
+---
+
+## ✨ SimpleDatatable Komponen
+
+Untuk kasus sederhana tanpa fitur lanjutan, tersedia `SimpleDatatable` yang ringan dan minimal:
+
+```tsx
+import { SimpleDatatable } from '@/components/datatable/datatable';
+
+<SimpleDatatable
+    data={users}
+    columns={columns}
+    pageSize={10}
+    showPagination={true}
+    emptyMessage="Data tidak ditemukan"
+/>;
+```
+
+### Props SimpleDatatable:
+
+| Prop             | Tipe                 | Default         | Keterangan                   |
+| ---------------- | -------------------- | --------------- | ---------------------------- |
+| `data`           | `TData[]`            | **Required**    | Array data                   |
+| `columns`        | `ColumnDef<TData>[]` | **Required**    | Definisi kolom               |
+| `pageSize`       | `number`             | `5`             | Jumlah baris per halaman     |
+| `showPagination` | `boolean`            | `true`          | Tampilkan kontrol pagination |
+| `emptyMessage`   | `string`             | `'No results.'` | Pesan ketika data kosong     |
+| `className`      | `string`             | `''`            | Custom class container       |
 
 ---
 

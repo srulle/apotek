@@ -2,6 +2,15 @@ import { Head, usePage } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { CalendarIcon } from 'lucide-react';
 import DataTable from '@/components/datatable/datatable';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableFooter,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { stok } from '@/routes';
 
 type Kategori = {
@@ -113,51 +122,58 @@ export default function Stok() {
             );
         }
 
+        const totalStok = obat.stok.reduce((sum, batch) => sum + batch.stok, 0);
+
         return (
-            <div className="p-4">
-                <h4 className="mb-3 font-medium">Detail Batch Stok</h4>
-                <div className="overflow-x-auto">
-                    <table className="w-full border-collapse border border-gray-200 text-sm">
-                        <thead>
-                            <tr className="bg-gray-50">
-                                <th className="border border-gray-200 px-3 py-2 text-left">
-                                    No. Batch
-                                </th>
-                                <th className="border border-gray-200 px-3 py-2 text-left">
-                                    Tanggal Expired
-                                </th>
-                                <th className="border border-gray-200 px-3 py-2 text-right">
-                                    Stok
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {obat.stok.map((batch) => (
-                                <tr key={batch.id} className="hover:bg-gray-50">
-                                    <td className="border border-gray-200 px-3 py-2">
-                                        {batch.nomor_batch}
-                                    </td>
-                                    <td className="border border-gray-200 px-3 py-2">
-                                        <div className="flex items-center gap-2">
-                                            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                                            {new Date(
-                                                batch.tanggal_expired,
-                                            ).toLocaleDateString('id-ID', {
-                                                day: '2-digit',
-                                                month: '2-digit',
-                                                year: 'numeric',
-                                            })}
-                                        </div>
-                                    </td>
-                                    <td className="border border-gray-200 px-3 py-2 text-right">
-                                        {batch.stok.toLocaleString('id-ID')}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <Table>
+                <TableHeader className="border-b">
+                    <TableRow>
+                        <TableHead className="w-12">No.</TableHead>
+                        <TableHead>No. Batch</TableHead>
+                        <TableHead>Tanggal Expired</TableHead>
+                        <TableHead className="text-center">Stok</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {obat.stok.map((batch, index) => (
+                        <TableRow key={batch.id}>
+                            <TableCell className="text-center">
+                                {index + 1}
+                            </TableCell>
+                            <TableCell>{batch.nomor_batch}</TableCell>
+                            <TableCell>
+                                <div className="flex items-center gap-2">
+                                    <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                                    {new Date(batch.tanggal_expired)
+                                        .toLocaleDateString('id-ID', {
+                                            day: '2-digit',
+                                            month: 'long',
+                                            year: 'numeric',
+                                        })
+                                        .replace(
+                                            /(\w+) (\w+) (\d+)/,
+                                            '$1 $2, $3',
+                                        )}
+                                </div>
+                            </TableCell>
+                            <TableCell className="text-center">
+                                {batch.stok.toLocaleString('id-ID')}
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+                <TableFooter
+                    className="bg-transparent">
+                    <TableRow>
+                        <TableCell colSpan={3} className="text-center">
+                            Total
+                        </TableCell>
+                        <TableCell className="text-center">
+                            {totalStok.toLocaleString('id-ID')}
+                        </TableCell>
+                    </TableRow>
+                </TableFooter>
+            </Table>
         );
     };
 

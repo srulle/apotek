@@ -66,6 +66,7 @@ const ComboboxData = forwardRef<HTMLButtonElement, ComboboxDataProps>(
                 if (Array.isArray(value)) {
                     return value.map((v: any) => v.id ?? v);
                 }
+
                 return [];
             }
 

@@ -172,6 +172,7 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
 
     // State untuk delete
     const [deleteLoading, setDeleteLoading] = useState<number | null>(null);
+    const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
 
     const createItem = async (
         url: string,
@@ -209,6 +210,49 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
     const handleEdit = (obat: Obat) => {
         setEditObat(obat);
         setIsModalOpen(true);
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedObat.length === 0) {
+return;
+}
+
+        setBulkDeleteLoading(true);
+
+        const deletePromises = selectedObat.map(
+            (obat) =>
+                new Promise<void>((resolve, reject) => {
+                    router.delete(`/master-data/obat/${obat.id}`, {
+                        preserveState: true,
+                        preserveScroll: true,
+                        onSuccess: () => resolve(),
+                        onError: (errors) => {
+                            reject(
+                                new Error(
+                                    errors.error ||
+                                        `Gagal menghapus obat ${obat.nama_obat}`,
+                                ),
+                            );
+                        },
+                    });
+                }),
+        );
+
+        const promise = Promise.all(deletePromises).then(() => {
+            setSelectedObat([]);
+        });
+
+        toast.promise(promise, {
+            loading: `Menghapus ${selectedObat.length} obat...`,
+            success: `${selectedObat.length} obat berhasil dihapus`,
+            error: (err) => err.message,
+        });
+
+        try {
+            await promise;
+        } finally {
+            setBulkDeleteLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -323,7 +367,8 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                                 {isRefreshing ? 'Memuat...' : 'Tambah Obat'}
                             </Button>
                         }
-                        size="6xl"
+                        size="5xl"
+                        blur="xs"
                         title={editObat ? 'Ubah Data Obat' : 'Tambah Data Obat'}
                         persistent={true}
                         description={
@@ -363,7 +408,7 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                             </>
                         }
                     >
-                        <div className="grid gap-4 py-4 md:grid-cols-3">
+                        <div className="grid gap-2 py-4 md:grid-cols-3">
                             <form.Field
                                 name="nama_obat"
                                 validators={{
@@ -579,21 +624,7 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                         </div>
                     </Modal>
 
-                    <div className="mt-6">
-                        {selectedObat.length > 0 && (
-                            <div className="mb-4 flex items-center gap-2 rounded-md bg-muted p-2">
-                                <span className="text-sm text-muted-foreground">
-                                    {selectedObat.length} data terpilih
-                                </span>
-                                <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    className="ml-auto"
-                                >
-                                    Hapus Terpilih
-                                </Button>
-                            </div>
-                        )}
+                    <div className="mt-4">
                         <DataTable
                             data={obat || []}
                             columns={columns}
@@ -603,6 +634,8 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                             enableGlobalFilter
                             searchPlaceholder="Cari nama obat, kategori, satuan..."
                             onSelectionChange={setSelectedObat}
+                            enableBulkDelete
+                            onBulkDelete={handleBulkDelete}
                         />
                     </div>
                 </div>
