@@ -61,8 +61,8 @@ const PurchaseItemDetailForm = ({
             className="grid gap-3"
         >
             <div className="space-y-1">
-                <h4 className="leading-none font-medium">{item.label}</h4>
-                <p className="text-sm text-muted-foreground">
+                {/* <h4 className="leading-none font-medium">{item.label}</h4> */}
+                <p className="text-xs italic text-muted-foreground">
                     Masukkan detail pembelian
                 </p>
             </div>
@@ -190,7 +190,7 @@ const PurchaseItemDetailForm = ({
                 </form.Field>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end gap-2 pt-2 pb-6">
                 <Button
                     type="button"
                     size="sm"

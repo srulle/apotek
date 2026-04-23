@@ -23,7 +23,7 @@ export const usePembelianForm = () => {
 
     const form = useForm({
         validators: {
-            onChange: pembelianFormSchema,
+            onSubmit: pembelianFormSchema,
         },
         defaultValues: {
             tanggalTransaksi: new Date(),

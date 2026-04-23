@@ -74,6 +74,7 @@ export default function PembelianForm({
                             <DatePicker
                                 className="md:min-h-[90px]"
                                 field={field}
+                                value={new Date()}
                                 label="Tanggal Transaksi"
                                 placeholder="Pilih tanggal transaksi"
                             />

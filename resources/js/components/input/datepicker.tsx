@@ -59,7 +59,7 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
             formatString = 'd MMMM, yyyy',
             minDate,
             maxDate,
-            fromYear = new Date().getFullYear() - 100,
+            fromYear = new Date().getFullYear() - 10,
             toYear = new Date().getFullYear() + 10,
             field,
             label,
@@ -83,7 +83,8 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
                       .join(', ')
                 : '';
 
-        const [month, setMonth] = useState<Date>(value || new Date());
+        const [month, setMonth] = useState<Date | undefined>(value);
+        const [open, setOpen] = useState(false);
 
         const handleCalendarChange = (
             value: string | number,
@@ -105,6 +106,8 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
             if (selectedDate) {
                 setMonth(selectedDate);
             }
+
+            setOpen(false);
         };
 
         return (
@@ -119,7 +122,7 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
                         {label}
                     </Label>
                 )}
-                <Popover>
+                <Popover open={open} onOpenChange={setOpen}>
                     <PopoverTrigger asChild>
                         <Button
                             ref={ref}

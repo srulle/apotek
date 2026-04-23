@@ -29,9 +29,12 @@ import {
     SearchIcon,
     CheckIcon,
     ChevronsUpDownIcon,
+    Trash2,
+    X,
 } from 'lucide-react';
 import { useEffect, useId, useState, useMemo } from 'react';
 
+import { DeleteConfirm } from '@/components/delete-confirm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
@@ -136,9 +139,20 @@ const DataTable = <T,>({
         return path.split('.').reduce((prev, curr) => prev?.[curr], obj);
     };
 
+    // Filter columns based on selection state - MEMOIZED
+    const columnsFiltered = useMemo(() => {
+        return columns.filter((col) => {
+            if (col.id === 'actions' && Object.keys(rowSelection).length > 0) {
+                return false;
+            }
+
+            return true;
+        });
+    }, [columns, rowSelection]);
+
     // Add filterFn to filterable columns - MEMOIZED
     const processedColumns = useMemo(() => {
-        return columns.map((col) => {
+        return columnsFiltered.map((col) => {
             if ((col.meta as any)?.filterable) {
                 return {
                     ...col,
@@ -148,7 +162,7 @@ const DataTable = <T,>({
 
             return col;
         });
-    }, [columns]);
+    }, [columnsFiltered]);
 
     // Get filterable columns from column meta - MEMOIZED
     const filterableColumns = useMemo(() => {
@@ -414,18 +428,31 @@ const DataTable = <T,>({
                 {enableRowSelection &&
                     table.getSelectedRowModel().rows.length > 0 && (
                         <div className="order-1 flex items-center gap-2 lg:order-3">
-                            <Badge variant="secondary" className="px-2 py-1">
-                                {table.getSelectedRowModel().rows.length}{' '}
-                                terpilih
-                            </Badge>
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                className="cursor-pointer px-3 py-1"
+                                onClick={() =>
+                                    table.toggleAllPageRowsSelected(false)
+                                }
+                            >
+                                <X className="mr-1 h-4 w-4" />
+                                {table.getSelectedRowModel().rows.length} data
+                                dipilih
+                            </Button>
                             {enableBulkDelete && onBulkDelete && (
-                                <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={onBulkDelete}
+                                <DeleteConfirm
+                                    title="Konfirmasi Hapus Terpilih"
+                                    description={`Apakah Anda yakin ingin menghapus ${table.getSelectedRowModel().rows.length} item terpilih? Tindakan ini tidak dapat dibatalkan.`}
+                                    onConfirm={onBulkDelete}
                                 >
-                                    Hapus Terpilih
-                                </Button>
+                                    <Button
+                                        variant="outline"
+                                        className="border-destructive! text-destructive! hover:bg-destructive/10! focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40"
+                                    >
+                                        <Trash2 className="h-6 w-6" />
+                                    </Button>
+                                </DeleteConfirm>
                             )}
                         </div>
                     )}
@@ -692,28 +719,6 @@ const DataTable = <T,>({
 
             {table.getPageCount() > 1 && (
                 <div className="flex flex-col items-center justify-end gap-4 sm:flex-row">
-                    <div className="flex items-center gap-3">
-                        {enableRowSelection &&
-                            table.getSelectedRowModel().rows.length > 0 && (
-                                <Badge
-                                    variant="secondary"
-                                    className="px-2 py-1"
-                                >
-                                    {table.getSelectedRowModel().rows.length}{' '}
-                                    terpilih
-                                </Badge>
-                            )}
-                        {enableBulkDelete && onBulkDelete && (
-                            <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={onBulkDelete}
-                            >
-                                Hapus Terpilih
-                            </Button>
-                        )}
-                    </div>
-
                     <div className="flex w-full justify-center sm:w-auto sm:grow-0 sm:justify-end">
                         <ButtonGroup className="w-full sm:w-auto">
                             <Button
