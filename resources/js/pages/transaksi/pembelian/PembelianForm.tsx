@@ -68,7 +68,7 @@ export default function PembelianForm({
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-1 items-start gap-2 md:gap-4 md:grid-cols-4">
+                <div className="grid grid-cols-1 items-start gap-2 md:grid-cols-4 md:gap-4">
                     <form.Field name="tanggalTransaksi">
                         {(field) => (
                             <DatePicker
@@ -324,6 +324,7 @@ export default function PembelianForm({
                                     ...item,
                                     subtitle:
                                         item.satuan_besar || item.subtitle,
+                                    stok: item.stok,
                                 })),
                             }))}
                             value={selectedObat}

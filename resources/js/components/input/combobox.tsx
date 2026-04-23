@@ -32,6 +32,7 @@ interface ComboboxProps {
     className?: string;
     creatable?: boolean;
     onCreate?: (value: string) => Promise<void> | void;
+    searchable?: boolean;
 }
 
 const Combobox = ({
@@ -43,6 +44,7 @@ const Combobox = ({
     className,
     creatable = false,
     onCreate,
+    searchable = true,
 }: ComboboxProps) => {
     const [open, setOpen] = useState(false);
     const [items, setItems] = useState(
@@ -101,13 +103,15 @@ const Combobox = ({
                 onTouchEnd={(e) => e.stopPropagation()}
             >
                 <Command>
-                    <CommandInput
-                        onValueChange={setSearch}
-                        placeholder={
-                            creatable ? 'Search or create...' : 'Search...'
-                        }
-                        value={search}
-                    />
+                    {searchable && (
+                        <CommandInput
+                            onValueChange={setSearch}
+                            placeholder={
+                                creatable ? 'Search or create...' : 'Search...'
+                            }
+                            value={search}
+                        />
+                    )}
                     <CommandList>
                         <CommandEmpty>
                             {creatable && search ? (
@@ -189,6 +193,7 @@ export interface TanStackComboboxProps {
     className?: string;
     creatable?: boolean;
     onCreate?: (value: string) => Promise<void> | void;
+    searchable?: boolean;
 }
 
 interface ComboboxLabelAndHelperProps extends TanStackComboboxProps {
@@ -206,6 +211,7 @@ const ComboboxLabelAndHelper = (props: ComboboxLabelAndHelperProps) => {
         className,
         creatable,
         onCreate,
+        searchable,
         value,
         onValueChange,
         helperText,
@@ -285,6 +291,7 @@ const ComboboxLabelAndHelper = (props: ComboboxLabelAndHelperProps) => {
                 }
                 creatable={creatable}
                 onCreate={onCreate}
+                searchable={searchable}
             />
             {errorMessage && (
                 <p className="-mt-2 text-xs text-destructive italic">

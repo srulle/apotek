@@ -102,7 +102,7 @@ export default function PenjualanForm({ obat, satuan }: PenjualanFormProps) {
                             ...group,
                             items: group.items.map((item) => ({
                                 ...item,
-                                subtitle: `${item.satuan_besar || item.subtitle} | Stok: ${item.stok_total || 0}`,
+                                subtitle: item.subtitle, // Subtitle sudah include satuan penjualan dan stok dari backend
                             })),
                         }))}
                         value={selectedObat}

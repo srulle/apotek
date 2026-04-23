@@ -25,7 +25,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return inertia('transaksi/pembelian', [
             'suppliers' => fn () => Supplier::orderBy('nama_supplier', 'asc')->get(['id', 'nama_supplier']),
             'satuan' => fn () => Satuan::orderBy('nama_satuan', 'asc')->pluck('nama_satuan'),
-            'obat' => fn () => Obat::with(['satuanBesar', 'satuanKecil', 'kategori'])
+            'obat' => fn () => Obat::with(['satuanBesar', 'satuanKecil', 'kategori', 'stok'])
                 ->where('is_active', true)
                 ->orderBy('nama_obat', 'asc')
                 ->get(['id', 'nama_obat', 'kategori_id', 'satuan_besar_id', 'satuan_kecil_id', 'jumlah_satuan_kecil_dalam_satuan_besar'])
@@ -39,6 +39,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
                         'satuan_besar' => $obat->satuanBesar?->nama_satuan,
                         'satuan_kecil' => $obat->satuanKecil?->nama_satuan,
                         'jumlah_satuan_kecil_dalam_satuan_besar' => $obat->jumlah_satuan_kecil_dalam_satuan_besar,
+                        'stok' => $obat->stok->map(fn ($stok) => [
+                            'id' => $stok->id,
+                            'nomor_batch' => $stok->nomor_batch,
+                            'tanggal_expired' => $stok->tanggal_expired,
+                            'stok' => $stok->stok,
+                        ])->toArray(),
                     ])->toArray(),
                 ])
                 ->values()

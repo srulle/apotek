@@ -10,12 +10,6 @@ import { Button } from '@/components/ui/button';
 
 interface SalesItemDetailFormProps {
     item: ComboboxItem & {
-        stok?: Array<{
-            id: number;
-            nomor_batch: string;
-            tanggal_expired: string;
-            stok: number;
-        }>;
         satuan_besar?: string;
         satuan_kecil?: string;
         isi_per_satuan?: number;
@@ -70,7 +64,7 @@ const SalesItemDetailForm = ({
         >
             <div className="space-y-1">
                 {/* <h4 className="leading-none font-medium">{item.label}</h4> */}
-                <p className="text-xs italic text-muted-foreground">
+                <p className="text-xs text-muted-foreground italic">
                     Masukkan detail penjualan
                 </p>
             </div>

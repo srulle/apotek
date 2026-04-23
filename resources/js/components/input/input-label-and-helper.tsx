@@ -1,16 +1,36 @@
-import { MinusIcon, PlusIcon } from 'lucide-react';
-import type { InputHTMLAttributes } from 'react';
-import { useId, forwardRef, useState, useEffect, useCallback } from 'react';
+import { Command as CommandPrimitive } from 'cmdk';
+import { MinusIcon, PlusIcon, Check } from 'lucide-react';
+import type { InputHTMLAttributes, KeyboardEvent } from 'react';
+import {
+    useId,
+    forwardRef,
+    useState,
+    useEffect,
+    useCallback,
+    useRef,
+    useMemo,
+} from 'react';
 import { NumericFormat } from 'react-number-format';
+import {
+    CommandGroup,
+    CommandItem,
+    CommandList,
+} from '@/components/ui/command';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+
+export type Option = Record<'value' | 'label', string> & Record<string, string>;
 
 export interface InputLabelAndHelperProps extends InputHTMLAttributes<HTMLInputElement> {
     label?: string;
     helperText?: string;
     error?: boolean;
-    type?: 'text' | 'number' | 'currency';
+    type?: 'text' | 'number' | 'currency' | 'autocomplete';
+    autocompleteOptions?: Option[];
+    autocompleteEmptyMessage?: string;
+    onAutocompleteSelect?: (value: Option | undefined) => void;
+    autocompleteValue?: Option;
 }
 
 // Props khusus untuk TanStack Form
@@ -18,9 +38,12 @@ export interface TanStackInputProps {
     field: any;
     label: string;
     placeholder?: string;
-    type?: 'text' | 'number' | 'currency';
+    type?: 'text' | 'number' | 'currency' | 'autocomplete';
     className?: string;
     helperText?: string;
+    autocompleteOptions?: Option[];
+    autocompleteEmptyMessage?: string;
+    onAutocompleteSelect?: (value: Option | undefined) => void;
 }
 
 // Overload untuk backward compatibility
@@ -45,22 +68,154 @@ const InputLabelAndHelper = forwardRef<
             type = 'text',
             className,
             helperText,
+            autocompleteOptions = [],
+            autocompleteEmptyMessage,
+            onAutocompleteSelect,
         } = props;
         const id = field.name || generatedId;
         const hasError = field.state.meta.errors.length > 0;
         const errorMessage = field.state.meta.errors
             .map((e: any) => e.message || e)
             .join(', ');
+        const inputRef = useRef<HTMLInputElement>(null);
 
         const [internalValue, setInternalValue] = useState(
             field.state.value || '',
         );
 
+        // AutoComplete states
+        const [isOpen, setOpen] = useState(false);
+        const [selected, setSelected] = useState<Option | undefined>(
+            autocompleteOptions.find((opt) => opt.value === field.state.value),
+        );
+        const [inputValue, setInputValue] = useState<string>(
+            autocompleteOptions.find((opt) => opt.value === field.state.value)
+                ?.label ||
+                field.state.value ||
+                '',
+        );
+
+        // AutoComplete handlers
+        const handleKeyDown = useCallback(
+            (event: KeyboardEvent<HTMLDivElement>) => {
+                const input = inputRef.current;
+
+                if (!input) {
+                    return;
+                }
+
+                if (!isOpen) {
+                    setOpen(true);
+                }
+
+                if (
+                    [
+                        'ArrowDown',
+                        'ArrowUp',
+                        'ArrowLeft',
+                        'ArrowRight',
+                    ].includes(event.key)
+                ) {
+                    event.preventDefault();
+                }
+
+                if (event.key === 'Enter' && input.value !== '') {
+                    const optionToSelect = autocompleteOptions.find(
+                        (option) => option.label === input.value,
+                    );
+
+                    if (optionToSelect) {
+                        setSelected(optionToSelect);
+                        onAutocompleteSelect?.(optionToSelect);
+                        field.handleChange(optionToSelect.value);
+                    } else {
+                        // Custom value yang user ketik sendiri
+                        const customOption: Option = {
+                            value: input.value,
+                            label: input.value,
+                        };
+                        setSelected(customOption);
+                        onAutocompleteSelect?.(customOption);
+                        field.handleChange(input.value);
+                    }
+                }
+
+                if (event.key === 'Escape') {
+                    input.blur();
+                }
+            },
+            [isOpen, onAutocompleteSelect, autocompleteOptions, field],
+        );
+
+        const handleBlur = useCallback(() => {
+            setOpen(false);
+
+            // Jika nilai input berbeda dengan nilai yang tersimpan, update selalu
+            if (inputValue && selected?.label !== inputValue) {
+                const customOption: Option = {
+                    value: inputValue,
+                    label: inputValue,
+                };
+                setSelected(customOption);
+                onAutocompleteSelect?.(customOption);
+                field.handleChange(inputValue);
+            }
+        }, [selected, inputValue, onAutocompleteSelect, field]);
+
+        const handleSelectOption = useCallback(
+            (selectedOption: Option) => {
+                if (selectedOption.value === selected?.value) {
+                    setInputValue('');
+                    setSelected(undefined);
+                    onAutocompleteSelect?.(undefined);
+                    field.handleChange('');
+                } else {
+                    setInputValue(selectedOption.label);
+                    setSelected(selectedOption);
+                    onAutocompleteSelect?.(selectedOption);
+                    field.handleChange(selectedOption.value);
+                }
+
+                setTimeout(() => {
+                    inputRef.current?.blur();
+                }, 0);
+            },
+            [onAutocompleteSelect, selected, field],
+        );
+
+        // Filter options based on input value
+        const filteredOptions = useMemo(
+            () =>
+                autocompleteOptions.filter((option) =>
+                    option.label
+                        .toLowerCase()
+                        .includes(inputValue.toLowerCase()),
+                ),
+            [autocompleteOptions, inputValue],
+        );
+
+        const showList =
+            isOpen && (filteredOptions.length > 0 || autocompleteEmptyMessage);
+
         useEffect(() => {
             if (type !== 'currency') {
                 setInternalValue(field.state.value || '');
             }
-        }, [field.state.value, type]);
+
+            // Sync value saat field berubah dari luar
+            if (type === 'autocomplete') {
+                const foundOption = autocompleteOptions.find(
+                    (opt) => opt.value === field.state.value,
+                );
+
+                if (foundOption) {
+                    setSelected(foundOption);
+                    setInputValue(foundOption.label);
+                } else {
+                    setInputValue(field.state.value || '');
+                }
+            }
+        }, [field.state.value, type, autocompleteOptions]);
 
         const handleInputChange = useCallback(
             (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,7 +260,87 @@ const InputLabelAndHelper = forwardRef<
                 >
                     {label}
                 </Label>
-                {type === 'number' ? (
+                {type === 'autocomplete' ? (
+                    <CommandPrimitive onKeyDown={handleKeyDown}>
+                        <div>
+                            <Input
+                                id={id}
+                                ref={inputRef}
+                                value={inputValue}
+                                onChange={(e) => {
+                                    setInputValue(e.target.value);
+                                    const customOption: Option = {
+                                        value: e.target.value,
+                                        label: e.target.value,
+                                    };
+                                    setSelected(customOption);
+                                    onAutocompleteSelect?.(customOption);
+                                    field.handleChange(e.target.value);
+                                }}
+                                onBlur={handleBlur}
+                                onFocus={() => setOpen(true)}
+                                placeholder={placeholder}
+                                className={cn(
+                                    hasError
+                                        ? 'border-destructive focus-visible:ring-destructive'
+                                        : '',
+                                )}
+                            />
+                        </div>
+                        <div className="relative mt-1">
+                            <div
+                                className={cn(
+                                    'absolute top-0 z-10 w-full rounded-xl bg-popover outline-none',
+                                    showList ? 'block' : 'hidden',
+                                )}
+                            >
+                                <CommandList className="rounded-lg border">
+                                    {filteredOptions.length > 0 ? (
+                                        <CommandGroup>
+                                            {filteredOptions.map((option) => {
+                                                const isSelected =
+                                                    selected?.value ===
+                                                    option.value;
+
+                                                return (
+                                                    <CommandItem
+                                                        key={option.value}
+                                                        value={option.label}
+                                                        onMouseDown={(
+                                                            event,
+                                                        ) => {
+                                                            event.preventDefault();
+                                                            event.stopPropagation();
+                                                        }}
+                                                        onSelect={() =>
+                                                            handleSelectOption(
+                                                                option,
+                                                            )
+                                                        }
+                                                        className={cn(
+                                                            'flex w-full items-center gap-2',
+                                                            !isSelected
+                                                                ? 'pl-8'
+                                                                : '',
+                                                        )}
+                                                    >
+                                                        {isSelected ? (
+                                                            <Check className="w-4" />
+                                                        ) : null}
+                                                        {option.label}
+                                                    </CommandItem>
+                                                );
+                                            })}
+                                        </CommandGroup>
+                                    ) : null}
+                                    <CommandPrimitive.Empty className="rounded-sm px-2 py-3 text-center text-xs text-muted-foreground select-none">
+                                        {autocompleteEmptyMessage}
+                                    </CommandPrimitive.Empty>
+                                </CommandList>
+                            </div>
+                        </div>
+                    </CommandPrimitive>
+                ) : type === 'number' ? (
                     <div
                         className={`relative inline-flex h-9 w-full min-w-0 items-center overflow-hidden rounded-md border border-input bg-transparent text-base whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 data-disabled:pointer-events-none data-disabled:cursor-not-allowed data-disabled:opacity-50 md:text-sm dark:bg-input/30 ${hasError ? 'border-destructive focus-within:border-destructive focus-within:ring-destructive/20 dark:focus-within:ring-destructive/40' : ''}`}
                     >
@@ -201,11 +436,105 @@ const InputLabelAndHelper = forwardRef<
         type = 'text',
         value: propValue,
         onChange: propOnChange,
+        autocompleteOptions = [],
+        autocompleteEmptyMessage,
+        onAutocompleteSelect,
+        autocompleteValue,
         ...inputProps
     } = props as InputLabelAndHelperProps;
     const id = providedId || generatedId;
+    const inputRef = useRef<HTMLInputElement>(null);
 
     const [internalValue, setInternalValue] = useState(propValue || '');
+
+    // AutoComplete states
+    const [isOpen, setOpen] = useState(false);
+    const [selected, setSelected] = useState<Option | undefined>(
+        autocompleteValue,
+    );
+    const [inputValue, setInputValue] = useState<string>(
+        autocompleteValue?.label || '',
+    );
+
+    // AutoComplete handlers
+    const handleKeyDown = useCallback(
+        (event: KeyboardEvent<HTMLDivElement>) => {
+            const input = inputRef.current;
+
+            if (!input) {
+                return;
+            }
+
+            if (!isOpen) {
+                setOpen(true);
+            }
+
+            if (
+                ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'].includes(
+                    event.key,
+                )
+            ) {
+                event.preventDefault();
+            }
+
+            if (event.key === 'Enter' && input.value !== '') {
+                const optionToSelect = autocompleteOptions.find(
+                    (option) => option.label === input.value,
+                );
+
+                if (optionToSelect) {
+                    setSelected(optionToSelect);
+                    onAutocompleteSelect?.(optionToSelect);
+                }
+            }
+
+            if (event.key === 'Escape') {
+                input.blur();
+            }
+        },
+        [isOpen, onAutocompleteSelect, autocompleteOptions],
+    );
+
+    const handleBlur = useCallback(() => {
+        setOpen(false);
+
+        // Jika nilai input berbeda dengan nilai yang tersimpan, update selalu
+        if (inputValue && selected?.label !== inputValue) {
+            const customOption: Option = {
+                value: inputValue,
+                label: inputValue,
+            };
+            setSelected(customOption);
+            onAutocompleteSelect?.(customOption);
+        }
+    }, [selected, inputValue, onAutocompleteSelect]);
+
+    const handleSelectOption = useCallback(
+        (selectedOption: Option) => {
+            if (selectedOption.value === selected?.value) {
+                setInputValue('');
+                setSelected(undefined);
+                onAutocompleteSelect?.(undefined);
+            } else {
+                setInputValue(selectedOption.label);
+                setSelected(selectedOption);
+                onAutocompleteSelect?.(selectedOption);
+            }
+
+            setTimeout(() => {
+                inputRef.current?.blur();
+            }, 0);
+        },
+        [onAutocompleteSelect, selected],
+    );
+
+    // Filter options based on input value
+    const filteredOptions = autocompleteOptions.filter((option) =>
+        option.label.toLowerCase().includes(inputValue.toLowerCase()),
+    );
+
+    const showList =
+        isOpen && (filteredOptions.length > 0 || autocompleteEmptyMessage);
 
     useEffect(() => {
         if (type !== 'currency') {
@@ -277,7 +606,85 @@ const InputLabelAndHelper = forwardRef<
                     {label}
                 </Label>
             )}
-            {type === 'number' ? (
+            {type === 'autocomplete' ? (
+                <CommandPrimitive onKeyDown={handleKeyDown}>
+                    <div>
+                        <Input
+                            id={id}
+                            ref={inputRef}
+                            value={inputValue}
+                            onChange={(e) => {
+                                setInputValue(e.target.value);
+                                const customOption: Option = {
+                                    value: e.target.value,
+                                    label: e.target.value,
+                                };
+                                setSelected(customOption);
+                                onAutocompleteSelect?.(customOption);
+                            }}
+                            onBlur={handleBlur}
+                            onFocus={() => setOpen(true)}
+                            placeholder={inputProps.placeholder}
+                            className={cn(
+                                error
+                                    ? 'border-destructive focus-visible:ring-destructive'
+                                    : '',
+                            )}
+                            {...inputProps}
+                        />
+                    </div>
+                    <div className="relative mt-1">
+                        <div
+                            className={cn(
+                                'absolute top-0 z-10 w-full rounded-xl bg-popover outline-none',
+                                showList ? 'block' : 'hidden',
+                            )}
+                        >
+                            <CommandList className="rounded-lg border">
+                                {filteredOptions.length > 0 ? (
+                                    <CommandGroup>
+                                        {filteredOptions.map((option) => {
+                                            const isSelected =
+                                                selected?.value ===
+                                                option.value;
+
+                                            return (
+                                                <CommandItem
+                                                    key={option.value}
+                                                    value={option.label}
+                                                    onMouseDown={(event) => {
+                                                        event.preventDefault();
+                                                        event.stopPropagation();
+                                                    }}
+                                                    onSelect={() =>
+                                                        handleSelectOption(
+                                                            option,
+                                                        )
+                                                    }
+                                                    className={cn(
+                                                        'flex w-full items-center gap-2',
+                                                        !isSelected
+                                                            ? 'pl-8'
+                                                            : '',
+                                                    )}
+                                                >
+                                                    {isSelected ? (
+                                                        <Check className="w-4" />
+                                                    ) : null}
+                                                    {option.label}
+                                                </CommandItem>
+                                            );
+                                        })}
+                                    </CommandGroup>
+                                ) : null}
+                                <CommandPrimitive.Empty className="rounded-sm px-2 py-3 text-center text-xs text-muted-foreground select-none">
+                                    {autocompleteEmptyMessage}
+                                </CommandPrimitive.Empty>
+                            </CommandList>
+                        </div>
+                    </div>
+                </CommandPrimitive>
+            ) : type === 'number' ? (
                 <div
                     className={`relative inline-flex h-9 w-full min-w-0 items-center overflow-hidden rounded-md border border-input bg-transparent text-base whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 data-disabled:pointer-events-none data-disabled:cursor-not-allowed data-disabled:opacity-50 md:text-sm dark:bg-input/30 ${error ? 'border-destructive focus-within:border-destructive focus-within:ring-destructive/20 dark:focus-within:ring-destructive/40' : ''}`}
                 >
