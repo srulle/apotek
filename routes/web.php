@@ -7,11 +7,6 @@ use App\Http\Controllers\PenjualanController;
 use App\Http\Controllers\SatuanController;
 use App\Http\Controllers\StokController;
 use App\Http\Controllers\SupplierController;
-use App\Models\Obat;
-use App\Models\Pembelian;
-use App\Models\Satuan;
-use App\Models\Supplier;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login')->name('home');
@@ -21,50 +16,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('transaksi', 'transaksi')->name('transaksi');
     Route::get('transaksi/penjualan', [PenjualanController::class, 'index'])->name('transaksi.penjualan');
     Route::post('transaksi/penjualan', [PenjualanController::class, 'store'])->name('transaksi.penjualan.store');
-    Route::get('transaksi/pembelian', function (Request $request) {
-        return inertia('transaksi/pembelian', [
-            'suppliers' => fn () => Supplier::orderBy('nama_supplier', 'asc')->get(['id', 'nama_supplier']),
-            'satuan' => fn () => Satuan::orderBy('nama_satuan', 'asc')->pluck('nama_satuan'),
-            'obat' => fn () => Obat::with(['satuanBesar', 'satuanKecil', 'kategori', 'stok'])
-                ->where('is_active', true)
-                ->orderBy('nama_obat', 'asc')
-                ->get(['id', 'nama_obat', 'kategori_id', 'satuan_besar_id', 'satuan_kecil_id', 'jumlah_satuan_kecil_dalam_satuan_besar'])
-                ->groupBy('kategori.nama_kategori')
-                ->map(fn ($obatGroup, $kategoriName) => [
-                    'title' => $kategoriName,
-                    'items' => $obatGroup->map(fn ($obat) => [
-                        'id' => $obat->id,
-                        'label' => $obat->nama_obat,
-                        'subtitle' => 'Jumlah kecil dalam 1 '.($obat->satuanBesar?->nama_satuan ?? 'N/A').' adalah '.$obat->jumlah_satuan_kecil_dalam_satuan_besar.' '.($obat->satuanKecil?->nama_satuan ?? 'N/A'),
-                        'satuan_besar' => $obat->satuanBesar?->nama_satuan,
-                        'satuan_kecil' => $obat->satuanKecil?->nama_satuan,
-                        'jumlah_satuan_kecil_dalam_satuan_besar' => $obat->jumlah_satuan_kecil_dalam_satuan_besar,
-                        'stok' => $obat->stok->map(fn ($stok) => [
-                            'id' => $stok->id,
-                            'nomor_batch' => $stok->nomor_batch,
-                            'tanggal_expired' => $stok->tanggal_expired,
-                            'stok' => $stok->stok,
-                        ])->toArray(),
-                    ])->toArray(),
-                ])
-                ->values()
-                ->toArray(),
-        ]);
-    })->name('transaksi.pembelian');
-
-    Route::get('api/transaksi/pembelian/history', function () {
-        return response()->json([
-            'pembelian' => Pembelian::with([
-                'supplier',
-                'user',
-                'pembelianDetail.obat.kategori',
-                'pembelianDetail.obat.satuanBesar',
-                'pembelianDetail.obat.satuanKecil',
-            ])
-                ->orderBy('created_at', 'desc')
-                ->get(),
-        ]);
-    });
+    Route::get('transaksi/pembelian', [PembelianController::class, 'index'])->name('transaksi.pembelian');
+    Route::get('api/transaksi/pembelian/history', [PembelianController::class, 'history']);
     Route::post('transaksi/pembelian', [PembelianController::class, 'store'])->name('transaksi.pembelian.store');
     Route::get('stok', [StokController::class, 'index'])->name('stok');
     Route::inertia('laporan', 'laporan')->name('laporan');

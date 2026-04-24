@@ -15,6 +15,13 @@ interface PembelianPageProps {
             subtitle: string;
             satuan_besar?: string;
             satuan_kecil?: string;
+            jumlah_satuan_kecil_dalam_satuan_besar?: number;
+            stok?: Array<{
+                id: number;
+                nomor_batch: string;
+                tanggal_expired: string;
+                stok: number;
+            }>;
         }>;
     }>;
     satuan: string[];

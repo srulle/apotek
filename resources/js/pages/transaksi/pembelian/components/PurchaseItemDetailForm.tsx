@@ -41,6 +41,7 @@ const PurchaseItemDetailForm = ({
         [String(item.satuan_besar || '')]:
             item.jumlah_satuan_kecil_dalam_satuan_besar || 0,
     }));
+
     const obatDetailSchema = z.object({
         batch: z.string().min(1, 'Nomor batch wajib diisi'),
         expiredDate: z.date({
@@ -99,11 +100,21 @@ const PurchaseItemDetailForm = ({
                             placeholder="Masukkan atau pilih nomor batch"
                             field={field}
                             type="autocomplete"
+                            autocompleteEmptyMessage="tidak ada batch tersedia"
                             autocompleteOptions={
                                 item.stok?.map((batchItem) => ({
                                     value: batchItem.nomor_batch,
-                                    label: `${batchItem.nomor_batch} (Stok: ${batchItem.stok} - Exp: ${new Date(batchItem.tanggal_expired).toLocaleDateString('id-ID')})`,
+                                    label: batchItem.nomor_batch,
                                 })) || []
+                            }
+                            onFocus={() =>
+                                console.log(
+                                    'Autocomplete options:',
+                                    item.stok?.map((batchItem) => ({
+                                        value: batchItem.nomor_batch,
+                                        label: `${batchItem.nomor_batch} (Stok: ${batchItem.stok} - Exp: ${new Date(batchItem.tanggal_expired).toLocaleDateString('id-ID')})`,
+                                    })) || [],
+                                )
                             }
                             onAutocompleteSelect={(selected) => {
                                 if (selected) {

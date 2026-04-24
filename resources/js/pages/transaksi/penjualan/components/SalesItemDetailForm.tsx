@@ -63,7 +63,7 @@ const SalesItemDetailForm = ({
     // Create batch options from item.stok
     const batchOptions = (item.stok || []).map((batchItem) => ({
         value: batchItem.nomor_batch,
-        label: `${batchItem.nomor_batch} (Stok: ${batchItem.stok} - Exp: ${new Date(batchItem.tanggal_expired).toLocaleDateString('id-ID')})`,
+        label: `${batchItem.nomor_batch} (Stok: ${batchItem.stok})`,
     }));
 
     // Auto-fill batch with nearest expiry date (FEFO - First Expired, First Out)
@@ -142,11 +142,10 @@ const SalesItemDetailForm = ({
                 >
                     {(field) => (
                         <>
-                            <label className="mb-1.5 block text-sm leading-none font-medium">
-                                Tanggal Kadaluarsa
-                            </label>
                             <DatePicker
+                                label="Tanggal Kadaluarsa"
                                 field={field}
+                                disabled={true}
                                 placeholder="Pilih tanggal kadaluarsa"
                                 toYear={new Date().getFullYear() + 15}
                             />

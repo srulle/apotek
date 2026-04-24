@@ -41,18 +41,6 @@ const ComboboxItemRenderer = ({
         : `no-group-${item.id}`;
 
     const onSelect = useCallback(() => {
-        // ✅ Log data item obat yang dipilih ke console
-        console.log('✅ Item combobox dipilih:');
-        console.table({
-            id: item.id,
-            label: item.label,
-            subtitle: item.subtitle,
-            satuan_besar: item.satuan_besar,
-            satuan_kecil: item.satuan_kecil,
-            isi_per_satuan: item.isi_per_satuan,
-        });
-        console.log('   Full object:', item);
-
         // ✅ HANYA tutup combobox dan buka modal saja
         // ❌ TIDAK menambahkan item ke selected / table dulu
         closeCombobox();

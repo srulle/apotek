@@ -36,6 +36,12 @@ interface PembelianFormProps {
             satuan_besar?: string;
             satuan_kecil?: string;
             jumlah_satuan_kecil_dalam_satuan_besar?: number;
+            stok?: Array<{
+                id: number;
+                nomor_batch: string;
+                tanggal_expired: string;
+                stok: number;
+            }>;
         }>;
     }>;
     satuan: string[];
@@ -324,7 +330,7 @@ export default function PembelianForm({
                                     ...item,
                                     subtitle:
                                         item.satuan_besar || item.subtitle,
-                                    stok: item.stok,
+                                    stok: item.stok || [],
                                 })),
                             }))}
                             value={selectedObat}

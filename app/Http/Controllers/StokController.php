@@ -14,7 +14,7 @@ class StokController extends Controller
             ->select('obat.*')
             ->selectRaw('COALESCE(SUM(stok.stok), 0) as total_stok')
             ->groupBy('obat.id')
-            ->orderBy('obat.created_at', 'desc')
+            ->orderBy('obat.nama_obat', 'asc')
             ->get()
             ->map(function ($obat) {
                 // Load stok data untuk setiap obat
