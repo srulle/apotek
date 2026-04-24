@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { CalendarIcon } from 'lucide-react';
 import type { ChangeEvent, ChangeEventHandler } from 'react';
-import { useState, forwardRef, useId } from 'react';
+import { useState, useMemo, forwardRef, useId } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -67,6 +67,47 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
         },
         ref,
     ) => {
+        // Adjust fromYear and toYear based on minDate and maxDate
+        const effectiveFromYear = minDate
+            ? Math.max(fromYear, minDate.getFullYear())
+            : fromYear;
+        const effectiveToYear = maxDate
+            ? Math.min(toYear, maxDate.getFullYear())
+            : toYear;
+
+        // Create disabled dates matcher based on minDate and maxDate
+        const disabledDates = useMemo(() => {
+            const matchers: any[] = [];
+            if (minDate) {
+                // Disable all dates before minDate (normalized to start of day)
+                const normalizedMinDate = new Date(minDate);
+                normalizedMinDate.setHours(0, 0, 0, 0);
+                matchers.push({ before: normalizedMinDate });
+            }
+            if (maxDate) {
+                // Disable all dates after maxDate (normalized to end of day)
+                const normalizedMaxDate = new Date(maxDate);
+                normalizedMaxDate.setHours(23, 59, 59, 999);
+                matchers.push({ after: normalizedMaxDate });
+            }
+            return matchers.length > 0 ? matchers : undefined;
+        }, [minDate, maxDate]);
+
+        // Normalize minDate and maxDate for fromDate/toDate
+        const normalizedMinDate = useMemo(() => {
+            if (!minDate) return undefined;
+            const d = new Date(minDate);
+            d.setHours(0, 0, 0, 0);
+            return d;
+        }, [minDate]);
+
+        const normalizedMaxDate = useMemo(() => {
+            if (!maxDate) return undefined;
+            const d = new Date(maxDate);
+            d.setHours(23, 59, 59, 999);
+            return d;
+        }, [maxDate]);
+
         const generatedId = useId();
 
         // Support TanStack Form field
@@ -189,11 +230,11 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
                             onMonthChange={setMonth}
                             onSelect={handleSelect}
                             selected={value}
-                            disabled={disabled}
-                            fromDate={minDate}
-                            toDate={maxDate}
-                            fromYear={fromYear}
-                            toYear={toYear}
+                            disabled={disabled ? true : disabledDates}
+                            fromDate={normalizedMinDate}
+                            toDate={normalizedMaxDate}
+                            fromYear={effectiveFromYear}
+                            toYear={effectiveToYear}
                         />
                     </PopoverContent>
                 </Popover>

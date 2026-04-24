@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 import type { ComboboxItem } from '@/components/combobox-data/types';
@@ -13,6 +14,12 @@ interface SalesItemDetailFormProps {
         satuan_besar?: string;
         satuan_kecil?: string;
         isi_per_satuan?: number;
+        stok?: Array<{
+            id: number;
+            nomor_batch: string;
+            tanggal_expired: string;
+            stok: number;
+        }>;
     };
     onSelectItem: (data: any) => void;
     onClosePopover: () => void;
@@ -53,6 +60,31 @@ const SalesItemDetailForm = ({
         },
     });
 
+    // Create batch options from item.stok
+    const batchOptions = (item.stok || []).map((batchItem) => ({
+        value: batchItem.nomor_batch,
+        label: `${batchItem.nomor_batch} (Stok: ${batchItem.stok} - Exp: ${new Date(batchItem.tanggal_expired).toLocaleDateString('id-ID')})`,
+    }));
+
+    // Auto-fill batch with nearest expiry date (FEFO - First Expired, First Out)
+    useEffect(() => {
+        if (item.stok && item.stok.length > 0) {
+            // Find batch with nearest expiry date (FEFO)
+            const nearestExpiryBatch = item.stok.reduce((nearest, current) => {
+                const currentExp = new Date(current.tanggal_expired);
+                const nearestExp = new Date(nearest.tanggal_expired);
+                return currentExp < nearestExp ? current : nearest;
+            });
+
+            // Set batch and expiry date
+            form.setFieldValue('batch', nearestExpiryBatch.nomor_batch);
+            form.setFieldValue(
+                'expiredDate',
+                new Date(nearestExpiryBatch.tanggal_expired),
+            );
+        }
+    }, [item.id]); // Re-run when item changes
+
     return (
         <form
             onSubmit={(e) => {
@@ -77,10 +109,25 @@ const SalesItemDetailForm = ({
                     }}
                 >
                     {(field) => (
-                        <InputLabelAndHelper
+                        <ComboboxLabelAndHelper
                             label="Nomor Batch"
-                            placeholder="Masukkan nomor batch"
+                            placeholder="Pilih nomor batch"
                             field={field}
+                            initialItems={batchOptions}
+                            searchable={false}
+                            onValueChange={(selectedValue) => {
+                                field.handleChange(selectedValue);
+                                // Update expiredDate when batch is selected
+                                const selectedBatch = item.stok?.find(
+                                    (b) => b.nomor_batch === selectedValue,
+                                );
+                                if (selectedBatch) {
+                                    form.setFieldValue(
+                                        'expiredDate',
+                                        new Date(selectedBatch.tanggal_expired),
+                                    );
+                                }
+                            }}
                         />
                     )}
                 </form.Field>

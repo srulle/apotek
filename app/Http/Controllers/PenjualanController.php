@@ -12,7 +12,7 @@ class PenjualanController extends Controller
     public function index(Request $request)
     {
         return Inertia::render('transaksi/penjualan/index', [
-            'obat' => Obat::with(['satuanBesar', 'satuanKecil', 'satuanPenjualan', 'kategori'])
+            'obat' => Obat::with(['satuanBesar', 'satuanKecil', 'satuanPenjualan', 'kategori', 'stok'])
                 ->select('obat.*')
                 ->selectRaw('(SELECT SUM(stok.stok) FROM stok WHERE stok.obat_id = obat.id) as stok_total')
                 ->where('is_active', true)
@@ -31,6 +31,12 @@ class PenjualanController extends Controller
                         'satuan_penjualan' => $obat->satuanPenjualan?->nama_satuan,
                         'jumlah_satuan_kecil_dalam_satuan_besar' => $obat->jumlah_satuan_kecil_dalam_satuan_besar,
                         'stok_total' => $obat->stok_total ?? 0,
+                        'stok' => $obat->stok->map(fn ($s) => [
+                            'id' => $s->id,
+                            'nomor_batch' => $s->nomor_batch,
+                            'tanggal_expired' => $s->tanggal_expired,
+                            'stok' => $s->stok,
+                        ]),
                     ])->toArray(),
                 ])
                 ->values()

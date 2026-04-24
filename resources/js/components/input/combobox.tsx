@@ -250,26 +250,29 @@ const ComboboxLabelAndHelper = (props: ComboboxLabelAndHelperProps) => {
     }
 
     const handleValueChange = (selectedLabel: string) => {
+        let valueToSend: string;
+
         if (isObjectItems) {
             // Find the corresponding value for the selected label
             const foundItem = (
                 initialItems as Array<{ value: string | number; label: string }>
             ).find((item) => item.label === selectedLabel);
-            const selectedValue = foundItem
+
+            valueToSend = foundItem
                 ? foundItem.value.toString()
                 : selectedLabel;
-
-            if (isFieldMode) {
-                field.handleChange(selectedValue);
-            } else {
-                onValueChange!(selectedValue);
-            }
         } else {
-            if (isFieldMode) {
-                field.handleChange(selectedLabel);
-            } else {
-                onValueChange!(selectedLabel);
-            }
+            valueToSend = selectedLabel;
+        }
+
+        // If in field mode, update the field value
+        if (isFieldMode) {
+            field.handleChange(valueToSend);
+        }
+
+        // Always call the onValueChange callback if provided (works for both field and non-field mode)
+        if (onValueChange) {
+            onValueChange(valueToSend);
         }
     };
 

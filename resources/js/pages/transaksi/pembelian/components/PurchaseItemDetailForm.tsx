@@ -148,14 +148,12 @@ const PurchaseItemDetailForm = ({
                 >
                     {(field) => (
                         <>
-                            <label className="mb-1.5 block text-sm leading-none font-medium">
-                                Tanggal Kadaluarsa
-                            </label>
                             <DatePicker
+                                label="Tanggal Kadaluarsa"
                                 field={field}
                                 placeholder="Pilih tanggal kadaluarsa"
                                 minDate={new Date()}
-                                toYear={new Date().getFullYear() + 15}
+                                toYear={new Date().getFullYear() + 30}
                                 disabled={isBatchFromList}
                                 helperText={
                                     isBatchFromList
