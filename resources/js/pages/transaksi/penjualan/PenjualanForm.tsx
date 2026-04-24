@@ -3,6 +3,7 @@
 import { useForm } from '@tanstack/react-form';
 import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { ulid } from 'ulid';
 import { z } from 'zod';
 import ComboboxData from '@/components/combobox-data';
 import DatePicker from '@/components/input/datepicker';
@@ -67,12 +68,57 @@ export default function PenjualanForm({ obat, satuan }: PenjualanFormProps) {
     >([]);
     const [obatFormData, setObatFormData] = useState<Record<string, any>>({});
 
+    const generateInvoiceNumber = () => {
+        return `JGF${ulid()}`;
+    };
+
+    const [invoiceNumber] = useState(generateInvoiceNumber);
+
     const handleSavePenjualan = () => {
-        console.log('=== Data Penjualan Siap Simpan ===');
-        console.log('Form values:', form.state.values);
-        console.log('Selected Obat:', selectedObat);
-        console.log('Obat Form Data:', obatFormData);
-        console.log('=================================');
+        const totalHarga = selectedObat.reduce((total, entry) => {
+            const formData = obatFormData[entry.uniqueId] || {};
+            const jumlahJual = Number(formData.jumlahJual) || 0;
+            const hargaJual = Number(formData.hargaJual) || 0;
+
+            return total + jumlahJual * hargaJual;
+        }, 0);
+
+        const detailPembelian = selectedObat.map((entry) => {
+            const formData = obatFormData[entry.uniqueId] || {};
+
+            return {
+                obat_id: entry.id,
+                nomor_batch: formData.batch || '',
+                tanggal_expired: formData.expiredDate || '',
+                jumlah_jual:
+                    (Number(formData.jumlahJual) || 0) *
+                    (Number(formData.isiSatuan) || 1),
+                harga_jual: formData.hargaJual || '',
+            };
+        });
+
+        console.log('✅ Data siap disimpan ke database');
+
+        console.table([
+            { field: 'nomor_faktur', value: invoiceNumber },
+            {
+                field: 'tanggal_transaksi',
+                value: form.state.values.tanggalTransaksi,
+            },
+            { field: 'user_id', value: null },
+            { field: 'total_harga', value: totalHarga },
+        ]);
+
+        detailPembelian.forEach((detail, index) => {
+            console.log(`Detail Penjualan ${index + 1}:`);
+            console.table([
+                { field: 'obat_id', value: detail.obat_id },
+                { field: 'nomor_batch', value: detail.nomor_batch },
+                { field: 'tanggal_expired', value: detail.tanggal_expired },
+                { field: 'jumlah_jual', value: detail.jumlah_jual },
+                { field: 'harga_jual', value: detail.harga_jual },
+            ]);
+        });
     };
 
     return (
@@ -139,7 +185,7 @@ export default function PenjualanForm({ obat, satuan }: PenjualanFormProps) {
                     <div className="mt-6">
                         <hr className="mb-5 border-muted-foreground/20" />
                         <h4 className="mb-2 text-sm font-medium">
-                            Daftar Obat Yang Dipilih
+                            Nomor Faktur: {invoiceNumber}
                         </h4>
                         <Table className="[&_td]:py-0.5 [&_th]:py-1">
                             <TableHeader>
@@ -164,9 +210,7 @@ export default function PenjualanForm({ obat, satuan }: PenjualanFormProps) {
                                     <TableHead className="w-32 text-right">
                                         Harga Jual
                                     </TableHead>
-                                    <TableHead className="w-32 text-right">
-                                        Sub Total
-                                    </TableHead>
+
                                     <TableHead className="w-24 text-center">
                                         Aksi
                                     </TableHead>
@@ -231,23 +275,6 @@ export default function PenjualanForm({ obat, satuan }: PenjualanFormProps) {
                                                       )
                                                     : '-'}
                                             </TableCell>
-                                            <TableCell className="text-right">
-                                                {formData.jumlahJual &&
-                                                formData.hargaJual
-                                                    ? new Intl.NumberFormat(
-                                                          'id-ID',
-                                                          {
-                                                              style: 'currency',
-                                                              currency: 'IDR',
-                                                              minimumFractionDigits: 2,
-                                                              maximumFractionDigits: 2,
-                                                          },
-                                                      ).format(
-                                                          formData.jumlahJual *
-                                                              formData.hargaJual,
-                                                      )
-                                                    : '-'}
-                                            </TableCell>
                                             <TableCell className="text-center">
                                                 <Button
                                                     size="sm"
@@ -287,7 +314,7 @@ export default function PenjualanForm({ obat, satuan }: PenjualanFormProps) {
                                 <TableRow>
                                     <TableCell
                                         colSpan={8}
-                                        className="text-right font-medium"
+                                        className="text-center font-medium"
                                     >
                                         Total Penjualan
                                     </TableCell>

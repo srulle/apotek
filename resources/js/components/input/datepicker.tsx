@@ -78,33 +78,44 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
         // Create disabled dates matcher based on minDate and maxDate
         const disabledDates = useMemo(() => {
             const matchers: any[] = [];
+
             if (minDate) {
                 // Disable all dates before minDate (normalized to start of day)
                 const normalizedMinDate = new Date(minDate);
                 normalizedMinDate.setHours(0, 0, 0, 0);
                 matchers.push({ before: normalizedMinDate });
             }
+
             if (maxDate) {
                 // Disable all dates after maxDate (normalized to end of day)
                 const normalizedMaxDate = new Date(maxDate);
                 normalizedMaxDate.setHours(23, 59, 59, 999);
                 matchers.push({ after: normalizedMaxDate });
             }
+
             return matchers.length > 0 ? matchers : undefined;
         }, [minDate, maxDate]);
 
         // Normalize minDate and maxDate for fromDate/toDate
         const normalizedMinDate = useMemo(() => {
-            if (!minDate) return undefined;
+            if (!minDate) {
+return undefined;
+}
+
             const d = new Date(minDate);
             d.setHours(0, 0, 0, 0);
+
             return d;
         }, [minDate]);
 
         const normalizedMaxDate = useMemo(() => {
-            if (!maxDate) return undefined;
+            if (!maxDate) {
+return undefined;
+}
+
             const d = new Date(maxDate);
             d.setHours(23, 59, 59, 999);
+
             return d;
         }, [maxDate]);
 

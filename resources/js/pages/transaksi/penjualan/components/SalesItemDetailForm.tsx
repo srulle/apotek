@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useForm } from '@tanstack/react-form';
+import { useEffect } from 'react';
 import { z } from 'zod';
 import type { ComboboxItem } from '@/components/combobox-data/types';
 import { ComboboxLabelAndHelper } from '@/components/input/combobox';
@@ -13,7 +13,9 @@ interface SalesItemDetailFormProps {
     item: ComboboxItem & {
         satuan_besar?: string;
         satuan_kecil?: string;
-        isi_per_satuan?: number;
+        satuan_penjualan?: string;
+        jumlah_satuan_kecil_dalam_satuan_penjualan?: number;
+        harga_jual?: number;
         stok?: Array<{
             id: number;
             nomor_batch: string;
@@ -38,7 +40,7 @@ const SalesItemDetailForm = ({
             required_error: 'Tanggal kadaluarsa wajib dipilih',
         }),
         satuan: z.string().min(1, 'Satuan wajib dipilih'),
-        isiSatuan: z.coerce.number().min(1, 'Isi satuan minimal 1'),
+        isiSatuan: z.coerce.number().min(0, 'Isi satuan minimal 0'),
         jumlahJual: z.coerce.number().int().min(1, 'Jumlah minimal 1'),
         hargaJual: z.coerce.number().min(1, 'Harga jual wajib diisi'),
     });
@@ -47,10 +49,12 @@ const SalesItemDetailForm = ({
         defaultValues: {
             batch: '',
             expiredDate: new Date(),
-            satuan: item.satuan_besar || '',
-            isiSatuan: item.isi_per_satuan || 1,
+            satuan: item.satuan_penjualan || '',
+            isiSatuan: item.jumlah_satuan_kecil_dalam_satuan_penjualan || 0,
             jumlahJual: 1,
-            hargaJual: 0,
+            hargaJual:
+                (item.harga_jual || 0) *
+                (item.jumlah_satuan_kecil_dalam_satuan_penjualan || 1),
         },
         onSubmit: async ({ value }) => {
             onSelectItem({
@@ -67,12 +71,14 @@ const SalesItemDetailForm = ({
     }));
 
     // Auto-fill batch with nearest expiry date (FEFO - First Expired, First Out)
+    // Also set isiSatuan and hargaJual based on item data
     useEffect(() => {
         if (item.stok && item.stok.length > 0) {
             // Find batch with nearest expiry date (FEFO)
             const nearestExpiryBatch = item.stok.reduce((nearest, current) => {
                 const currentExp = new Date(current.tanggal_expired);
                 const nearestExp = new Date(nearest.tanggal_expired);
+
                 return currentExp < nearestExp ? current : nearest;
             });
 
@@ -83,6 +89,21 @@ const SalesItemDetailForm = ({
                 new Date(nearestExpiryBatch.tanggal_expired),
             );
         }
+
+        // Set isiSatuan to jumlah_satuan_kecil_dalam_satuan_penjualan
+        form.setFieldValue(
+            'isiSatuan',
+            item.jumlah_satuan_kecil_dalam_satuan_penjualan || 0,
+        );
+
+        // Set hargaJual to (harga_jual * jumlah_satuan_kecil_dalam_satuan_penjualan) * jumlahJual
+        const currentJumlahJual = form.getFieldValue('jumlahJual') || 1;
+        form.setFieldValue(
+            'hargaJual',
+            (item.harga_jual || 0) *
+                (item.jumlah_satuan_kecil_dalam_satuan_penjualan || 1) *
+                currentJumlahJual,
+        );
     }, [item.id]); // Re-run when item changes
 
     return (
@@ -121,6 +142,7 @@ const SalesItemDetailForm = ({
                                 const selectedBatch = item.stok?.find(
                                     (b) => b.nomor_batch === selectedValue,
                                 );
+
                                 if (selectedBatch) {
                                     form.setFieldValue(
                                         'expiredDate',
@@ -170,29 +192,67 @@ const SalesItemDetailForm = ({
                 </form.Field>
 
                 <form.Subscribe selector={(state) => state.values.satuan}>
-                    {(satuanValue) =>
-                        satuanValue &&
-                        item.satuan_kecil &&
-                        satuanValue !== (item.satuan_besar || '') && (
-                            <form.Field
-                                name="isiSatuan"
-                                validators={{
-                                    onChange: z.coerce
-                                        .number()
-                                        .min(1, 'Isi satuan minimal 1'),
-                                }}
-                            >
-                                {(field) => (
-                                    <InputLabelAndHelper
-                                        label={`Berapa jumlah '${item.satuan_kecil}' dalam 1 '${satuanValue}'`}
-                                        type="number"
-                                        min={1}
-                                        field={field}
-                                    />
-                                )}
-                            </form.Field>
-                        )
-                    }
+                    {(satuanValue) => (
+                        <form.Field
+                            name="isiSatuan"
+                            validators={{
+                                onChange: z.coerce
+                                    .number()
+                                    .min(0, 'Isi satuan minimal 0'),
+                            }}
+                        >
+                            {(field) => (
+                                <InputLabelAndHelper
+                                    label={`Berapa jumlah '${item.satuan_kecil || 'satuan kecil'}' dalam 1 '${satuanValue || 'satuan'}'`}
+                                    type="number"
+                                    min={0}
+                                    field={field}
+                                />
+                            )}
+                        </form.Field>
+                    )}
+                </form.Subscribe>
+
+                {/* Reset isiSatuan when satuan changes */}
+                <form.Subscribe
+                    selector={(state) => state.values.satuan}
+                    children={(satuanValue) => {
+                        useEffect(() => {
+                            // If satuan is changed back to default (satuan_penjualan), restore isiSatuan
+                            if (satuanValue === item.satuan_penjualan) {
+                                form.setFieldValue(
+                                    'isiSatuan',
+                                    item.jumlah_satuan_kecil_dalam_satuan_penjualan ||
+                                        0,
+                                );
+                            } else {
+                                form.setFieldValue('isiSatuan', 0);
+                            }
+                        }, [satuanValue]);
+
+                        return null;
+                    }}
+                />
+
+                {/* Update hargaJual when isiSatuan or jumlahJual changes */}
+                <form.Subscribe
+                    selector={(state) => [
+                        state.values.isiSatuan,
+                        state.values.jumlahJual,
+                    ]}
+                >
+                    {([isiSatuanValue, jumlahJualValue]) => {
+                        useEffect(() => {
+                            form.setFieldValue(
+                                'hargaJual',
+                                (item.harga_jual || 0) *
+                                    (isiSatuanValue || 0) *
+                                    (jumlahJualValue || 1),
+                            );
+                        }, [isiSatuanValue, jumlahJualValue]);
+
+                        return null;
+                    }}
                 </form.Subscribe>
 
                 <form.Subscribe selector={(state) => state.values.satuan}>
