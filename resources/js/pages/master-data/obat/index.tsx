@@ -6,11 +6,11 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import DataTable from '@/components/datatable/datatable';
 import { DeleteConfirm } from '@/components/delete-confirm';
-import { ComboboxLabelAndHelper } from '@/components/input/combobox';
-import { InputLabelAndHelper } from '@/components/input/input-label-and-helper';
 import { Modal } from '@/components/modal';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { DialogClose } from '@/components/ui/dialog';
+import TambahObatForm from './tambah-obat-form';
 
 type Kategori = {
     id: number;
@@ -65,25 +65,51 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
             },
         },
         {
-            accessorKey: 'satuan_besar.nama_satuan',
-            header: 'Satuan Besar',
-            cell: ({ row }) => row.original.satuan_besar?.nama_satuan || '-',
-        },
-        {
             accessorKey: 'satuan_kecil.nama_satuan',
             header: 'Satuan Kecil',
             cell: ({ row }) => row.original.satuan_kecil?.nama_satuan || '-',
         },
         {
-            accessorKey: 'satuan_penjualan.nama_satuan',
-            header: 'Satuan Penjualan',
-            cell: ({ row }) =>
-                row.original.satuan_penjualan?.nama_satuan || '-',
+            accessorKey: 'satuan_besar.nama_satuan',
+            header: 'Satuan Besar',
+            cell: ({ row }) => {
+                const satuanBesar =
+                    row.original.satuan_besar?.nama_satuan || '-';
+                const jumlah =
+                    row.original.jumlah_satuan_kecil_dalam_satuan_besar;
+                const satuanKecil =
+                    row.original.satuan_kecil?.nama_satuan || '-';
+                return (
+                    <div className="flex items-center gap-2">
+                        {satuanBesar}
+                        <Badge className="rounded-sm px-1.5 py-px text-[10px]">
+                            {jumlah} {satuanKecil}
+                        </Badge>
+                    </div>
+                );
+            },
         },
         {
-            accessorKey: 'jumlah_satuan_kecil_dalam_satuan_besar',
-            header: 'Jumlah Kecil/Besar',
+            accessorKey: 'satuan_penjualan.nama_satuan',
+            header: 'Satuan Penjualan',
+            cell: ({ row }) => {
+                const satuanPenjualan =
+                    row.original.satuan_penjualan?.nama_satuan || '-';
+                const jumlah =
+                    row.original.jumlah_satuan_kecil_dalam_satuan_penjualan;
+                const satuanKecil =
+                    row.original.satuan_kecil?.nama_satuan || '-';
+                return (
+                    <div className="flex items-center gap-2">
+                        {satuanPenjualan}
+                        <Badge className="rounded-sm px-1.5 py-px text-[10px]">
+                            {jumlah} {satuanKecil}
+                        </Badge>
+                    </div>
+                );
+            },
         },
+
         {
             accessorKey: 'harga_jual',
             header: 'Harga Jual',
@@ -91,12 +117,22 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                 sortIconType: 'numeric',
             },
             cell: ({ row }) => {
-                return new Intl.NumberFormat('id-ID', {
+                const harga = new Intl.NumberFormat('id-ID', {
                     style: 'currency',
                     currency: 'IDR',
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 0,
                 }).format(row.original.harga_jual);
+                const satuanKecil =
+                    row.original.satuan_kecil?.nama_satuan || '-';
+                return (
+                    <div className="flex items-center gap-2">
+                        {harga}
+                        <Badge className="rounded-sm px-1.5 py-px text-[10px]">
+                            per {satuanKecil}
+                        </Badge>
+                    </div>
+                );
             },
         },
         {
@@ -214,8 +250,8 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
 
     const handleBulkDelete = async () => {
         if (selectedObat.length === 0) {
-return;
-}
+            return;
+        }
 
         setBulkDeleteLoading(true);
 
@@ -346,7 +382,7 @@ return;
                         }}
                         trigger={
                             <Button
-                                className="w-fit"
+                                className="w-fit cursor-pointer"
                                 disabled={isRefreshing}
                                 onClick={async () => {
                                     setIsRefreshing(true);
@@ -367,7 +403,7 @@ return;
                                 {isRefreshing ? 'Memuat...' : 'Tambah Obat'}
                             </Button>
                         }
-                        size="5xl"
+                        size="6xl"
                         blur="xs"
                         title={editObat ? 'Ubah Data Obat' : 'Tambah Data Obat'}
                         persistent={true}
@@ -408,220 +444,12 @@ return;
                             </>
                         }
                     >
-                        <div className="grid gap-2 py-4 md:grid-cols-3">
-                            <form.Field
-                                name="nama_obat"
-                                validators={{
-                                    onChange: ({ value }) => {
-                                        if (!value) {
-                                            return 'Nama Obat harus diisi';
-                                        }
-                                    },
-                                }}
-                            >
-                                {(field) => (
-                                    <InputLabelAndHelper
-                                        field={field}
-                                        label="Nama Obat"
-                                        placeholder="Masukkan nama obat"
-                                    />
-                                )}
-                            </form.Field>
-
-                            <form.Field
-                                name="kategori_obat"
-                                validators={{
-                                    onChange: ({ value }) => {
-                                        if (!value) {
-                                            return 'Kategori Obat harus diisi';
-                                        }
-                                    },
-                                }}
-                            >
-                                {(field) => (
-                                    <ComboboxLabelAndHelper
-                                        field={field}
-                                        label="Kategori Obat"
-                                        placeholder="Pilih atau buat kategori obat"
-                                        initialItems={kategoriObat}
-                                        creatable={true}
-                                        onCreate={(value) =>
-                                            createItem(
-                                                '/master-data/kategori-obat',
-                                                { nama_kategori: value },
-                                                'Kategori obat berhasil ditambahkan',
-                                                'Menambahkan kategori obat...',
-                                                'nama_kategori',
-                                            )
-                                        }
-                                    />
-                                )}
-                            </form.Field>
-
-                            <form.Field
-                                name="satuan_besar"
-                                validators={{
-                                    onChange: ({ value }) => {
-                                        if (!value) {
-                                            return 'Satuan Besar harus diisi';
-                                        }
-                                    },
-                                }}
-                            >
-                                {(field) => (
-                                    <ComboboxLabelAndHelper
-                                        field={field}
-                                        label="Satuan Besar"
-                                        placeholder="Pilih satuan besar"
-                                        initialItems={satuan}
-                                        creatable={true}
-                                        onCreate={(value) =>
-                                            createItem(
-                                                '/master-data/satuan',
-                                                { nama_satuan: value },
-                                                'Satuan berhasil ditambahkan',
-                                                'Menambahkan satuan...',
-                                                'nama_satuan',
-                                            )
-                                        }
-                                    />
-                                )}
-                            </form.Field>
-
-                            <form.Field
-                                name="satuan_kecil"
-                                validators={{
-                                    onChange: ({ value }) => {
-                                        if (!value) {
-                                            return 'Satuan Kecil harus diisi';
-                                        }
-                                    },
-                                }}
-                            >
-                                {(field) => (
-                                    <ComboboxLabelAndHelper
-                                        field={field}
-                                        label="Satuan Kecil"
-                                        placeholder="Pilih satuan kecil"
-                                        initialItems={satuan}
-                                        creatable={true}
-                                        onCreate={(value) =>
-                                            createItem(
-                                                '/master-data/satuan',
-                                                { nama_satuan: value },
-                                                'Satuan berhasil ditambahkan',
-                                                'Menambahkan satuan...',
-                                                'nama_satuan',
-                                            )
-                                        }
-                                    />
-                                )}
-                            </form.Field>
-
-                            <form.Field
-                                name="satuan_penjualan"
-                                validators={{
-                                    onChange: ({ value }) => {
-                                        if (!value) {
-                                            return 'Satuan Penjualan harus diisi';
-                                        }
-                                    },
-                                }}
-                            >
-                                {(field) => (
-                                    <ComboboxLabelAndHelper
-                                        field={field}
-                                        label="Satuan Penjualan"
-                                        placeholder="Pilih satuan penjualan"
-                                        initialItems={satuan}
-                                        creatable={true}
-                                        onCreate={(value) =>
-                                            createItem(
-                                                '/master-data/satuan',
-                                                { nama_satuan: value },
-                                                'Satuan berhasil ditambahkan',
-                                                'Menambahkan satuan...',
-                                                'nama_satuan',
-                                            )
-                                        }
-                                    />
-                                )}
-                            </form.Field>
-
-                            <form.Field
-                                name="jumlah_satuan_kecil_dalam_satuan_besar"
-                                validators={{
-                                    onChange: ({ value }) => {
-                                        if (!value) {
-                                            return 'Jumlah Satuan Kecil dalam Satuan Besar harus diisi';
-                                        }
-
-                                        if (isNaN(Number(value))) {
-                                            return 'Harus berupa angka';
-                                        }
-                                    },
-                                }}
-                            >
-                                {(field) => (
-                                    <InputLabelAndHelper
-                                        field={field}
-                                        label="Jumlah Satuan Kecil dalam Satuan Besar"
-                                        placeholder="Contoh: 10"
-                                        type="number"
-                                        helperText="Jumlah satuan kecil yang terdapat dalam 1 satuan besar"
-                                    />
-                                )}
-                            </form.Field>
-
-                            <form.Field
-                                name="jumlah_satuan_kecil_dalam_satuan_penjualan"
-                                validators={{
-                                    onChange: ({ value }) => {
-                                        if (!value) {
-                                            return 'Jumlah Satuan Kecil dalam Satuan Penjualan harus diisi';
-                                        }
-
-                                        if (isNaN(Number(value))) {
-                                            return 'Harus berupa angka';
-                                        }
-                                    },
-                                }}
-                            >
-                                {(field) => (
-                                    <InputLabelAndHelper
-                                        field={field}
-                                        label="Jumlah Satuan Kecil dalam Satuan Penjualan"
-                                        placeholder="Contoh: 1"
-                                        type="number"
-                                        helperText="Jumlah satuan kecil yang terdapat dalam 1 satuan penjualan"
-                                    />
-                                )}
-                            </form.Field>
-
-                            <form.Field
-                                name="harga_jual"
-                                validators={{
-                                    onChange: ({ value }) => {
-                                        if (!value) {
-                                            return 'Harga Jual harus diisi';
-                                        }
-
-                                        if (isNaN(Number(value))) {
-                                            return 'Harus berupa angka';
-                                        }
-                                    },
-                                }}
-                            >
-                                {(field) => (
-                                    <InputLabelAndHelper
-                                        field={field}
-                                        label="Harga Jual"
-                                        placeholder="Contoh: 15000"
-                                        type="currency"
-                                    />
-                                )}
-                            </form.Field>
-                        </div>
+                        <TambahObatForm
+                            form={form}
+                            kategoriObat={kategoriObat}
+                            satuan={satuan}
+                            createItem={createItem}
+                        />
                     </Modal>
 
                     <div className="mt-4">

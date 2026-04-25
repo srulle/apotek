@@ -1,6 +1,12 @@
 import { Command as CommandPrimitive } from 'cmdk';
-import { MinusIcon, PlusIcon, Check } from 'lucide-react';
+import { MinusIcon, PlusIcon, Check, InfoIcon } from 'lucide-react';
 import type { InputHTMLAttributes, KeyboardEvent } from 'react';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
 import {
     useId,
     forwardRef,
@@ -24,6 +30,7 @@ export type Option = Record<'value' | 'label', string> & Record<string, string>;
 
 export interface InputLabelAndHelperProps extends InputHTMLAttributes<HTMLInputElement> {
     label?: string;
+    labelInfo?: string;
     helperText?: string;
     error?: boolean;
     type?: 'text' | 'number' | 'currency' | 'autocomplete';
@@ -37,6 +44,7 @@ export interface InputLabelAndHelperProps extends InputHTMLAttributes<HTMLInputE
 export interface TanStackInputProps {
     field: any;
     label: string;
+    labelInfo?: string;
     placeholder?: string;
     type?: 'text' | 'number' | 'currency' | 'autocomplete';
     className?: string;
@@ -64,6 +72,7 @@ const InputLabelAndHelper = forwardRef<
         const {
             field,
             label,
+            labelInfo,
             placeholder,
             type = 'text',
             className,
@@ -250,15 +259,41 @@ const InputLabelAndHelper = forwardRef<
         };
 
         return (
-            <div className={`w-full space-y-2 ${className || ''}`}>
+            <div className={`w-full overflow-hidden p-1 ${className || ''}`}>
                 <Label
                     htmlFor={id}
                     className={cn(
-                        'truncate',
+                        'inline-block w-full min-w-0 truncate overflow-hidden text-ellipsis whitespace-nowrap',
                         hasError ? 'text-destructive' : '',
                     )}
                 >
-                    {label}
+                    <div className="flex items-center gap-1">
+                        {labelInfo && (
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-4 w-4 shrink-0 p-0 hover:bg-transparent cursor-pointer"
+                                    >
+                                        <InfoIcon className="h-3 w-3" />
+                                        <span className="sr-only">Info</span>
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-80 p-3">
+                                    <div className="grid gap-3">
+                                        <div className="space-y-1.5 text-center">
+                                            <div className="text-sm font-semibold">Informasi</div>
+                                            <p className="text-muted-foreground text-xs leading-tight">
+                                                {labelInfo}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+                        )}
+                        <span className="truncate">{label}</span>
+                    </div>
                 </Label>
                 {type === 'autocomplete' ? (
                     <CommandPrimitive onKeyDown={handleKeyDown}>
@@ -348,7 +383,7 @@ const InputLabelAndHelper = forwardRef<
                             type="button"
                             tabIndex={-1}
                             onClick={handleDecrement}
-                            className="-ms-px flex aspect-square h-[inherit] items-center justify-center rounded-l-md border border-input bg-background text-sm text-muted-foreground transition-[color,box-shadow] hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                            className="-ms-px flex aspect-square h-[inherit] items-center justify-center rounded-l-md border border-input bg-background text-sm text-muted-foreground transition-[color,box-shadow] hover:bg-accent hover:text-foreground cursor-pointer disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <MinusIcon size={16} />
                             <span className="sr-only">Decrement</span>
@@ -367,7 +402,7 @@ const InputLabelAndHelper = forwardRef<
                             type="button"
                             tabIndex={-1}
                             onClick={handleIncrement}
-                            className="-me-px flex aspect-square h-[inherit] items-center justify-center rounded-r-md border border-input bg-background text-sm text-muted-foreground transition-[color,box-shadow] hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                            className="-me-px flex aspect-square h-[inherit] items-center justify-center rounded-r-md border border-input bg-background text-sm text-muted-foreground transition-[color,box-shadow] hover:bg-accent hover:text-foreground cursor-pointer disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <PlusIcon size={16} />
                             <span className="sr-only">Increment</span>
@@ -407,20 +442,20 @@ const InputLabelAndHelper = forwardRef<
                         onBlur={field.handleBlur}
                         className={
                             hasError
-                                ? 'border-destructive focus-visible:ring-destructive'
+                                ? 'border-destructive focus-visible:ring-ring'
                                 : ''
                         }
                     />
                 )}
                 {errorMessage && (
-                    <p className="-mt-1.5 text-xs text-destructive italic">
+                    <p className="text-xs text-destructive italic">
                         {errorMessage}
                     </p>
                 )}
                 {helperText && !errorMessage && (
-                    <p className="-mt-1.5 text-xs text-muted-foreground italic">
+                    <div className="text-xs text-muted-foreground italic">
                         {helperText}
-                    </p>
+                    </div>
                 )}
             </div>
         );
@@ -429,6 +464,7 @@ const InputLabelAndHelper = forwardRef<
     // Jika menggunakan props biasa (backward compatibility)
     const {
         label,
+        labelInfo,
         helperText,
         error = false,
         className,
@@ -601,9 +637,38 @@ const InputLabelAndHelper = forwardRef<
             {label && (
                 <Label
                     htmlFor={id}
-                    className={cn('truncate', error ? 'text-destructive' : '')}
+                    className={cn(
+                        'inline-block w-full min-w-0 truncate overflow-hidden text-ellipsis whitespace-nowrap',
+                        error ? 'text-destructive' : '',
+                    )}
                 >
-                    {label}
+                    <div className="flex items-center gap-1">
+                        {labelInfo && (
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-4 w-4 shrink-0 p-0 hover:bg-transparent cursor-pointer"
+                                    >
+                                        <InfoIcon className="h-3 w-3" />
+                                        <span className="sr-only">Info</span>
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-80 p-2">
+                                    <div className="grid gap-3">
+                                        <div className="space-y-1.5 text-center">
+                                            <div className="text-sm font-semibold">Informasi</div>
+                                            <p className="text-muted-foreground text-xs leading-tight">
+                                                {labelInfo}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+                        )}
+                        <span className="truncate">{label}</span>
+                    </div>
                 </Label>
             )}
             {type === 'autocomplete' ? (
@@ -692,7 +757,7 @@ const InputLabelAndHelper = forwardRef<
                         type="button"
                         tabIndex={-1}
                         onClick={handleDecrement}
-                        className="-ms-px flex aspect-square h-[inherit] items-center justify-center rounded-l-md border border-input bg-background text-sm text-muted-foreground transition-[color,box-shadow] hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                        className="-ms-px flex aspect-square h-[inherit] items-center justify-center rounded-l-md border border-input bg-background text-sm text-muted-foreground transition-[color,box-shadow] hover:bg-accent hover:text-foreground cursor-pointer disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         <MinusIcon size={16} />
                         <span className="sr-only">Decrement</span>
@@ -710,7 +775,7 @@ const InputLabelAndHelper = forwardRef<
                         type="button"
                         tabIndex={-1}
                         onClick={handleIncrement}
-                        className="-me-px flex aspect-square h-[inherit] items-center justify-center rounded-r-md border border-input bg-background text-sm text-muted-foreground transition-[color,box-shadow] hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                        className="-me-px flex aspect-square h-[inherit] items-center justify-center rounded-r-md border border-input bg-background text-sm text-muted-foreground transition-[color,box-shadow] hover:bg-accent hover:text-foreground cursor-pointer disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         <PlusIcon size={16} />
                         <span className="sr-only">Increment</span>

@@ -277,7 +277,7 @@ const ComboboxLabelAndHelper = (props: ComboboxLabelAndHelperProps) => {
     };
 
     return (
-        <div className={`w-full space-y-2 ${className || ''}`}>
+        <div className={`p-1 w-full space-y-2 ${className || ''}`}>
             <Label className={hasError ? 'text-destructive' : ''}>
                 {label}
             </Label>

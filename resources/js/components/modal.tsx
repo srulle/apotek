@@ -115,15 +115,15 @@ export function Modal({
                                 </DialogTitle>
                             )}
                             {description && (
-                                <DialogDescription asChild>
-                                    <div className="p-6">{description}</div>
+                                <DialogDescription className="px-6">
+                                    {description}
                                 </DialogDescription>
                             )}
                         </DialogHeader>
                     )}
                     <div className="px-4 md:px-6">{children}</div>
                     {footer && (
-                        <DialogFooter className="px-4 md:px-6 pb-6 sm:justify-end">
+                        <DialogFooter className="px-4 pb-6 sm:justify-end md:px-6">
                             {footer}
                         </DialogFooter>
                     )}
