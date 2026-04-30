@@ -1,5 +1,5 @@
-import { InputLabelAndHelper } from '@/components/input/input-label-and-helper';
 import { ComboboxLabelAndHelper } from '@/components/input/combobox';
+import { InputLabelAndHelper } from '@/components/input/input-label-and-helper';
 
 interface TambahObatFormProps {
     form: any;
@@ -21,7 +21,7 @@ export default function TambahObatForm({
     createItem,
 }: TambahObatFormProps) {
     return (
-        <div className="grid grid-cols-3 gap-2 py-4">
+        <div className="grid gap-2 py-4 lg:grid-cols-3">
             {/* Row 1: Nama Obat | Kategori Obat | Satuan Kecil */}
             <form.Field
                 name="nama_obat"
@@ -56,7 +56,7 @@ export default function TambahObatForm({
                     <ComboboxLabelAndHelper
                         field={field}
                         label="Kategori Obat"
-                        placeholder="Pilih atau buat kategori obat"
+                        placeholder="Pilih kategori obat"
                         initialItems={kategoriObat}
                         creatable={true}
                         onCreate={(value) =>
@@ -103,10 +103,10 @@ export default function TambahObatForm({
             </form.Field>
 
             {/* Row 2: Container col-span-12 */}
-            <div className="col-span-3 grid grid-cols-12 gap-2">
+            <div className="grid w-full gap-2 lg:col-span-3 lg:grid-cols-12">
                 {/* Satuan Besar + Jumlah - col-span-5 */}
-                <div className="col-span-5">
-                    <div className="grid grid-cols-5 gap-2">
+                <div className="col-span-12 lg:col-span-5">
+                    <div className="grid grid-cols-5 lg:gap-2">
                         <div className="col-span-3">
                             <form.Field
                                 name="satuan_besar"
@@ -143,9 +143,21 @@ export default function TambahObatForm({
                             </form.Field>
                         </div>
                         <div className="col-span-2">
-                            <form.Subscribe selector={(state: any) => ({ satuanKecil: state.values.satuan_kecil, satuanBesar: state.values.satuan_besar })}>
-                                {(data: { satuanKecil?: string; satuanBesar?: string }) => {
-                                    const label = data.satuanBesar && data.satuanKecil ? `1 ${data.satuanBesar} berapa ${data.satuanKecil}` : 'Jumlah';
+                            <form.Subscribe
+                                selector={(state: any) => ({
+                                    satuanKecil: state.values.satuan_kecil,
+                                    satuanBesar: state.values.satuan_besar,
+                                })}
+                            >
+                                {(data: {
+                                    satuanKecil?: string;
+                                    satuanBesar?: string;
+                                }) => {
+                                    const label =
+                                        data.satuanBesar && data.satuanKecil
+                                            ? `1 ${data.satuanBesar} berapa ${data.satuanKecil}`
+                                            : 'Jumlah';
+
                                     return (
                                         <form.Field
                                             name="jumlah_satuan_kecil_dalam_satuan_besar"
@@ -158,6 +170,7 @@ export default function TambahObatForm({
                                                     if (!value) {
                                                         return 'Jumlah Satuan Kecil dalam Satuan Besar harus diisi';
                                                     }
+
                                                     if (isNaN(Number(value))) {
                                                         return 'Harus berupa angka';
                                                     }
@@ -171,7 +184,7 @@ export default function TambahObatForm({
                                                     labelInfo="Jumlah disini adalah jumlah satuan kecil dalam satuan besar. Contoh: jika  satuan kecil adalah 'Tablet' dan satuan besar adalah 'Box/Dus', maka tulis disini 'berapa' jumlah Tablet dalam 1 Box/Dus."
                                                     placeholder="Contoh: 10"
                                                     type="number"
-                                                    helperText="Dalam 1 satuan besar"
+                                                    // helperText="Dalam 1 satuan besar"
                                                 />
                                             )}
                                         </form.Field>
@@ -183,8 +196,8 @@ export default function TambahObatForm({
                 </div>
 
                 {/* Satuan Penjualan + Jumlah - col-span-5 */}
-                <div className="col-span-5">
-                    <div className="grid grid-cols-5 gap-2">
+                <div className="col-span-12 lg:col-span-5">
+                    <div className="grid grid-cols-5 lg:gap-2">
                         <div className="col-span-3">
                             <form.Field
                                 name="satuan_penjualan"
@@ -221,9 +234,22 @@ export default function TambahObatForm({
                             </form.Field>
                         </div>
                         <div className="col-span-2">
-                            <form.Subscribe selector={(state: any) => ({ satuanKecil: state.values.satuan_kecil, satuanPenjualan: state.values.satuan_penjualan })}>
-                                {(data: { satuanKecil?: string; satuanPenjualan?: string }) => {
-                                    const label = data.satuanPenjualan && data.satuanKecil ? `1 ${data.satuanPenjualan} berapa ${data.satuanKecil}` : 'Jumlah';
+                            <form.Subscribe
+                                selector={(state: any) => ({
+                                    satuanKecil: state.values.satuan_kecil,
+                                    satuanPenjualan:
+                                        state.values.satuan_penjualan,
+                                })}
+                            >
+                                {(data: {
+                                    satuanKecil?: string;
+                                    satuanPenjualan?: string;
+                                }) => {
+                                    const label =
+                                        data.satuanPenjualan && data.satuanKecil
+                                            ? `1 ${data.satuanPenjualan} berapa ${data.satuanKecil}`
+                                            : 'Jumlah';
+
                                     return (
                                         <form.Field
                                             name="jumlah_satuan_kecil_dalam_satuan_penjualan"
@@ -236,6 +262,7 @@ export default function TambahObatForm({
                                                     if (!value) {
                                                         return 'Jumlah Satuan Kecil dalam Satuan Penjualan harus diisi';
                                                     }
+
                                                     if (isNaN(Number(value))) {
                                                         return 'Harus berupa angka';
                                                     }
@@ -249,7 +276,7 @@ export default function TambahObatForm({
                                                     label={label}
                                                     placeholder="Contoh: 1"
                                                     type="number"
-                                                    helperText="Dalam 1 satuan penjualan"
+                                                    // helperText="Dalam 1 satuan penjualan"
                                                 />
                                             )}
                                         </form.Field>
@@ -261,16 +288,23 @@ export default function TambahObatForm({
                 </div>
 
                 {/* Harga Jual - col-span-2 */}
-                <div className="col-span-2">
-                    <form.Subscribe selector={(state: any) => state.values.satuan_kecil}>
+                <div className="col-span-12 lg:col-span-2">
+                    <form.Subscribe
+                        selector={(state: any) => state.values.satuan_kecil}
+                    >
                         {(satuanKecil: string) => (
                             <form.Field
                                 name="harga_jual"
                                 validators={{
-                                    onChange: ({ value }: { value: string }) => {
+                                    onChange: ({
+                                        value,
+                                    }: {
+                                        value: string;
+                                    }) => {
                                         if (!value) {
                                             return 'Harga Jual harus diisi';
                                         }
+
                                         if (isNaN(Number(value))) {
                                             return 'Harus berupa angka';
                                         }
@@ -278,14 +312,18 @@ export default function TambahObatForm({
                                 }}
                             >
                                 {(field: any) => (
-                                        <InputLabelAndHelper
-                                            field={field}
-                                            label={satuanKecil ? `Harga Jual (per ${satuanKecil})` : 'Harga Jual'}
-                                            labelInfo="Harga jual adalah harga jual per satuan kecil. Contoh: jika satuan kecil adalah 'Tablet' dan harga jual per tablet adalah 500, maka tulis  500."
-                                            placeholder="Harga jual"
-                                            type="currency"
-                                            helperText="Harga jual per satuan kecil"
-                                        />
+                                    <InputLabelAndHelper
+                                        field={field}
+                                        label={
+                                            satuanKecil
+                                                ? `Harga Jual (per ${satuanKecil})`
+                                                : 'Harga Jual'
+                                        }
+                                        labelInfo="Harga jual adalah harga jual per satuan kecil. Contoh: jika satuan kecil adalah 'Tablet' dan harga jual per tablet adalah 500, maka tulis  500."
+                                        placeholder="Harga jual"
+                                        type="currency"
+                                        helperText="Harga jual per satuan kecil"
+                                    />
                                 )}
                             </form.Field>
                         )}

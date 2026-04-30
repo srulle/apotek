@@ -2,12 +2,6 @@ import { Command as CommandPrimitive } from 'cmdk';
 import { MinusIcon, PlusIcon, Check, InfoIcon } from 'lucide-react';
 import type { InputHTMLAttributes, KeyboardEvent } from 'react';
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
-import { Button } from '@/components/ui/button';
-import {
     useId,
     forwardRef,
     useState,
@@ -17,6 +11,7 @@ import {
     useMemo,
 } from 'react';
 import { NumericFormat } from 'react-number-format';
+import { Button } from '@/components/ui/button';
 import {
     CommandGroup,
     CommandItem,
@@ -24,6 +19,11 @@ import {
 } from '@/components/ui/command';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 
 export type Option = Record<'value' | 'label', string> & Record<string, string>;

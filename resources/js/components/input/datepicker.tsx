@@ -163,7 +163,7 @@ return undefined;
         };
 
         return (
-            <div className={`w-full space-y-2 ${className || ''}`}>
+            <div className={`w-full space-y-2 p-1 ${className || ''}`}>
                 {label && (
                     <Label
                         className={cn(

@@ -67,7 +67,8 @@ const SalesItemDetailForm = ({
     // Create batch options from item.stok
     const batchOptions = (item.stok || []).map((batchItem) => ({
         value: batchItem.nomor_batch,
-        label: `${batchItem.nomor_batch} (Stok: ${batchItem.stok})`,
+        label: batchItem.nomor_batch,
+        subtitle: `Stok: ${batchItem.stok}`,
     }));
 
     // Auto-fill batch with nearest expiry date (FEFO - First Expired, First Out)
@@ -113,45 +114,58 @@ const SalesItemDetailForm = ({
                 e.stopPropagation();
                 form.handleSubmit();
             }}
-            className="grid gap-3"
+            className="grid gap-0"
         >
-            <div className="space-y-1">
+            <div className="space-y-0">
                 {/* <h4 className="leading-none font-medium">{item.label}</h4> */}
                 <p className="text-xs text-muted-foreground italic">
                     Masukkan detail penjualan
                 </p>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-1">
                 <form.Field
                     name="batch"
                     validators={{
                         onChange: z.string().min(1, 'Nomor batch wajib diisi'),
                     }}
                 >
-                    {(field) => (
-                        <ComboboxLabelAndHelper
-                            label="Nomor Batch"
-                            placeholder="Pilih nomor batch"
-                            field={field}
-                            initialItems={batchOptions}
-                            searchable={false}
-                            onValueChange={(selectedValue) => {
-                                field.handleChange(selectedValue);
-                                // Update expiredDate when batch is selected
-                                const selectedBatch = item.stok?.find(
-                                    (b) => b.nomor_batch === selectedValue,
-                                );
+                    {(field) => {
+                        // Get stock for selected batch
+                        const selectedBatch = item.stok?.find(
+                            (b) => b.nomor_batch === field.state.value,
+                        );
+                        const helperText = selectedBatch
+                            ? `Stok tersedia: ${selectedBatch.stok} ${item.satuan_kecil}`
+                            : undefined;
 
-                                if (selectedBatch) {
-                                    form.setFieldValue(
-                                        'expiredDate',
-                                        new Date(selectedBatch.tanggal_expired),
+                        return (
+                            <ComboboxLabelAndHelper
+                                label="Nomor Batch"
+                                placeholder="Pilih nomor batch"
+                                field={field}
+                                initialItems={batchOptions}
+                                searchable={false}
+                                helperText={helperText}
+                                onValueChange={(selectedValue) => {
+                                    field.handleChange(selectedValue);
+                                    // Update expiredDate when batch is selected
+                                    const selectedBatch = item.stok?.find(
+                                        (b) => b.nomor_batch === selectedValue,
                                     );
-                                }
-                            }}
-                        />
-                    )}
+
+                                    if (selectedBatch) {
+                                        form.setFieldValue(
+                                            'expiredDate',
+                                            new Date(
+                                                selectedBatch.tanggal_expired,
+                                            ),
+                                        );
+                                    }
+                                }}
+                            />
+                        );
+                    }}
                 </form.Field>
 
                 <form.Field
@@ -255,27 +269,65 @@ const SalesItemDetailForm = ({
                     }}
                 </form.Subscribe>
 
-                <form.Subscribe selector={(state) => state.values.satuan}>
-                    {(satuanValue) => (
-                        <form.Field
-                            name="jumlahJual"
-                            validators={{
-                                onChange: z.coerce
-                                    .number()
-                                    .int()
-                                    .min(1, 'Jumlah minimal 1'),
-                            }}
-                        >
-                            {(field) => (
-                                <InputLabelAndHelper
-                                    label={`Jumlah Jual (${satuanValue || 'satuan'})`}
-                                    type="number"
-                                    min={1}
-                                    field={field}
-                                />
-                            )}
-                        </form.Field>
-                    )}
+                <form.Subscribe
+                    selector={(state) => [
+                        state.values.satuan,
+                        state.values.batch,
+                        state.values.isiSatuan,
+                    ]}
+                >
+                    {([satuanValue, batchValue, isiSatuanValue]) => {
+                        // Get selected batch stock
+                        const selectedBatch = item.stok?.find(
+                            (b) => b.nomor_batch === batchValue,
+                        );
+                        const maxJumlahJual =
+                            selectedBatch && isiSatuanValue
+                                ? Math.floor(
+                                      selectedBatch.stok /
+                                          (isiSatuanValue as number),
+                                  )
+                                : undefined;
+
+                        return (
+                            <form.Field
+                                name="jumlahJual"
+                                validators={{
+                                    onChange: z.coerce
+                                        .number()
+                                        .int()
+                                        .min(1, 'Jumlah minimal 1')
+                                        .refine(
+                                            (value) => {
+                                                if (
+                                                    !selectedBatch ||
+                                                    !isiSatuanValue
+                                                )
+                                                    return true;
+                                                return (
+                                                    value *
+                                                        (isiSatuanValue as number) <=
+                                                    selectedBatch.stok
+                                                );
+                                            },
+                                            {
+                                                message: `Stok tersedia: ${maxJumlahJual || 0} ${satuanValue || 'satuan'} (${selectedBatch?.stok || 0} ${item.satuan_kecil}) untuk Batch ini`,
+                                            },
+                                        ),
+                                }}
+                            >
+                                {(field) => (
+                                    <InputLabelAndHelper
+                                        label={`Jumlah Jual (${satuanValue || 'satuan'})`}
+                                        type="number"
+                                        min={1}
+                                        max={maxJumlahJual}
+                                        field={field}
+                                    />
+                                )}
+                            </form.Field>
+                        );
+                    }}
                 </form.Subscribe>
 
                 <form.Field

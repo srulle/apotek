@@ -78,9 +78,11 @@ export default function PenjualanForm({ obat, satuan }: PenjualanFormProps) {
         const totalHarga = selectedObat.reduce((total, entry) => {
             const formData = obatFormData[entry.uniqueId] || {};
             const jumlahJual = Number(formData.jumlahJual) || 0;
-            const hargaJual = Number(formData.hargaJual) || 0;
+            const hargaJual = Number(
+                (formData.hargaJual?.toString() || '').replace(/\./g, '') || 0,
+            );
 
-            return total + jumlahJual * hargaJual;
+            return total + hargaJual;
         }, 0);
 
         const detailPembelian = selectedObat.map((entry) => {
@@ -93,7 +95,14 @@ export default function PenjualanForm({ obat, satuan }: PenjualanFormProps) {
                 jumlah_jual:
                     (Number(formData.jumlahJual) || 0) *
                     (Number(formData.isiSatuan) || 1),
-                harga_jual: formData.hargaJual || '',
+                harga_jual:
+                    Number(
+                        (formData.hargaJual?.toString() || '').replace(
+                            /\./g,
+                            '',
+                        ) || 0,
+                    ) /
+                    ((formData.isiSatuan || 1) * (formData.jumlahJual || 1)),
             };
         });
 
@@ -267,8 +276,8 @@ export default function PenjualanForm({ obat, satuan }: PenjualanFormProps) {
                                                           {
                                                               style: 'currency',
                                                               currency: 'IDR',
-                                                              minimumFractionDigits: 2,
-                                                              maximumFractionDigits: 2,
+                                                              minimumFractionDigits: 0,
+                                                              maximumFractionDigits: 0,
                                                           },
                                                       ).format(
                                                           formData.hargaJual,
@@ -328,12 +337,13 @@ export default function PenjualanForm({ obat, satuan }: PenjualanFormProps) {
 
                                                 return (
                                                     total +
-                                                    (Number(
-                                                        formData.jumlahJual,
-                                                    ) *
-                                                        Number(
-                                                            formData.hargaJual,
-                                                        ) || 0)
+                                                    Number(
+                                                        (
+                                                            formData.hargaJual?.toString() ||
+                                                            ''
+                                                        ).replace(/\./g, '') ||
+                                                            0,
+                                                    )
                                                 );
                                             },
                                             0,
@@ -341,8 +351,8 @@ export default function PenjualanForm({ obat, satuan }: PenjualanFormProps) {
                                             ? new Intl.NumberFormat('id-ID', {
                                                   style: 'currency',
                                                   currency: 'IDR',
-                                                  minimumFractionDigits: 2,
-                                                  maximumFractionDigits: 2,
+                                                  minimumFractionDigits: 0,
+                                                  maximumFractionDigits: 0,
                                               }).format(
                                                   selectedObat.reduce<number>(
                                                       (total, entry) => {
@@ -353,12 +363,15 @@ export default function PenjualanForm({ obat, satuan }: PenjualanFormProps) {
 
                                                           return (
                                                               total +
-                                                              (Number(
-                                                                  formData.jumlahJual,
-                                                              ) *
-                                                                  Number(
-                                                                      formData.hargaJual,
-                                                                  ) || 0)
+                                                              Number(
+                                                                  (
+                                                                      formData.hargaJual?.toString() ||
+                                                                      ''
+                                                                  ).replace(
+                                                                      /\./g,
+                                                                      '',
+                                                                  ) || 0,
+                                                              )
                                                           );
                                                       },
                                                       0,

@@ -27,7 +27,9 @@ interface ComboboxProps {
     value: string;
     onValueChange?: (value: string) => void;
     onBlur?: () => void;
-    initialItems?: string[] | Array<{ value: string | number; label: string }>;
+    initialItems?:
+        | string[]
+        | Array<{ value: string | number; label: string; subtitle?: string }>;
     placeholder?: string;
     className?: string;
     creatable?: boolean;
@@ -49,14 +51,20 @@ const Combobox = ({
     const [open, setOpen] = useState(false);
     const [items, setItems] = useState(
         initialItems?.map((item: any) =>
-            typeof item === 'object' && 'label' in item ? item.label : item,
+            typeof item === 'object' && 'label' in item
+                ? {
+                      label: item.label,
+                      subtitle: item.subtitle,
+                      value: item.value,
+                  }
+                : { label: item, subtitle: undefined, value: item },
         ) ?? [],
     );
     const [search, setSearch] = useState('');
     const [isCreating, setIsCreating] = useState(false);
 
     const handleCreate = async () => {
-        if (search && !items.includes(search)) {
+        if (search && !items.some((item) => item.label === search)) {
             setIsCreating(true);
 
             try {
@@ -66,7 +74,10 @@ const Combobox = ({
 
                 setOpen(false);
                 setSearch('');
-                setItems([...items, search]);
+                setItems([
+                    ...items,
+                    { label: search, subtitle: undefined, value: search },
+                ]);
                 onValueChange?.(search);
             } finally {
                 setIsCreating(false);
@@ -135,7 +146,7 @@ const Combobox = ({
                         <CommandGroup>
                             {items.map((item) => (
                                 <CommandItem
-                                    key={item}
+                                    key={item.label}
                                     onSelect={(currentValue) => {
                                         onValueChange?.(
                                             currentValue === value
@@ -144,23 +155,30 @@ const Combobox = ({
                                         );
                                         setOpen(false);
                                     }}
-                                    value={item}
+                                    value={item.label}
                                 >
                                     <Check
                                         className={cn(
                                             'mr-2 size-4',
-                                            value === item
+                                            value === item.label
                                                 ? 'opacity-100'
                                                 : 'opacity-0',
                                         )}
                                     />
-                                    {item}
+                                    <div className="flex flex-1 items-center justify-between">
+                                        <span>{item.label}</span>
+                                        {item.subtitle && (
+                                            <span className="ml-2 text-xs text-muted-foreground">
+                                                {item.subtitle}
+                                            </span>
+                                        )}
+                                    </div>
                                 </CommandItem>
                             ))}
                         </CommandGroup>
                         {creatable &&
                             search &&
-                            !items.includes(search) &&
+                            !items.some((item) => item.label === search) &&
                             items.length > 0 && (
                                 <>
                                     <CommandSeparator />
@@ -189,7 +207,9 @@ export interface TanStackComboboxProps {
     field?: any;
     label: string;
     placeholder?: string;
-    initialItems?: string[] | Array<{ value: string | number; label: string }>;
+    initialItems?:
+        | string[]
+        | Array<{ value: string | number; label: string; subtitle?: string }>;
     className?: string;
     creatable?: boolean;
     onCreate?: (value: string) => Promise<void> | void;
@@ -225,16 +245,28 @@ const ComboboxLabelAndHelper = (props: ComboboxLabelAndHelperProps) => {
         ? field.state.meta.errors.map((e: any) => e.message || e).join(', ')
         : '';
 
-    // Handle object initialItems {value, label}
+    // Handle object initialItems {value, label, subtitle?}
     const isObjectItems =
         initialItems &&
         initialItems.length > 0 &&
         typeof initialItems[0] === 'object';
-    const itemsAsStrings = isObjectItems
+    const itemsAsObjects = isObjectItems
         ? (
-              initialItems as Array<{ value: string | number; label: string }>
-          ).map((item) => item.label)
-        : (initialItems as string[]);
+              initialItems as Array<{
+                  value: string | number;
+                  label: string;
+                  subtitle?: string;
+              }>
+          ).map((item) => ({
+              label: item.label,
+              subtitle: item.subtitle,
+              value: item.value,
+          }))
+        : (initialItems as string[]).map((item) => ({
+              label: item,
+              subtitle: undefined,
+              value: item,
+          }));
 
     // Find label for current value if using object items
     let displayValue = currentValue;
@@ -277,7 +309,7 @@ const ComboboxLabelAndHelper = (props: ComboboxLabelAndHelperProps) => {
     };
 
     return (
-        <div className={`p-1 w-full space-y-2 ${className || ''}`}>
+        <div className={`w-full space-y-2 p-1 ${className || ''}`}>
             <Label className={hasError ? 'text-destructive' : ''}>
                 {label}
             </Label>
@@ -285,7 +317,7 @@ const ComboboxLabelAndHelper = (props: ComboboxLabelAndHelperProps) => {
                 value={displayValue}
                 onValueChange={handleValueChange}
                 onBlur={isFieldMode ? field.handleBlur : undefined}
-                initialItems={itemsAsStrings}
+                initialItems={itemsAsObjects}
                 placeholder={placeholder}
                 className={
                     hasError
@@ -302,7 +334,7 @@ const ComboboxLabelAndHelper = (props: ComboboxLabelAndHelperProps) => {
                 </p>
             )}
             {helperText && !errorMessage && (
-                <p className="mt-1.5 text-xs text-muted-foreground">
+                <p className="-mt-2 text-xs text-muted-foreground italic">
                     {helperText}
                 </p>
             )}

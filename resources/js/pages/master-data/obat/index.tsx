@@ -7,8 +7,8 @@ import { toast } from 'sonner';
 import DataTable from '@/components/datatable/datatable';
 import { DeleteConfirm } from '@/components/delete-confirm';
 import { Modal } from '@/components/modal';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { DialogClose } from '@/components/ui/dialog';
 import TambahObatForm from './tambah-obat-form';
 
@@ -79,6 +79,7 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                     row.original.jumlah_satuan_kecil_dalam_satuan_besar;
                 const satuanKecil =
                     row.original.satuan_kecil?.nama_satuan || '-';
+
                 return (
                     <div className="flex items-center gap-2">
                         {satuanBesar}
@@ -99,6 +100,7 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                     row.original.jumlah_satuan_kecil_dalam_satuan_penjualan;
                 const satuanKecil =
                     row.original.satuan_kecil?.nama_satuan || '-';
+
                 return (
                     <div className="flex items-center gap-2">
                         {satuanPenjualan}
@@ -125,6 +127,7 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                 }).format(row.original.harga_jual);
                 const satuanKecil =
                     row.original.satuan_kecil?.nama_satuan || '-';
+
                 return (
                     <div className="flex items-center gap-2">
                         {harga}

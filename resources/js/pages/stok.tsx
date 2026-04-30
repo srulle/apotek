@@ -2,6 +2,7 @@ import { Head, usePage } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { CalendarIcon } from 'lucide-react';
 import DataTable from '@/components/datatable/datatable';
+import { Badge } from '@/components/ui/badge';
 import {
     Table,
     TableBody,
@@ -70,20 +71,7 @@ export default function Stok() {
                 filterable: true,
             },
         },
-        {
-            accessorKey: 'satuan_besar.nama_satuan',
-            header: 'Satuan Besar',
-            cell: ({ row }) => row.original.satuan_besar?.nama_satuan || '-',
-        },
-        {
-            accessorKey: 'satuan_kecil.nama_satuan',
-            header: 'Satuan Kecil',
-            cell: ({ row }) => row.original.satuan_kecil?.nama_satuan || '-',
-        },
-        {
-            accessorKey: 'isi_per_satuan',
-            header: 'Isi',
-        },
+
         {
             accessorKey: 'harga_jual',
             header: 'Harga Jual',
@@ -91,12 +79,23 @@ export default function Stok() {
                 sortIconType: 'numeric',
             },
             cell: ({ row }) => {
-                return new Intl.NumberFormat('id-ID', {
+                const harga = new Intl.NumberFormat('id-ID', {
                     style: 'currency',
                     currency: 'IDR',
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 0,
                 }).format(row.original.harga_jual);
+                const satuanKecil =
+                    row.original.satuan_kecil?.nama_satuan || '';
+
+                return (
+                    <div className="flex items-center gap-1">
+                        {harga}
+                        <Badge className="rounded-sm px-1.5 py-px text-[10px]">
+                            per {satuanKecil}
+                        </Badge>
+                    </div>
+                );
             },
         },
         {
@@ -107,8 +106,17 @@ export default function Stok() {
             },
             cell: ({ row }) => {
                 const totalStok = row.original.total_stok || 0;
+                const satuanKecil =
+                    row.original.satuan_kecil?.nama_satuan || '';
 
-                return totalStok.toLocaleString('id-ID');
+                return (
+                    <div className="flex items-center gap-1">
+                        {totalStok.toLocaleString('id-ID')}
+                        <Badge className="rounded-sm px-1.5 py-px text-[10px]">
+                            per {satuanKecil}
+                        </Badge>
+                    </div>
+                );
             },
         },
     ];
@@ -162,8 +170,7 @@ export default function Stok() {
                         </TableRow>
                     ))}
                 </TableBody>
-                <TableFooter
-                    className="bg-transparent">
+                <TableFooter className="bg-transparent">
                     <TableRow>
                         <TableCell colSpan={3} className="text-center">
                             Total

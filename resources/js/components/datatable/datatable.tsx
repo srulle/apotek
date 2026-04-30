@@ -130,6 +130,7 @@ const DataTable = <T,>({
         Record<string, string[]>
     >({});
     const [expanded, setExpanded] = useState<ExpandedState>({});
+    const [activeRowId, setActiveRowId] = useState<string | null>(null);
     const [popoverOpens, setPopoverOpens] = useState<Record<string, boolean>>(
         {},
     );
@@ -626,10 +627,19 @@ const DataTable = <T,>({
                                         data-state={
                                             row.getIsSelected() && 'selected'
                                         }
-                                        className={
+                                        className={cn(
                                             row.getIsExpanded()
                                                 ? 'font-semibold'
-                                                : ''
+                                                : '',
+                                            activeRowId === row.id &&
+                                                'bg-muted/50',
+                                        )}
+                                        onClick={() =>
+                                            setActiveRowId(
+                                                row.id === activeRowId
+                                                    ? null
+                                                    : row.id,
+                                            )
                                         }
                                     >
                                         {enableRowExpansion && (
