@@ -10,6 +10,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
     Table,
     TableBody,
@@ -30,9 +31,15 @@ type Supplier = {
     nama_supplier: string;
 };
 
+type Satuan = {
+    id: number;
+    nama_satuan: string;
+};
+
 type Obat = {
     id: string;
     nama_obat: string;
+    satuan_kecil?: Satuan;
 };
 
 type PembelianDetail = {
@@ -121,9 +128,12 @@ export default function PembelianHistory({
                     row.original.tanggal_pembelian,
                 ).toLocaleDateString('id-ID', {
                     day: '2-digit',
-                    month: '2-digit',
+                    month: 'long',
                     year: 'numeric',
-                });
+                }).replace(
+                    /(\w+) (\w+) (\d+)/,
+                    '$1 $2, $3',
+                );
             },
         },
         {
@@ -131,22 +141,7 @@ export default function PembelianHistory({
             header: 'User',
             cell: ({ row }) => row.original.user?.name || '-',
         },
-        {
-            accessorKey: 'created_at',
-            header: 'Waktu Dibuat',
-            cell: ({ row }) => {
-                return new Date(row.original.created_at).toLocaleString(
-                    'id-ID',
-                    {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                    },
-                );
-            },
-        },
+
     ];
 
     const renderExpandedRow = (pembelianData: Pembelian) => {
@@ -210,7 +205,7 @@ export default function PembelianHistory({
                                     </div>
                                 </TableCell>
                                 <TableCell className="text-center">
-                                    {detail.jumlah_beli.toLocaleString('id-ID')}
+                                    {detail.jumlah_beli.toLocaleString('id-ID')} {detail.obat?.satuan_kecil?.nama_satuan || ''}
                                 </TableCell>
                                 <TableCell className="text-center">
                                     {new Intl.NumberFormat('id-ID', {
@@ -218,7 +213,10 @@ export default function PembelianHistory({
                                         currency: 'IDR',
                                         minimumFractionDigits: 0,
                                         maximumFractionDigits: 0,
-                                    }).format(detail.harga_beli)}
+                                    }).format(detail.harga_beli)}{' '}
+                                    <Badge className="rounded-sm px-1.5 py-px text-[10px]">
+                                        per {detail.obat?.satuan_kecil?.nama_satuan || ''}
+                                    </Badge>
                                 </TableCell>
                                 <TableCell className="text-right">
                                     {new Intl.NumberFormat('id-ID', {

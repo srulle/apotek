@@ -25,6 +25,12 @@ import {
 import PurchaseItemDetailForm from './components/PurchaseItemDetailForm';
 import { usePembelianForm } from './usePembelianForm';
 
+const fetchSuppliers = async (): Promise<string[]> => {
+    const response = await fetch('/api/master-data/supplier');
+    if (!response.ok) throw new Error('Failed to fetch suppliers');
+    return response.json();
+};
+
 interface PembelianFormProps {
     suppliers: Array<{ id: number; nama_supplier: string }>;
     obat: Array<{
@@ -99,6 +105,7 @@ export default function PembelianForm({
                                 }))}
                                 field={field}
                                 creatable={true}
+                                fetchItems={fetchSuppliers}
                                 onCreate={createSupplier}
                             />
                         )}

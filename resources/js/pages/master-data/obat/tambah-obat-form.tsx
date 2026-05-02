@@ -14,6 +14,26 @@ interface TambahObatFormProps {
     ) => Promise<void>;
 }
 
+const fetchKategoriObat = async (): Promise<string[]> => {
+    const response = await fetch('/api/master-data/kategori-obat');
+
+    if (!response.ok) {
+throw new Error('Failed to fetch kategori obat');
+}
+
+    return response.json();
+};
+
+const fetchSatuan = async (): Promise<string[]> => {
+    const response = await fetch('/api/master-data/satuan');
+
+    if (!response.ok) {
+throw new Error('Failed to fetch satuan');
+}
+
+    return response.json();
+};
+
 export default function TambahObatForm({
     form,
     kategoriObat,
@@ -59,6 +79,7 @@ export default function TambahObatForm({
                         placeholder="Pilih kategori obat"
                         initialItems={kategoriObat}
                         creatable={true}
+                        fetchItems={fetchKategoriObat}
                         onCreate={(value) =>
                             createItem(
                                 '/master-data/kategori-obat',
@@ -89,6 +110,7 @@ export default function TambahObatForm({
                         placeholder="Pilih satuan kecil"
                         initialItems={satuan}
                         creatable={true}
+                        fetchItems={fetchSatuan}
                         onCreate={(value) =>
                             createItem(
                                 '/master-data/satuan',
@@ -129,6 +151,7 @@ export default function TambahObatForm({
                                         placeholder="Pilih satuan besar"
                                         initialItems={satuan}
                                         creatable={true}
+                                        fetchItems={fetchSatuan}
                                         onCreate={(value) =>
                                             createItem(
                                                 '/master-data/satuan',
@@ -220,6 +243,7 @@ export default function TambahObatForm({
                                         placeholder="Pilih satuan penjualan"
                                         initialItems={satuan}
                                         creatable={true}
+                                        fetchItems={fetchSatuan}
                                         onCreate={(value) =>
                                             createItem(
                                                 '/master-data/satuan',

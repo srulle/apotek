@@ -1,7 +1,7 @@
 'use client';
 
 import { Check, ChevronsUpDown, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -35,6 +35,10 @@ interface ComboboxProps {
     creatable?: boolean;
     onCreate?: (value: string) => Promise<void> | void;
     searchable?: boolean;
+    fetchItems?: () => Promise<
+        | string[]
+        | Array<{ value: string | number; label: string; subtitle?: string }>
+    >;
 }
 
 const Combobox = ({
@@ -47,21 +51,55 @@ const Combobox = ({
     creatable = false,
     onCreate,
     searchable = true,
+    fetchItems,
 }: ComboboxProps) => {
     const [open, setOpen] = useState(false);
+
+    const formatItem = (item: any) => {
+        return typeof item === 'object' && 'label' in item
+            ? {
+                  label: item.label,
+                  subtitle: item.subtitle,
+                  value: item.value,
+              }
+            : { label: item, subtitle: undefined, value: item };
+    };
+
     const [items, setItems] = useState(
-        initialItems?.map((item: any) =>
-            typeof item === 'object' && 'label' in item
-                ? {
-                      label: item.label,
-                      subtitle: item.subtitle,
-                      value: item.value,
-                  }
-                : { label: item, subtitle: undefined, value: item },
-        ) ?? [],
+        initialItems?.map(formatItem) ?? [],
     );
     const [search, setSearch] = useState('');
     const [isCreating, setIsCreating] = useState(false);
+    const [isFetching, setIsFetching] = useState(false);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (open && !isFetching && searchable) {
+            // Use requestAnimationFrame to ensure DOM is ready
+            const raf = requestAnimationFrame(() => {
+                inputRef.current?.focus();
+            });
+            
+            return () => cancelAnimationFrame(raf);
+        }
+    }, [open, isFetching, searchable]);
+
+    const handleOpenChange = async (isOpen: boolean) => {
+        setOpen(isOpen);
+
+        if (isOpen && fetchItems) {
+            setIsFetching(true);
+
+            try {
+                const freshItems = await fetchItems();
+                setItems(freshItems.map(formatItem));
+            } catch (error) {
+                console.error('Failed to fetch items:', error);
+            } finally {
+                setIsFetching(false);
+            }
+        }
+    };
 
     const handleCreate = async () => {
         if (search && !items.some((item) => item.label === search)) {
@@ -86,7 +124,7 @@ const Combobox = ({
     };
 
     return (
-        <Popover onOpenChange={setOpen} open={open}>
+        <Popover onOpenChange={handleOpenChange} open={open}>
             <PopoverTrigger asChild>
                 <Button
                     aria-expanded={open}
@@ -113,90 +151,97 @@ const Combobox = ({
                 onTouchMove={(e) => e.stopPropagation()}
                 onTouchEnd={(e) => e.stopPropagation()}
             >
-                <Command>
-                    {searchable && (
-                        <CommandInput
-                            onValueChange={setSearch}
-                            placeholder={
-                                creatable ? 'Search or create...' : 'Search...'
-                            }
-                            value={search}
-                        />
-                    )}
-                    <CommandList>
-                        <CommandEmpty>
-                            {creatable && search ? (
-                                <Button
-                                    className="w-full justify-start"
-                                    onClick={handleCreate}
-                                    variant="ghost"
-                                    disabled={isCreating}
-                                >
-                                    <Plus className="mr-2 size-4" />
-                                    {isCreating
-                                        ? 'Menyimpan...'
-                                        : `Create "${search}"`}
-                                </Button>
-                            ) : (
-                                <p className="p-2 text-sm text-muted-foreground">
-                                    No results found.
-                                </p>
-                            )}
-                        </CommandEmpty>
-                        <CommandGroup>
-                            {items.map((item) => (
-                                <CommandItem
-                                    key={item.label}
-                                    onSelect={(currentValue) => {
-                                        onValueChange?.(
-                                            currentValue === value
-                                                ? ''
-                                                : currentValue,
-                                        );
-                                        setOpen(false);
-                                    }}
-                                    value={item.label}
-                                >
-                                    <Check
-                                        className={cn(
-                                            'mr-2 size-4',
-                                            value === item.label
-                                                ? 'opacity-100'
-                                                : 'opacity-0',
-                                        )}
-                                    />
-                                    <div className="flex flex-1 items-center justify-between">
-                                        <span>{item.label}</span>
-                                        {item.subtitle && (
-                                            <span className="ml-2 text-xs text-muted-foreground">
-                                                {item.subtitle}
-                                            </span>
-                                        )}
-                                    </div>
-                                </CommandItem>
-                            ))}
-                        </CommandGroup>
-                        {creatable &&
-                            search &&
-                            !items.some((item) => item.label === search) &&
-                            items.length > 0 && (
-                                <>
-                                    <CommandSeparator />
-                                    <CommandGroup>
-                                        <CommandItem
-                                            onSelect={handleCreate}
-                                            disabled={isCreating}
-                                        >
-                                            <Plus className="mr-2 size-4" />
-                                            {isCreating
-                                                ? 'Menyimpan...'
-                                                : `Create "${search}"`}
-                                        </CommandItem>
-                                    </CommandGroup>
-                                </>
-                            )}
-                    </CommandList>
-                </Command>
+                {isFetching ? (
+                    <div className="p-4 text-center text-sm text-muted-foreground">
+                        Loading...
+                    </div>
+                ) : (
+                    <Command>
+                        {searchable && (
+                            <CommandInput
+                                ref={inputRef}
+                                onValueChange={setSearch}
+                                placeholder={
+                                    creatable ? 'Search or create...' : 'Search...'
+                                }
+                                value={search}
+                            />
+                        )}
+                        <CommandList>
+                            <CommandEmpty>
+                                {creatable && search ? (
+                                    <Button
+                                        className="w-full justify-start"
+                                        onClick={handleCreate}
+                                        variant="ghost"
+                                        disabled={isCreating}
+                                    >
+                                        <Plus className="mr-2 size-4" />
+                                        {isCreating
+                                            ? 'Menyimpan...'
+                                            : `Create "${search}"`}
+                                    </Button>
+                                ) : (
+                                    <p className="p-2 text-sm text-muted-foreground">
+                                        No results found.
+                                    </p>
+                                )}
+                            </CommandEmpty>
+                            <CommandGroup>
+                                {items.map((item) => (
+                                    <CommandItem
+                                        key={item.label}
+                                        onSelect={(currentValue) => {
+                                            onValueChange?.(
+                                                currentValue === value
+                                                    ? ''
+                                                    : currentValue,
+                                            );
+                                            setOpen(false);
+                                        }}
+                                        value={item.label}
+                                    >
+                                        <Check
+                                            className={cn(
+                                                'mr-2 size-4',
+                                                value === item.label
+                                                    ? 'opacity-100'
+                                                    : 'opacity-0',
+                                            )}
+                                        />
+                                        <div className="flex flex-1 items-center justify-between">
+                                            <span>{item.label}</span>
+                                            {item.subtitle && (
+                                                <span className="ml-2 text-xs text-muted-foreground">
+                                                    {item.subtitle}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </CommandItem>
+                                ))}
+                            </CommandGroup>
+                            {creatable &&
+                                search &&
+                                !items.some((item) => item.label === search) &&
+                                items.length > 0 && (
+                                    <>
+                                        <CommandSeparator />
+                                        <CommandGroup>
+                                            <CommandItem
+                                                onSelect={handleCreate}
+                                                disabled={isCreating}
+                                            >
+                                                <Plus className="mr-2 size-4" />
+                                                {isCreating
+                                                    ? 'Menyimpan...'
+                                                    : `Create "${search}"`}
+                                            </CommandItem>
+                                        </CommandGroup>
+                                    </>
+                                )}
+                        </CommandList>
+                    </Command>
+                )}
             </PopoverContent>
         </Popover>
     );
@@ -214,6 +259,10 @@ export interface TanStackComboboxProps {
     creatable?: boolean;
     onCreate?: (value: string) => Promise<void> | void;
     searchable?: boolean;
+    fetchItems?: () => Promise<
+        | string[]
+        | Array<{ value: string | number; label: string; subtitle?: string }>
+    >;
 }
 
 interface ComboboxLabelAndHelperProps extends TanStackComboboxProps {
@@ -232,6 +281,7 @@ const ComboboxLabelAndHelper = (props: ComboboxLabelAndHelperProps) => {
         creatable,
         onCreate,
         searchable,
+        fetchItems,
         value,
         onValueChange,
         helperText,
@@ -327,6 +377,7 @@ const ComboboxLabelAndHelper = (props: ComboboxLabelAndHelperProps) => {
                 creatable={creatable}
                 onCreate={onCreate}
                 searchable={searchable}
+                fetchItems={fetchItems}
             />
             {errorMessage && (
                 <p className="-mt-2 text-xs text-destructive italic">

@@ -15,6 +15,13 @@ class KategoriObatController extends Controller
         return inertia('master-data/kategori-obat', compact('kategoriObat'));
     }
 
+    public function list()
+    {
+        $kategoriObat = KategoriObat::orderBy('nama_kategori', 'asc')->pluck('nama_kategori');
+
+        return response()->json($kategoriObat);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([

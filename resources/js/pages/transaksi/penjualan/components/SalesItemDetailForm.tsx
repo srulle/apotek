@@ -302,8 +302,10 @@ const SalesItemDetailForm = ({
                                                 if (
                                                     !selectedBatch ||
                                                     !isiSatuanValue
-                                                )
-                                                    return true;
+                                                ) {
+return true;
+}
+
                                                 return (
                                                     value *
                                                         (isiSatuanValue as number) <=

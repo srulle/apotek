@@ -53,6 +53,19 @@ class PenjualanController extends Controller
         ]);
     }
 
+    public function history()
+    {
+        return response()->json([
+            'penjualan' => Penjualan::with([
+                'user',
+                'penjualanDetail.obat.kategori',
+                'penjualanDetail.obat.satuanKecil',
+            ])
+                ->orderBy('created_at', 'desc')
+                ->get(),
+        ]);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([

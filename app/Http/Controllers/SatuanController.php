@@ -15,6 +15,13 @@ class SatuanController extends Controller
         return inertia('master-data/satuan', compact('satuan'));
     }
 
+    public function list()
+    {
+        $satuan = Satuan::orderBy('nama_satuan', 'asc')->pluck('nama_satuan');
+
+        return response()->json($satuan);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([

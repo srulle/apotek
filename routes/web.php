@@ -16,6 +16,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('transaksi', 'transaksi')->name('transaksi');
     Route::get('transaksi/penjualan', [PenjualanController::class, 'index'])->name('transaksi.penjualan');
     Route::post('transaksi/penjualan', [PenjualanController::class, 'store'])->name('transaksi.penjualan.store');
+    Route::get('api/transaksi/penjualan/history', [PenjualanController::class, 'history']);
     Route::get('transaksi/pembelian', [PembelianController::class, 'index'])->name('transaksi.pembelian');
     Route::get('api/transaksi/pembelian/history', [PembelianController::class, 'history']);
     Route::post('transaksi/pembelian', [PembelianController::class, 'store'])->name('transaksi.pembelian.store');
@@ -28,17 +29,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('master-data/obat/{obat}', [ObatController::class, 'update'])->name('obat.update');
     Route::delete('master-data/obat/{obat}', [ObatController::class, 'destroy'])->name('obat.destroy');
     Route::get('master-data/kategori-obat', [KategoriObatController::class, 'index'])->name('kategori-obat');
+    Route::get('api/master-data/kategori-obat', [KategoriObatController::class, 'list'])->name('api.kategori-obat.list');
     Route::post('master-data/kategori-obat', [KategoriObatController::class, 'store'])->name('kategori-obat.store');
     Route::put('master-data/kategori-obat/{kategori_obat}', [KategoriObatController::class, 'update'])->name('kategori-obat.update');
     Route::delete('master-data/kategori-obat/{kategori_obat}', [KategoriObatController::class, 'destroy'])->name('kategori-obat.destroy');
     Route::get('master-data/satuan', [SatuanController::class, 'index'])->name('satuan');
+    Route::get('api/master-data/satuan', [SatuanController::class, 'list'])->name('api.satuan.list');
     Route::post('master-data/satuan', [SatuanController::class, 'store'])->name('satuan.store');
     Route::put('master-data/satuan/{satuan}', [SatuanController::class, 'update'])->name('satuan.update');
     Route::delete('master-data/satuan/{satuan}', [SatuanController::class, 'destroy'])->name('satuan.destroy');
     Route::get('master-data/supplier', [SupplierController::class, 'index'])->name('supplier');
+    Route::get('api/master-data/supplier', [SupplierController::class, 'list'])->name('api.supplier.list');
     Route::post('master-data/supplier', [SupplierController::class, 'store'])->name('supplier.store');
     Route::put('master-data/supplier/{supplier}', [SupplierController::class, 'update'])->name('supplier.update');
     Route::delete('master-data/supplier/{supplier}', [SupplierController::class, 'destroy'])->name('supplier.destroy');
+
+    // Session re-authentication
+    Route::post('api/re-authenticate', [App\Http\Controllers\ReAuthenticateController::class, 'reAuthenticate'])->name('api.re-authenticate');
 });
 
 require __DIR__.'/settings.php';

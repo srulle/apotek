@@ -19,7 +19,6 @@ return new class extends Migration
                 ->constrained('users')
                 ->cascadeOnUpdate()
                 ->restrictOnDelete();
-            $table->decimal('total_harga', 13, 2)->nullable();
             $table->timestamps();
 
             $table->index('tanggal_penjualan');

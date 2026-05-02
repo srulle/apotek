@@ -15,6 +15,13 @@ class SupplierController extends Controller
         return inertia('master-data/supplier', compact('suppliers'));
     }
 
+    public function list()
+    {
+        $suppliers = Supplier::orderBy('nama_supplier', 'asc')->pluck('nama_supplier');
+
+        return response()->json($suppliers);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([

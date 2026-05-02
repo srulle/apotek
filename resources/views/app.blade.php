@@ -37,6 +37,8 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=geist:400,500,600,700" rel="stylesheet" />
 
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+
         @viteReactRefresh
         @vite(['resources/css/app.css', 'resources/js/app.tsx'])
         <x-inertia::head>
