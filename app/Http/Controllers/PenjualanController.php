@@ -8,6 +8,7 @@ use App\Models\Penjualan;
 use App\Models\PenjualanDetail;
 use App\Models\Satuan;
 use App\Models\Stok;
+use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -59,6 +60,7 @@ class PenjualanController extends Controller
             'penjualan' => Penjualan::with([
                 'user',
                 'penjualanDetail.obat.kategori',
+                'penjualanDetail.obat.satuanBesar',
                 'penjualanDetail.obat.satuanKecil',
             ])
                 ->orderBy('created_at', 'desc')
@@ -66,36 +68,73 @@ class PenjualanController extends Controller
         ]);
     }
 
+    public function getNextNomorFaktur(Request $request)
+    {
+        $tanggal = $request->get('tanggal', date('Y-m-d'));
+        $tanggalFormatted = date('Ymd', strtotime($tanggal));
+        $prefix = 'JGF-'.$tanggalFormatted;
+
+        $lastFaktur = DB::table('penjualan')
+            ->where('nomor_faktur', 'like', $prefix.'%')
+            ->orderBy('nomor_faktur', 'desc')
+            ->value('nomor_faktur');
+
+        if ($lastFaktur && preg_match('/(\d{4})$/', $lastFaktur, $matches)) {
+            $counter = intval($matches[1]) + 1;
+        } else {
+            $counter = 1;
+        }
+
+        $nextNomor = $prefix.str_pad($counter, 4, '0', STR_PAD_LEFT);
+
+        return response()->json(['nomor_faktur' => $nextNomor]);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nomor_faktur' => 'required|string|max:255|unique:penjualan,nomor_faktur',
-            'tanggal_transaksi' => 'required|date',
-            'total_harga' => 'required|numeric|min:0',
-            'detail_pembelian' => 'required|array|min:1',
-            'detail_pembelian.*.obat_id' => 'required|exists:obat,id',
-            'detail_pembelian.*.nomor_batch' => 'required|string|max:255',
-            'detail_pembelian.*.tanggal_expired' => 'required|date',
-            'detail_pembelian.*.jumlah_jual' => 'required|integer|min:1',
-            'detail_pembelian.*.harga_jual' => 'required|numeric|min:0',
+            'header.tanggal_penjualan' => 'required|date',
+            'header.user_id' => 'required|exists:users,id',
+            'items' => 'required|array|min:1',
+            'items.*.obat_id' => 'required|exists:obat,id',
+            'items.*.nomor_batch' => 'required|string|max:255',
+            'items.*.tanggal_expired' => 'required|date',
+            'items.*.jumlah_jual' => 'required|integer|min:1',
+            'items.*.harga_jual' => 'required|numeric|min:0',
         ]);
 
-        $user = auth()->user();
+        // Generate nomor faktur: JGF-YYYYMMDDXXXX
+        $tanggal = date('Ymd');
+        $prefix = 'JGF-'.$tanggal;
+
+        // Cari nomor faktur terakhir untuk hari ini
+        $lastFaktur = DB::table('penjualan')
+            ->where('nomor_faktur', 'like', $prefix.'%')
+            ->orderBy('nomor_faktur', 'desc')
+            ->value('nomor_faktur');
+
+        if ($lastFaktur && preg_match('/(\d{4})$/', $lastFaktur, $matches)) {
+            $counter = intval($matches[1]) + 1;
+        } else {
+            $counter = 1;
+        }
+
+        $validated['header']['nomor_faktur'] = $prefix.str_pad($counter, 4, '0', STR_PAD_LEFT);
+
+        $user = User::find($validated['header']['user_id']);
 
         try {
             DB::beginTransaction();
 
             // Simpan header penjualan
-            $penjualan = Penjualan::create([
-                'nomor_faktur' => $validated['nomor_faktur'],
-                'tanggal_penjualan' => $validated['tanggal_transaksi'],
-                'user_id' => $user->id,
-                'total_harga' => $validated['total_harga'],
-            ]);
+            $penjualan = Penjualan::create($validated['header']);
 
             // Simpan detail penjualan dan update stok
-            foreach ($validated['detail_pembelian'] as $item) {
+            foreach ($validated['items'] as $item) {
                 $obat = Obat::find($item['obat_id']);
+
+                // Set penjualan_id yang benar (id dari penjualan yang baru dibuat)
+                $item['penjualan_id'] = $penjualan->id;
 
                 // Cek stok tersedia untuk batch spesifik
                 $tanggalExpired = date('Y-m-d', strtotime($item['tanggal_expired']));
@@ -111,14 +150,7 @@ class PenjualanController extends Controller
                 }
 
                 // Simpan detail penjualan
-                PenjualanDetail::create([
-                    'penjualan_id' => $penjualan->id,
-                    'obat_id' => $item['obat_id'],
-                    'nomor_batch' => $item['nomor_batch'],
-                    'tanggal_expired' => $tanggalExpired,
-                    'jumlah_jual' => $item['jumlah_jual'],
-                    'harga_jual' => $item['harga_jual'],
-                ]);
+                PenjualanDetail::create($item);
 
                 // Update stok
                 $stokSebelum = $stok->stok;
@@ -136,7 +168,7 @@ class PenjualanController extends Controller
                     'stok_sebelum' => $stokSebelum,
                     'stok_sesudah' => $stokSesudah,
                     'referensi_id' => $penjualan->id,
-                    'keterangan' => "Penjualan faktur {$validated['nomor_faktur']} - {$obat->nama_obat} batch {$item['nomor_batch']}, oleh {$user->name}",
+                    'keterangan' => "Penjualan faktur {$validated['header']['nomor_faktur']} - {$obat->nama_obat} batch {$item['nomor_batch']}, oleh {$user->name} ({$user->email}({$user->id}))",
                     'created_at' => now(),
                 ]);
             }
@@ -165,6 +197,8 @@ class PenjualanController extends Controller
             return redirect()->back()->withErrors(['error' => 'Terjadi kesalahan sistem']);
         }
 
-        return redirect()->back()->with('success', 'Penjualan berhasil disimpan');
+        return redirect()->back()
+            ->with('success', 'Penjualan berhasil disimpan')
+            ->with('nomor_faktur', $validated['header']['nomor_faktur']);
     }
 }

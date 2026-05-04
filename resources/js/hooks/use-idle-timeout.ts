@@ -35,6 +35,7 @@ export function useIdleTimeout({
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
+
     if (countdownRef.current) {
       clearInterval(countdownRef.current);
       countdownRef.current = null;
@@ -53,7 +54,10 @@ export function useIdleTimeout({
     timerRef.current = setTimeout(() => {
       isIdleRef.current = true;
       setIsIdle(true);
-      if (onIdle) onIdle();
+
+      if (onIdle) {
+onIdle();
+}
     }, timeout);
 
     // Start countdown
@@ -63,7 +67,9 @@ export function useIdleTimeout({
       setTimeLeft(Math.ceil(remaining));
     }, 1000);
 
-    if (onActive) onActive();
+    if (onActive) {
+onActive();
+}
   }, [timeout, onIdle, onActive, clearTimers]);
 
   const handleActivity = () => {

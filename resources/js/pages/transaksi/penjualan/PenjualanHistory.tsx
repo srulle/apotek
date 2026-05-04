@@ -3,6 +3,7 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { CalendarIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import DataTable from '@/components/datatable/datatable';
+import { Badge } from '@/components/ui/badge';
 import {
     Card,
     CardContent,
@@ -10,7 +11,6 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
     Table,
     TableBody,

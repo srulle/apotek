@@ -27,7 +27,11 @@ import { usePembelianForm } from './usePembelianForm';
 
 const fetchSuppliers = async (): Promise<string[]> => {
     const response = await fetch('/api/master-data/supplier');
-    if (!response.ok) throw new Error('Failed to fetch suppliers');
+
+    if (!response.ok) {
+throw new Error('Failed to fetch suppliers');
+}
+
     return response.json();
 };
 

@@ -28,7 +28,7 @@ export default function AppLogo() {
                 <span className="-mb-1 ml-2 truncate text-xs leading-tight font-medium">
                     Apotek
                 </span>
-                <span className="truncate text-xl leading-tight font-bold">
+                <span className="truncate text-xl leading-tight font-bold text-primary">
                     JAGA FARMA
                 </span>
             </div>

@@ -5,7 +5,7 @@ import type { Option } from '@/components/input/autocomplete-standalone';
 import { ComboboxLabelAndHelper } from '@/components/input/combobox';
 import { InputLabelAndHelper } from '@/components/input/input-label-and-helper';
 import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
-import { dashboard } from '@/routes';
+// import { dashboard } from '@/routes';
 
 export default function Dashboard() {
     const [selectedItem, setSelectedItem] = useState<Option | undefined>();
@@ -136,11 +136,11 @@ export default function Dashboard() {
     );
 }
 
-Dashboard.layout = {
-    breadcrumbs: [
-        {
-            title: 'Dashboard',
-            href: dashboard(),
-        },
-    ],
-};
+// Dashboard.layout = {
+//     breadcrumbs: [
+//         {
+//             title: 'Dashboard',
+//             href: dashboard(),
+//         },
+//     ],
+// };

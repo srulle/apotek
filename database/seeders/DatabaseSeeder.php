@@ -21,6 +21,8 @@ class DatabaseSeeder extends Seeder
         ], [
             'name' => 'Asrul Azhar',
             'password' => Hash::make('00000000'),
+            'role' => 'super_admin',
+            'email_verified_at' => now(),
         ]);
 
         $this->call(KategoriObatSeeder::class);

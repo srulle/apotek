@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from 'react'
 import { EyeIcon, EyeOffIcon } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -91,7 +91,10 @@ export function SessionTimeoutModal({
 
   const handleOpenChange = (open: boolean) => {
     // Prevent closing the dialog - user must re-authenticate
-    if (!open) return
+    if (!open) {
+return
+}
+
     setIsOpen(open)
   }
 

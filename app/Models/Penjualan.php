@@ -19,12 +19,10 @@ class Penjualan extends Model
         'nomor_faktur',
         'tanggal_penjualan',
         'user_id',
-        'total_harga',
     ];
 
     protected $casts = [
         'tanggal_penjualan' => 'date',
-        'total_harga' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

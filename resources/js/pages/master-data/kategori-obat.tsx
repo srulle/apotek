@@ -4,7 +4,7 @@ import { ClipboardPlus, Pencil, Trash2 } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { toast } from 'sonner';
 import { SimpleDatatable } from '@/components/datatable/datatable';
-import { DeleteConfirm } from '@/components/delete-confirm';
+import { DeleteConfirm } from '@/components/confirm-action';
 import { OneFieldForm } from '@/components/input/one-field-form';
 import { Button } from '@/components/ui/button';
 

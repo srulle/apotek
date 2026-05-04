@@ -1,4 +1,5 @@
 import { Head } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
 import { ClipboardPlus, ClipboardList } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { transaksi } from '@/routes';
@@ -20,6 +21,8 @@ interface PenjualanPageProps {
 }
 
 export default function Transaksi({ obat, satuan }: PenjualanPageProps) {
+    const { auth } = usePage().props as { auth: { user: { id: number } } };
+
     return (
         <>
             <Head title="Penjualan" />
@@ -37,7 +40,11 @@ export default function Transaksi({ obat, satuan }: PenjualanPageProps) {
                             </TabsTrigger>
                         </TabsList>
                         <TabsContent value="tambah">
-                            <PenjualanForm obat={obat} satuan={satuan} />
+                            <PenjualanForm
+                                obat={obat}
+                                satuan={satuan}
+                                userId={auth.user.id}
+                            />
                         </TabsContent>
                         <TabsContent value="daftar">
                             <PenjualanHistory />

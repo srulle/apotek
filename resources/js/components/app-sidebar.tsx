@@ -1,14 +1,5 @@
-import { Link } from '@inertiajs/react';
-import {
-    FileText,
-    LayoutGrid,
-    ArrowRightLeft,
-    Database,
-    Pill,
-    Tags,
-    Users,
-    Package,
-} from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { ArrowRightLeft, Database, Package, Users } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -22,7 +13,6 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import {
-    dashboard,
     laporan,
     transaksi,
     obat,
@@ -30,16 +20,17 @@ import {
     satuan,
     supplier,
     stok,
+    pengguna,
 } from '@/routes';
 import { penjualan, pembelian } from '@/routes/transaksi';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
+    // {
+    //     title: 'Dashboard',
+    //     href: dashboard(),
+    //     icon: LayoutGrid,
+    // },
     {
         title: 'Transaksi',
         icon: ArrowRightLeft,
@@ -81,6 +72,14 @@ const mainNavItems: NavItem[] = [
             },
         ],
     },
+];
+
+const adminNavItems: NavItem[] = [
+    {
+        title: 'Pengguna',
+        href: pengguna(),
+        icon: Users,
+    },
     // {
     //     title: 'Laporan',
     //     href: laporan(),
@@ -89,13 +88,16 @@ const mainNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { props } = usePage();
+    const isSuperAdmin = props.auth?.user?.is_super_admin;
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard().url} prefetch>
+                            <Link href={penjualan().url} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
@@ -105,6 +107,9 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavMain items={mainNavItems} />
+                {isSuperAdmin && (
+                    <NavMain items={adminNavItems} groupLabel="Superadmin" />
+                )}
             </SidebarContent>
 
             <SidebarFooter>

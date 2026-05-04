@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useId, useState, useMemo } from 'react';
 
-import { DeleteConfirm } from '@/components/delete-confirm';
+import { DeleteConfirm } from '@/components/confirm-action';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';

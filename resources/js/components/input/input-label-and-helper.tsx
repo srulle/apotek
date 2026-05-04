@@ -259,7 +259,7 @@ const InputLabelAndHelper = forwardRef<
         };
 
         return (
-            <div className={`w-full overflow-hidden p-1 ${className || ''}`}>
+            <div className={`w-full p-1 ${className || ''}`}>
                 <Label
                     htmlFor={id}
                     className={cn(
@@ -274,7 +274,7 @@ const InputLabelAndHelper = forwardRef<
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-4 w-4 shrink-0 p-0 hover:bg-transparent cursor-pointer"
+                                        className="h-4 w-4 shrink-0 cursor-pointer p-0 hover:bg-transparent"
                                     >
                                         <InfoIcon className="h-3 w-3" />
                                         <span className="sr-only">Info</span>
@@ -283,8 +283,10 @@ const InputLabelAndHelper = forwardRef<
                                 <PopoverContent className="w-80 p-3">
                                     <div className="grid gap-3">
                                         <div className="space-y-1.5 text-center">
-                                            <div className="text-sm font-semibold">Informasi</div>
-                                            <p className="text-muted-foreground text-xs leading-tight">
+                                            <div className="text-sm font-semibold">
+                                                Informasi
+                                            </div>
+                                            <p className="text-xs leading-tight text-muted-foreground">
                                                 {labelInfo}
                                             </p>
                                         </div>
@@ -325,7 +327,7 @@ const InputLabelAndHelper = forwardRef<
                         <div className="relative mt-1">
                             <div
                                 className={cn(
-                                    'absolute top-0 z-10 w-full rounded-xl bg-popover outline-none',
+                                    'absolute top-0 z-[60] w-full rounded-xl bg-popover outline-none',
                                     showList ? 'block' : 'hidden',
                                 )}
                             >
@@ -383,7 +385,7 @@ const InputLabelAndHelper = forwardRef<
                             type="button"
                             tabIndex={-1}
                             onClick={handleDecrement}
-                            className="-ms-px flex aspect-square h-[inherit] items-center justify-center rounded-l-md border border-input bg-background text-sm text-muted-foreground transition-[color,box-shadow] hover:bg-accent hover:text-foreground cursor-pointer disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                            className="-ms-px flex aspect-square h-[inherit] cursor-pointer items-center justify-center rounded-l-md border border-input bg-background text-sm text-muted-foreground transition-[color,box-shadow] hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <MinusIcon size={16} />
                             <span className="sr-only">Decrement</span>
@@ -402,7 +404,7 @@ const InputLabelAndHelper = forwardRef<
                             type="button"
                             tabIndex={-1}
                             onClick={handleIncrement}
-                            className="-me-px flex aspect-square h-[inherit] items-center justify-center rounded-r-md border border-input bg-background text-sm text-muted-foreground transition-[color,box-shadow] hover:bg-accent hover:text-foreground cursor-pointer disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                            className="-me-px flex aspect-square h-[inherit] cursor-pointer items-center justify-center rounded-r-md border border-input bg-background text-sm text-muted-foreground transition-[color,box-shadow] hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <PlusIcon size={16} />
                             <span className="sr-only">Increment</span>
@@ -649,7 +651,7 @@ const InputLabelAndHelper = forwardRef<
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-4 w-4 shrink-0 p-0 hover:bg-transparent cursor-pointer"
+                                        className="h-4 w-4 shrink-0 cursor-pointer p-0 hover:bg-transparent"
                                     >
                                         <InfoIcon className="h-3 w-3" />
                                         <span className="sr-only">Info</span>
@@ -658,8 +660,10 @@ const InputLabelAndHelper = forwardRef<
                                 <PopoverContent className="w-80 p-2">
                                     <div className="grid gap-3">
                                         <div className="space-y-1.5 text-center">
-                                            <div className="text-sm font-semibold">Informasi</div>
-                                            <p className="text-muted-foreground text-xs leading-tight">
+                                            <div className="text-sm font-semibold">
+                                                Informasi
+                                            </div>
+                                            <p className="text-xs leading-tight text-muted-foreground">
                                                 {labelInfo}
                                             </p>
                                         </div>
@@ -701,7 +705,7 @@ const InputLabelAndHelper = forwardRef<
                     <div className="relative mt-1">
                         <div
                             className={cn(
-                                'absolute top-0 z-10 w-full rounded-xl bg-popover outline-none',
+                                'absolute top-0 z-[60] w-full rounded-xl bg-popover outline-none',
                                 showList ? 'block' : 'hidden',
                             )}
                         >
@@ -757,7 +761,7 @@ const InputLabelAndHelper = forwardRef<
                         type="button"
                         tabIndex={-1}
                         onClick={handleDecrement}
-                        className="-ms-px flex aspect-square h-[inherit] items-center justify-center rounded-l-md border border-input bg-background text-sm text-muted-foreground transition-[color,box-shadow] hover:bg-accent hover:text-foreground cursor-pointer disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                        className="-ms-px flex aspect-square h-[inherit] cursor-pointer items-center justify-center rounded-l-md border border-input bg-background text-sm text-muted-foreground transition-[color,box-shadow] hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         <MinusIcon size={16} />
                         <span className="sr-only">Decrement</span>
@@ -775,7 +779,7 @@ const InputLabelAndHelper = forwardRef<
                         type="button"
                         tabIndex={-1}
                         onClick={handleIncrement}
-                        className="-me-px flex aspect-square h-[inherit] items-center justify-center rounded-r-md border border-input bg-background text-sm text-muted-foreground transition-[color,box-shadow] hover:bg-accent hover:text-foreground cursor-pointer disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                        className="-me-px flex aspect-square h-[inherit] cursor-pointer items-center justify-center rounded-r-md border border-input bg-background text-sm text-muted-foreground transition-[color,box-shadow] hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         <PlusIcon size={16} />
                         <span className="sr-only">Increment</span>

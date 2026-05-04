@@ -100,7 +100,6 @@ const PurchaseItemDetailForm = ({
                             placeholder="Masukkan atau pilih nomor batch"
                             field={field}
                             type="autocomplete"
-                            autocompleteEmptyMessage="tidak ada batch tersedia"
                             autocompleteOptions={
                                 item.stok?.map((batchItem) => ({
                                     value: batchItem.nomor_batch,
