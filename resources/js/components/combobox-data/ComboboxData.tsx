@@ -107,7 +107,7 @@ const ComboboxData = forwardRef<HTMLButtonElement, ComboboxDataProps>(
         );
 
         return (
-            <div className={`w-full space-y-2 ${className}`}>
+            <div className={`p-1 space-y-2 ${className}`}>
                 {label && <Label htmlFor={componentId}>{label}</Label>}
                 <Popover open={open} onOpenChange={setOpen}>
                     <PopoverTrigger asChild>

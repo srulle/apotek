@@ -727,7 +727,7 @@ const DataTable = <T,>({
                 </Table>
             </div>
 
-            {table.getPageCount() > 1 && (
+            {table.getRowCount() >= 6 && (
                 <div className="flex flex-col items-center justify-end gap-4 sm:flex-row">
                     <div className="flex w-full justify-center sm:w-auto sm:grow-0 sm:justify-end">
                         <ButtonGroup className="w-full sm:w-auto">

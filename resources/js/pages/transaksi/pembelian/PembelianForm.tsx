@@ -127,7 +127,7 @@ export default function PembelianForm({
                     </form.Field>
 
                     <Button
-                        className="mt-2 w-full md:mt-6"
+                        className="mt-2 w-full md:mt-7"
                         onClick={handleSubmit}
                     >
                         Pilih Item
@@ -337,12 +337,23 @@ export default function PembelianForm({
                             label="Pilih Obat"
                             items={obat.map((group) => ({
                                 ...group,
-                                items: group.items.map((item) => ({
-                                    ...item,
-                                    subtitle:
-                                        item.satuan_besar || item.subtitle,
-                                    stok: item.stok || [],
-                                })),
+                                items: group.items.map((item) => {
+                                    const totalStok =
+                                        item.stok?.reduce(
+                                            (total: number, s: { stok: number }) =>
+                                                total + s.stok,
+                                            0,
+                                        ) ?? 0;
+
+                                    return {
+                                        ...item,
+                                        subtitle:
+                                            totalStok > 0
+                                                ? `Stok: ${totalStok} ${item.satuan_kecil || ''}`
+                                                : `Stok: ${totalStok}`,
+                                        stok: item.stok || [],
+                                    };
+                                }),
                             }))}
                             value={selectedObat}
                             onChange={(value) =>

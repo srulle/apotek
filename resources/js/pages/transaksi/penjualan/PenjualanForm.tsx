@@ -222,14 +222,14 @@ export default function PenjualanForm({
                 </div>
 
                 {selectedObat.length > 0 && (
-                    <div className="mt-6">
-                        <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
-                            <p className="text-sm font-medium text-blue-800">
+                    <div>
+                        <div className="mb-2 border-b border-t bg-muted/40 p-2">
+                            <p className="text-sm font-medium text-muted-foreground">
                                 Nomor Faktur:{' '}
                                 {nextNomorFaktur || 'Sedang memuat...'}
                             </p>
                         </div>
-                        <hr className="mb-5 border-muted-foreground/20" />
+                        {/* <hr className="mb-5 border-muted-foreground/20" /> */}
                         <Table className="[&_td]:py-0.5 [&_th]:py-1">
                             <TableHeader>
                                 <TableRow className="bg-muted/50">

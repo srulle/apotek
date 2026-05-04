@@ -21,6 +21,7 @@ interface PurchaseItemDetailFormProps {
         satuan_besar?: string;
         satuan_kecil?: string;
         jumlah_satuan_kecil_dalam_satuan_besar?: number;
+        harga_jual?: number;
     };
     onSelectItem: (data: any) => void;
     onClosePopover: () => void;
@@ -56,7 +57,7 @@ const PurchaseItemDetailForm = ({
     const form = useForm({
         defaultValues: {
             batch: '',
-            expiredDate: new Date(),
+            expiredDate: undefined as Date | undefined,
             satuan: item.satuan_besar || '',
             jumlahBeli: 1,
             totalHarga: 0,
@@ -133,16 +134,16 @@ const PurchaseItemDetailForm = ({
                                         setIsBatchFromList(false);
                                         form.setFieldValue(
                                             'expiredDate',
-                                            new Date(),
+                                            undefined,
                                         );
                                     }
-                                } else {
-                                    setIsBatchFromList(false);
-                                    form.setFieldValue(
-                                        'expiredDate',
-                                        new Date(),
-                                    );
-                                }
+                            } else {
+                                setIsBatchFromList(false);
+                                form.setFieldValue(
+                                    'expiredDate',
+                                    undefined,
+                                );
+                            }
                             }}
                         />
                     )}
@@ -183,7 +184,7 @@ const PurchaseItemDetailForm = ({
                 >
                     {(field) => (
                         <ComboboxLabelAndHelper
-                            label="Satuan Besar Saat Pembelian"
+                            label="Satuan Saat Pembelian"
                             placeholder="Pilih satuan"
                             initialItems={satuan}
                             field={field}
@@ -268,23 +269,48 @@ const PurchaseItemDetailForm = ({
                     )}
                 </form.Subscribe>
 
-                <form.Field
-                    name="totalHarga"
-                    validators={{
-                        onChange: z.coerce
-                            .number()
-                            .min(1, 'Harga beli wajib diisi'),
-                    }}
+                <form.Subscribe
+                    selector={(state) => [
+                        state.values.jumlahBeli,
+                        state.values.konversi,
+                    ]}
                 >
-                    {(field) => (
-                        <InputLabelAndHelper
-                            label="Total Harga"
-                            type="currency"
-                            placeholder="Masukkan harga beli"
-                            field={field}
-                        />
-                    )}
-                </form.Field>
+                    {([jumlahBeli, konversi]) => {
+                        const hargaJual = item.harga_jual || 0;
+                        const calculatedTotal =
+                            hargaJual * (jumlahBeli || 0) * (konversi || 0);
+
+                        const placeholder =
+                            calculatedTotal > 0
+                                ? `Contoh ${new Intl.NumberFormat('id-ID', {
+                                      style: 'currency',
+                                      currency: 'IDR',
+                                      minimumFractionDigits: 0,
+                                      maximumFractionDigits: 0,
+                                  }).format(calculatedTotal)}`
+                                : 'Masukkan harga beli';
+
+                        return (
+                            <form.Field
+                                name="totalHarga"
+                                validators={{
+                                    onChange: z.coerce
+                                        .number()
+                                        .min(1, 'Harga beli wajib diisi'),
+                                }}
+                            >
+                                {(field) => (
+                                    <InputLabelAndHelper
+                                        label="Total Harga"
+                                        type="currency"
+                                        placeholder={placeholder}
+                                        field={field}
+                                    />
+                                )}
+                            </form.Field>
+                        );
+                    }}
+                </form.Subscribe>
             </div>
 
             <div className="flex justify-end gap-2 pt-2 pb-6">

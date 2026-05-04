@@ -1,6 +1,6 @@
 'use client';
 
-import { SquareCheckBig } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import { useCallback } from 'react';
 
 import { Modal } from '@/components/modal';
@@ -106,7 +106,7 @@ const ComboboxItemRenderer = ({
             onSelect={onSelect}
         >
             <div className="flex items-center gap-2">
-                <SquareCheckBig
+                <ShoppingCart
                     className={`size-5 shrink-0 ${
                         selectedValues.includes(item.id)
                             ? 'opacity-100'

@@ -24,7 +24,7 @@ class PembelianController extends Controller
             'obat' => fn () => Obat::with(['satuanBesar', 'satuanKecil', 'kategori', 'stok'])
                 ->where('is_active', true)
                 ->orderBy('nama_obat', 'asc')
-                ->get(['id', 'nama_obat', 'kategori_id', 'satuan_besar_id', 'satuan_kecil_id', 'jumlah_satuan_kecil_dalam_satuan_besar'])
+                ->get(['id', 'nama_obat', 'kategori_id', 'satuan_besar_id', 'satuan_kecil_id', 'jumlah_satuan_kecil_dalam_satuan_besar', 'harga_jual'])
                 ->groupBy('kategori.nama_kategori')
                 ->map(fn ($obatGroup, $kategoriName) => [
                     'title' => $kategoriName,
@@ -35,6 +35,7 @@ class PembelianController extends Controller
                         'satuan_besar' => $obat->satuanBesar?->nama_satuan,
                         'satuan_kecil' => $obat->satuanKecil?->nama_satuan,
                         'jumlah_satuan_kecil_dalam_satuan_besar' => $obat->jumlah_satuan_kecil_dalam_satuan_besar,
+                        'harga_jual' => $obat->harga_jual,
                         'stok' => $obat->stok->map(fn ($stok) => [
                             'id' => $stok->id,
                             'nomor_batch' => $stok->nomor_batch,

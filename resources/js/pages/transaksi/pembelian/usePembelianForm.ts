@@ -60,28 +60,7 @@ export const usePembelianForm = () => {
 
         if (form.state.isValid) {
             setShowItemForm(true);
-            console.log('=== Nilai Form Pembelian ===');
-            console.log(
-                'Form values:',
-                JSON.stringify(form.state.values, null, 2),
-            );
-            console.log(
-                'Obat Dipilih:',
-                JSON.stringify(
-                    selectedObat.map((entry) => ({
-                        id: entry.id,
-                        uniqueId: entry.uniqueId,
-                        jumlah: 1, // default
-                        totalHarga: 0, // default
-                        batch: '', // default
-                        expiredDate: undefined, // default
-                        satuan: '', // default
-                    })),
-                    null,
-                    2,
-                ),
-            );
-            console.log('=========================');
+
         }
     };
 
@@ -130,11 +109,7 @@ export const usePembelianForm = () => {
             items,
         };
 
-        console.log('✅ Data siap disimpan ke database:');
-        console.log('Header Pembelian:');
-        console.log(JSON.stringify(header, null, 2));
-        console.log('Detail Pembelian:');
-        console.log(JSON.stringify(items, null, 2));
+
 
         // Kirim data ke backend menggunakan Inertia router
         return new Promise<void>((resolve, reject) => {
