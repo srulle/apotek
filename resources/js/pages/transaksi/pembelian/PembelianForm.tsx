@@ -370,7 +370,7 @@ export default function PembelianForm({
                                     [item.uniqueId]: item,
                                 }));
                             }}
-                            placeholder="Pilih obat yang akan dibeli"
+                            placeholder="Pilih item"
                             searchPlaceholder="Cari nama obat..."
                             className="w-full"
                             multiple={true}

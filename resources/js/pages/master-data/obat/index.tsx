@@ -455,7 +455,7 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                         />
                     </Modal>
 
-                    <div className="mt-4">
+                    <div>
                         <DataTable
                             data={obat || []}
                             columns={columns}

@@ -206,7 +206,7 @@ export default function PenjualanForm({
                                 [item.uniqueId]: item,
                             }));
                         }}
-                        placeholder="Pilih obat yang akan dijual"
+                        placeholder="Pilih item"
                         searchPlaceholder="Cari nama obat..."
                         className="w-full"
                         multiple={true}
