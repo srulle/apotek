@@ -1,49 +1,56 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import type { FilterableColumn } from './types';
 
-export const getNestedValue = (obj: any, path: string) => {
-    return path.split('.').reduce((prev, curr) => prev?.[curr], obj);
+interface DataTableColumnMeta {
+    filterable?: boolean;
+    sortIconType?: 'text' | 'numeric';
+}
+
+export const getNestedValue = (obj: any, path: string): any => {
+    return path.split('.').reduce((prev: any, curr) => prev?.[curr], obj);
 };
 
-export const getFilterableColumns = <T,>(
+export const getFilterableColumns = <T>(
     columns: ColumnDef<T>[],
     data: T[],
 ): FilterableColumn[] => {
     return columns
-        .filter((col) => (col.meta as any)?.filterable)
-        .map((col) => ({
-            id: col.id || ((col as any).accessorKey as string),
-            label:
-                typeof col.header === 'string'
-                    ? col.header
-                    : col.id || ((col as any).accessorKey as string),
-            accessorKey: (col as any).accessorKey as string,
-            values: Array.from(
-                new Set(
-                    data.map((row) =>
-                        String(
-                            getNestedValue(
-                                row,
-                                (col as any).accessorKey as string,
-                            ),
+        .filter((col): col is ColumnDef<T> & { accessorKey: string } => {
+            const meta = col.meta as DataTableColumnMeta | undefined;
+            return meta?.filterable === true;
+        })
+        .map((col) => {
+            const accessorKey = col.accessorKey;
+            return {
+                id: accessorKey,
+                label:
+                    typeof col.header === 'string'
+                        ? col.header
+                        : col.id || accessorKey,
+                accessorKey: accessorKey,
+                values: Array.from(
+                    new Set(
+                        data.map((row) =>
+                            String(getNestedValue(row, accessorKey)),
                         ),
                     ),
-                ),
-            ).filter(Boolean),
-        }));
+                ).filter(Boolean),
+            };
+        });
 };
 
-export const processColumns = <T,>(columns: ColumnDef<T>[]) => {
+export const processColumns = <T>(columns: ColumnDef<T>[]): ColumnDef<T>[] => {
     return columns.map((col) => {
-        if ((col.meta as any)?.filterable) {
-            (col as any).filterFn = 'multiSelect';
+        const meta = col.meta as DataTableColumnMeta | undefined;
+        if (meta?.filterable) {
+            return { ...col, filterFn: 'multiSelect' as any };
         }
 
         return col;
-    });
+    }) as ColumnDef<T>[];
 };
 
-export const filterData = <T,>(
+export const filterData = <T>(
     data: T[],
     globalFilter: string,
     columnFilters: Record<string, string[]>,
@@ -52,12 +59,15 @@ export const filterData = <T,>(
     return data.filter((row) => {
         if (globalFilter && globalFilter.trim()) {
             const searchTerm = globalFilter.toLowerCase().trim();
-            const matchesSearch = processedColumns.some((col: any) => {
-                const accessorKey = col.accessorKey;
+            const matchesSearch = processedColumns.some((col) => {
+                const colWithAccessor = col as ColumnDef<T> & {
+                    accessorKey?: string;
+                };
+                const accessorKey = colWithAccessor.accessorKey;
 
                 if (!accessorKey) {
-return false;
-}
+                    return false;
+                }
 
                 const value = getNestedValue(row, accessorKey);
 
@@ -65,20 +75,20 @@ return false;
             });
 
             if (!matchesSearch) {
-return false;
-}
+                return false;
+            }
         }
 
         for (const [columnId, filterValues] of Object.entries(columnFilters)) {
             if (filterValues.length === 0) {
-continue;
-}
+                continue;
+            }
 
             const value = getNestedValue(row, columnId);
 
             if (!filterValues.includes(String(value))) {
-return false;
-}
+                return false;
+            }
         }
 
         return true;

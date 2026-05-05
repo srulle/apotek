@@ -1,6 +1,7 @@
 'use client';
 
 import { flexRender } from '@tanstack/react-table';
+import type { Table, HeaderGroup, Header } from '@tanstack/react-table';
 import {
     ArrowDownUp,
     ArrowUpAZ,
@@ -10,38 +11,40 @@ import {
 } from 'lucide-react';
 
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
+import { TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 import { cn } from '@/lib/utils';
 
-interface TableHeaderProps {
-    table: any;
+interface DataTableColumnMeta {
+    sortIconType?: 'text' | 'numeric';
+}
+
+interface TableHeaderProps<T = any> {
+    table: Table<T>;
     enableRowExpansion: boolean;
     enableRowSelection: boolean;
 }
 
-export function DataTableHeader({
+export function DataTableHeader<T = any>({
     table,
     enableRowExpansion,
     enableRowSelection,
-}: TableHeaderProps) {
+}: TableHeaderProps<T>) {
     const pageRows = table.getRowModel().rows;
-    const selectedCount = pageRows.filter((row: any) => row.getIsSelected()).length;
-    const allSelected = pageRows.length > 0 && selectedCount === pageRows.length;
+    const selectedCount = pageRows.filter((row) => row.getIsSelected()).length;
+    const allSelected =
+        pageRows.length > 0 && selectedCount === pageRows.length;
     const someSelected = selectedCount > 0 && !allSelected;
-    const headerChecked = allSelected ? true : someSelected ? 'indeterminate' : false;
+    const headerChecked = allSelected
+        ? true
+        : someSelected
+          ? 'indeterminate'
+          : false;
 
     return (
         <TableHeader>
-            {table.getHeaderGroups().map((headerGroup: any) => (
-                <TableRow
-                    key={headerGroup.id}
-                    className="hover:bg-transparent"
-                >
+            {table.getHeaderGroups().map((headerGroup: HeaderGroup<T>) => (
+                <TableRow key={headerGroup.id} className="hover:bg-transparent">
                     {enableRowExpansion && (
                         <TableHead className="h-11 w-12"></TableHead>
                     )}
@@ -50,15 +53,13 @@ export function DataTableHeader({
                             <Checkbox
                                 checked={headerChecked}
                                 onCheckedChange={(value) =>
-                                    table.toggleAllPageRowsSelected(
-                                        !!value,
-                                    )
+                                    table.toggleAllPageRowsSelected(!!value)
                                 }
                                 aria-label="Pilih semua di halaman ini"
                             />
                         </TableHead>
                     )}
-                    {headerGroup.headers.map((header: any) => {
+                    {headerGroup.headers.map((header: Header<T, unknown>) => {
                         return (
                             <TableHead
                                 key={header.id}
@@ -77,8 +78,7 @@ export function DataTableHeader({
                                         onKeyDown={(e) => {
                                             if (
                                                 header.column.getCanSort() &&
-                                                (e.key ===
-                                                    'Enter' ||
+                                                (e.key === 'Enter' ||
                                                     e.key === ' ')
                                             ) {
                                                 e.preventDefault();
@@ -96,11 +96,11 @@ export function DataTableHeader({
                                         {(() => {
                                             const sortState =
                                                 header.column.getIsSorted();
-                                            const metaType = (
-                                                header.column
-                                                    .columnDef
-                                                    .meta as any
-                                            )?.sortIconType;
+                                            const meta = header.column.columnDef
+                                                .meta as
+                                                | DataTableColumnMeta
+                                                | undefined;
+                                            const metaType = meta?.sortIconType;
 
                                             if (!sortState) {
                                                 return (
@@ -113,33 +113,26 @@ export function DataTableHeader({
                                             }
 
                                             let isNumeric =
-                                                metaType ===
-                                                'numeric';
+                                                metaType === 'numeric';
 
                                             if (
                                                 !metaType &&
-                                                table.getCoreRowModel()
-                                                    .rows.length > 0
+                                                table.getCoreRowModel().rows
+                                                    .length > 0
                                             ) {
-                                                const firstRowValue =
-                                                    table
-                                                        .getCoreRowModel()
-                                                        .rows[0].getValue(
-                                                            header
-                                                                .column
-                                                                .id,
-                                                        );
+                                                const firstRowValue = table
+                                                    .getCoreRowModel()
+                                                    .rows[0].getValue(
+                                                        header.column.id,
+                                                    );
                                                 isNumeric =
                                                     typeof firstRowValue ===
                                                         'number' &&
-                                                    !isNaN(
-                                                        firstRowValue,
-                                                    );
+                                                    !isNaN(firstRowValue);
                                             }
 
                                             if (isNumeric) {
-                                                return sortState ===
-                                                    'asc' ? (
+                                                return sortState === 'asc' ? (
                                                     <ArrowUp01
                                                         className="shrink-0 opacity-70"
                                                         size={16}
@@ -154,8 +147,7 @@ export function DataTableHeader({
                                                 );
                                             }
 
-                                            return sortState ===
-                                                'asc' ? (
+                                            return sortState === 'asc' ? (
                                                 <ArrowUpAZ
                                                     className="shrink-0 opacity-70"
                                                     size={16}
@@ -170,15 +162,13 @@ export function DataTableHeader({
                                             );
                                         })()}
                                         {flexRender(
-                                            header.column.columnDef
-                                                .header,
+                                            header.column.columnDef.header,
                                             header.getContext(),
                                         )}
                                     </div>
                                 ) : (
                                     flexRender(
-                                        header.column.columnDef
-                                            .header,
+                                        header.column.columnDef.header,
                                         header.getContext(),
                                     )
                                 )}

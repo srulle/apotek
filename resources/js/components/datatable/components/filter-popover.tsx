@@ -25,7 +25,9 @@ interface FilterPopoverProps {
     selectedValues: string[];
     isOpen: boolean;
     setIsOpen: (open: boolean) => void;
-    setColumnFilters: React.Dispatch<React.SetStateAction<Record<string, string[]>>>;
+    setColumnFilters: React.Dispatch<
+        React.SetStateAction<Record<string, string[]>>
+    >;
 }
 
 export function FilterPopover({
@@ -52,7 +54,7 @@ export function FilterPopover({
                                 e.stopPropagation();
                                 setColumnFilters((prev) => ({
                                     ...prev,
-                                    [column.id]: [],
+                                    [column.accessorKey]: [],
                                 }));
                             }}
                             title={
@@ -105,7 +107,7 @@ export function FilterPopover({
                                     onSelect={() => {
                                         setColumnFilters((prev) => {
                                             const current =
-                                                prev[column.id] || [];
+                                                prev[column.accessorKey] || [];
                                             const updated = current.includes(
                                                 value,
                                             )
@@ -116,7 +118,7 @@ export function FilterPopover({
 
                                             return {
                                                 ...prev,
-                                                [column.id]: updated,
+                                                [column.accessorKey]: updated,
                                             };
                                         });
                                     }}

@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { router } from '@inertiajs/react';
 import { Users } from 'lucide-react';
-import DataTable from '@/components/datatable/datatable';
+import { DataTable } from '@/components/datatable/datatable';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { VerifyConfirm, UnverifyConfirm } from '@/components/confirm-action';
@@ -95,7 +95,7 @@ export default function Pengguna({ users }: PenggunaPageProps) {
         <>
             <Head title="Pengguna" />
             <div className="m-2 flex flex-1 flex-col overflow-auto rounded-xl border border-sidebar-border/70 p-2 md:m-4 md:p-4 dark:border-sidebar-border">
-                <div className="space-y-4 max-w-2xl">
+                <div className="max-w-2xl space-y-4">
                     <h1 className="text-xl font-semibold">Pengguna</h1>
                     <DataTable
                         data={users || []}

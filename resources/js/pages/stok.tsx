@@ -1,7 +1,7 @@
 import { Head, usePage } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { CalendarIcon } from 'lucide-react';
-import DataTable from '@/components/datatable/datatable';
+import { DataTable } from '@/components/datatable/datatable';
 import { Badge } from '@/components/ui/badge';
 import {
     Table,

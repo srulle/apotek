@@ -1,6 +1,8 @@
 'use client';
 
 import { SearchIcon, Trash2, X } from 'lucide-react';
+import { useState } from 'react';
+import type { Table } from '@tanstack/react-table';
 
 import { DeleteConfirm } from '@/components/confirm-action';
 import { Button } from '@/components/ui/button';
@@ -9,20 +11,20 @@ import { Input } from '@/components/ui/input';
 import type { FilterableColumn } from '../types';
 import { FilterPopover } from './filter-popover';
 
-interface ToolbarProps {
+interface ToolbarProps<T = any> {
     enableGlobalFilter: boolean;
     searchPlaceholder: string;
     globalFilter: string;
     setGlobalFilter: (value: string) => void;
     filterableColumns: FilterableColumn[];
     columnFilters: Record<string, string[]>;
-    setColumnFilters: React.Dispatch<React.SetStateAction<Record<string, string[]>>>;
-    popoverOpens: Record<string, boolean>;
-    setPopoverOpens: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
+    setColumnFilters: React.Dispatch<
+        React.SetStateAction<Record<string, string[]>>
+    >;
     enableRowSelection: boolean;
     enableBulkDelete: boolean;
     onBulkDelete?: () => void | Promise<void>;
-    table: any;
+    table: Table<T>;
     rowSelection: Record<string, boolean>;
 }
 
@@ -34,14 +36,15 @@ export function DataTableToolbar({
     filterableColumns,
     columnFilters,
     setColumnFilters,
-    popoverOpens,
-    setPopoverOpens,
     enableRowSelection,
     enableBulkDelete,
     onBulkDelete,
     table,
     rowSelection,
 }: ToolbarProps) {
+    const [popoverOpens, setPopoverOpens] = useState<Record<string, boolean>>(
+        {},
+    );
     const selectedCount = Object.keys(rowSelection).length;
 
     return (
@@ -56,7 +59,7 @@ export function DataTableToolbar({
                             onChange={(e) =>
                                 setGlobalFilter(String(e.target.value))
                             }
-                            className="pl-10 pr-10"
+                            className="pr-10 pl-10"
                             placeholder={searchPlaceholder}
                         />
                         {(globalFilter ?? '') && (
@@ -93,34 +96,33 @@ export function DataTableToolbar({
                 })}
             </div>
 
-            {enableRowSelection &&
-                selectedCount > 0 && (
-                    <div className="order-1 flex items-center gap-2 lg:order-3">
-                        <Button
-                            variant="secondary"
-                            size="sm"
-                            className="cursor-pointer px-3 py-1"
-                            onClick={() => table.setRowSelection({})}
+            {enableRowSelection && selectedCount > 0 && (
+                <div className="order-1 flex items-center gap-2 lg:order-3">
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        className="cursor-pointer px-3 py-1"
+                        onClick={() => table.setRowSelection({})}
+                    >
+                        <X className="mr-1 h-4 w-4" />
+                        {selectedCount} data dipilih
+                    </Button>
+                    {enableBulkDelete && onBulkDelete && (
+                        <DeleteConfirm
+                            title="Konfirmasi Hapus Terpilih"
+                            description={`Apakah Anda yakin ingin menghapus ${selectedCount} item terpilih? Tindakan ini tidak dapat dibatalkan.`}
+                            onConfirm={onBulkDelete}
                         >
-                            <X className="mr-1 h-4 w-4" />
-                            {selectedCount} data dipilih
-                        </Button>
-                        {enableBulkDelete && onBulkDelete && (
-                            <DeleteConfirm
-                                title="Konfirmasi Hapus Terpilih"
-                                description={`Apakah Anda yakin ingin menghapus ${selectedCount} item terpilih? Tindakan ini tidak dapat dibatalkan.`}
-                                onConfirm={onBulkDelete}
+                            <Button
+                                variant="outline"
+                                className="border-destructive! text-destructive! hover:bg-destructive/10! focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40"
                             >
-                                <Button
-                                    variant="outline"
-                                    className="border-destructive! text-destructive! hover:bg-destructive/10! focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40"
-                                >
-                                    <Trash2 className="h-6 w-6" />
-                                </Button>
-                            </DeleteConfirm>
-                        )}
-                    </div>
-                )}
+                                <Trash2 className="h-6 w-6" />
+                            </Button>
+                        </DeleteConfirm>
+                    )}
+                </div>
+            )}
         </div>
     );
 }

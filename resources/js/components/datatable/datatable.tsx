@@ -1,6 +1,12 @@
 'use client';
 
-import type { ColumnDef, PaginationState, SortingState, RowSelectionState, ExpandedState } from '@tanstack/react-table';
+import type {
+    ColumnDef,
+    PaginationState,
+    SortingState,
+    RowSelectionState,
+    ExpandedState,
+} from '@tanstack/react-table';
 import {
     flexRender,
     getCoreRowModel,
@@ -14,15 +20,9 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableRow,
-} from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 
 import { cn } from '@/lib/utils';
-
 
 import { DataTablePagination } from './components/pagination';
 import { DataTableHeader } from './components/table-header';
@@ -33,6 +33,7 @@ import { getFilterableColumns, processColumns, filterData } from './utils';
 const DataTable = <T,>({
     data,
     columns,
+    getRowId,
     initialPagination = { pageIndex: 0, pageSize: 5 },
     initialSorting = [],
     pageSizeOptions = [5, 10, 25, 50],
@@ -56,10 +57,6 @@ const DataTable = <T,>({
         Record<string, string[]>
     >({});
     const [expanded, setExpanded] = useState<ExpandedState>({});
-    const [activeRowId, setActiveRowId] = useState<string | null>(null);
-    const [popoverOpens, setPopoverOpens] = useState<Record<string, boolean>>(
-        {},
-    );
 
     const prevDataLengthRef = useRef(data.length);
 
@@ -70,8 +67,6 @@ const DataTable = <T,>({
 
         prevDataLengthRef.current = data.length;
     }, [data.length, setRowSelection]);
-
-    const disableActions = Object.keys(rowSelection).length > 1;
 
     const processedColumns = useMemo(() => {
         return processColumns(columns);
@@ -84,6 +79,8 @@ const DataTable = <T,>({
     const filteredData = useMemo(() => {
         return filterData(data, globalFilter, columnFilters, processedColumns);
     }, [data, globalFilter, columnFilters, processedColumns]);
+
+    const disableActions = Object.keys(rowSelection).length > 1;
 
     useEffect(() => {
         const totalPages = Math.ceil(filteredData.length / pagination.pageSize);
@@ -99,6 +96,7 @@ const DataTable = <T,>({
     const table = useReactTable({
         data: filteredData,
         columns: processedColumns as ColumnDef<T>[],
+        ...(getRowId ? { getRowId: getRowId as any } : {}),
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
         onSortingChange: setSorting,
@@ -142,8 +140,6 @@ const DataTable = <T,>({
                 filterableColumns={filterableColumns}
                 columnFilters={columnFilters}
                 setColumnFilters={setColumnFilters}
-                popoverOpens={popoverOpens}
-                setPopoverOpens={setPopoverOpens}
                 enableRowSelection={enableRowSelection}
                 enableBulkDelete={enableBulkDelete}
                 onBulkDelete={onBulkDelete}
@@ -171,16 +167,7 @@ const DataTable = <T,>({
                                             row.getIsExpanded()
                                                 ? 'font-semibold'
                                                 : '',
-                                            activeRowId === row.id &&
-                                                'bg-muted/50',
                                         )}
-                                        onClick={() =>
-                                            setActiveRowId(
-                                                row.id === activeRowId
-                                                    ? null
-                                                    : row.id,
-                                            )
-                                        }
                                     >
                                         {enableRowExpansion && (
                                             <TableCell className="w-12">
@@ -278,7 +265,6 @@ const DataTable = <T,>({
     );
 };
 
-export default DataTable;
 export { DataTable };
 export type { DataTableProps } from './types';
 export { SimpleDatatable } from './simple-datatable';

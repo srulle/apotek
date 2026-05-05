@@ -8,6 +8,7 @@ import {
     ChevronsUpDownIcon,
     CheckIcon,
 } from 'lucide-react';
+import type { Table } from '@tanstack/react-table';
 
 import { useState, useEffect } from 'react';
 
@@ -21,8 +22,8 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-interface PaginationProps {
-    table: any;
+interface PaginationProps<T = any> {
+    table: Table<T>;
     pageSizeOptions: number[];
     pagination: { pageIndex: number; pageSize: number };
 }
@@ -34,17 +35,19 @@ export function DataTablePagination({
 }: PaginationProps) {
     const [mounted, setMounted] = useState(false);
     const { pageIndex, pageSize } = pagination;
-    
+
     useEffect(() => {
         setMounted(true);
     }, []);
-    
+
     const totalRows = mounted ? table.getRowCount() : 0;
     const startRow = pageIndex * pageSize + 1;
     const endRow = Math.min((pageIndex + 1) * pageSize, totalRows);
-    
+
     const canPreviousPage = mounted ? pageIndex > 0 : false;
-    const canNextPage = mounted ? totalRows > 0 && (pageIndex + 1) * pageSize < totalRows : false;
+    const canNextPage = mounted
+        ? totalRows > 0 && (pageIndex + 1) * pageSize < totalRows
+        : false;
 
     return (
         <div className="flex flex-col items-center justify-end gap-4 sm:flex-row">
@@ -89,17 +92,12 @@ export function DataTablePagination({
                                 <ChevronsUpDownIcon className="h-4 w-4 opacity-60" />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                            align="center"
-                            className="w-40"
-                        >
+                        <DropdownMenuContent align="center" className="w-40">
                             <DropdownMenuGroup>
                                 {pageSizeOptions.map((size: number) => (
                                     <DropdownMenuItem
                                         key={size}
-                                        onClick={() =>
-                                            table.setPageSize(size)
-                                        }
+                                        onClick={() => table.setPageSize(size)}
                                         className="justify-between"
                                     >
                                         {size} baris

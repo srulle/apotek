@@ -2,7 +2,7 @@ import { usePage } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { CalendarIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import DataTable from '@/components/datatable/datatable';
+import { DataTable } from '@/components/datatable/datatable';
 import { Badge } from '@/components/ui/badge';
 import {
     Card,
@@ -112,16 +112,13 @@ export default function PenjualanHistory({
             accessorKey: 'tanggal_penjualan',
             header: 'Tanggal Penjualan',
             cell: ({ row }) => {
-                return new Date(
-                    row.original.tanggal_penjualan,
-                ).toLocaleDateString('id-ID', {
-                    day: '2-digit',
-                    month: 'long',
-                    year: 'numeric',
-                }).replace(
-                    /(\w+) (\w+) (\d+)/,
-                    '$1 $2, $3',
-                );
+                return new Date(row.original.tanggal_penjualan)
+                    .toLocaleDateString('id-ID', {
+                        day: '2-digit',
+                        month: 'long',
+                        year: 'numeric',
+                    })
+                    .replace(/(\w+) (\w+) (\d+)/, '$1 $2, $3');
             },
         },
         {
@@ -192,7 +189,9 @@ export default function PenjualanHistory({
                                     </div>
                                 </TableCell>
                                 <TableCell className="text-center">
-                                    {detail.jumlah_jual.toLocaleString('id-ID')} {detail.obat?.satuan_kecil?.nama_satuan || ''}
+                                    {detail.jumlah_jual.toLocaleString('id-ID')}{' '}
+                                    {detail.obat?.satuan_kecil?.nama_satuan ||
+                                        ''}
                                 </TableCell>
                                 <TableCell className="text-center">
                                     {new Intl.NumberFormat('id-ID', {
@@ -202,7 +201,9 @@ export default function PenjualanHistory({
                                         maximumFractionDigits: 0,
                                     }).format(detail.harga_jual)}{' '}
                                     <Badge className="rounded-sm px-1.5 py-px text-[10px]">
-                                        per {detail.obat?.satuan_kecil?.nama_satuan || ''}
+                                        per{' '}
+                                        {detail.obat?.satuan_kecil
+                                            ?.nama_satuan || ''}
                                     </Badge>
                                 </TableCell>
                                 <TableCell className="text-right">

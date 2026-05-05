@@ -4,7 +4,7 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { ClipboardPlus, Pencil, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import DataTable from '@/components/datatable/datatable';
+import { DataTable } from '@/components/datatable/datatable';
 import { DeleteConfirm } from '@/components/confirm-action';
 import { Modal } from '@/components/modal';
 import { Badge } from '@/components/ui/badge';
@@ -143,7 +143,8 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
             header: () => <div className="text-center">Aksi</div>,
             cell: ({ row, table }) => {
                 const item = row.original;
-                const disableActions = (table.options.meta as any)?.disableActions;
+                const disableActions = (table.options.meta as any)
+                    ?.disableActions;
 
                 return (
                     <div className="flex justify-center gap-1">
@@ -261,37 +262,80 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
 
         setBulkDeleteLoading(true);
 
-        const deletePromises = selectedObat.map(
-            (obat) =>
-                new Promise<void>((resolve, reject) => {
-                    router.delete(`/master-data/obat/${obat.id}`, {
-                        preserveState: true,
-                        preserveScroll: true,
-                        onSuccess: () => resolve(),
-                        onError: (errors) => {
-                            reject(
-                                new Error(
-                                    errors.error ||
-                                        `Gagal menghapus obat ${obat.nama_obat}`,
-                                ),
-                            );
-                        },
-                    });
-                }),
-        );
-
-        const promise = Promise.all(deletePromises).then(() => {
-            setSelectedObat([]);
-        });
-
-        toast.promise(promise, {
-            loading: `Menghapus ${selectedObat.length} obat...`,
-            success: `${selectedObat.length} obat berhasil dihapus`,
-            error: (err) => err.message,
-        });
-
         try {
-            await promise;
+            const csrfToken = document
+                .querySelector('meta[name="csrf-token"]')
+                ?.getAttribute('content');
+
+            const deletePromises = selectedObat.map((obat) =>
+                fetch(`/master-data/obat/${obat.id}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken || '',
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ _method: 'DELETE' }),
+                }).then(async (response) => {
+                    const data = await response.json();
+
+                    if (!response.ok || data.success === false) {
+                        throw {
+                            obat,
+                            message: data.message,
+                            nomorFaktur: data.nomor_faktur || null,
+                        };
+                    }
+
+                    return data;
+                }),
+            );
+
+            const results = await Promise.allSettled(deletePromises);
+
+            const failed = results
+                .filter((r) => r.status === 'rejected')
+                .map((r) => {
+                    if (r.status === 'rejected') {
+                        return r.reason;
+                    }
+                    return null;
+                })
+                .filter(Boolean);
+
+            const succeeded = results.filter(
+                (r) => r.status === 'fulfilled',
+            ).length;
+
+            if (failed.length > 0) {
+                const nomorFakturList = failed
+                    .map((f) => f.nomorFaktur)
+                    .filter(Boolean);
+
+                let errorMessage = `Tidak dapat dihapus karena digunakan`;
+
+                if (nomorFakturList.length > 0) {
+                    errorMessage += ` nomor faktur: ${nomorFakturList.join(', ')}`;
+                }
+
+                if (failed.length > 0) {
+                    errorMessage += `. ${failed.length} obat gagal dihapus.`;
+                }
+
+                toast.error(errorMessage);
+            }
+
+            if (succeeded > 0) {
+                setSelectedObat([]);
+                toast.success(`${succeeded} obat berhasil dihapus`);
+            }
+
+            router.visit(window.location.pathname, {
+                only: ['obat'],
+                preserveScroll: true,
+            });
+        } catch (error: any) {
+            toast.error(error.message || 'Gagal menghapus obat');
         } finally {
             setBulkDeleteLoading(false);
         }
@@ -462,6 +506,7 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                         <DataTable
                             data={obat || []}
                             columns={columns}
+                            getRowId={(row) => String(row.id)}
                             initialPagination={{ pageIndex: 0, pageSize: 10 }}
                             emptyMessage="Belum ada data obat"
                             enableRowSelection

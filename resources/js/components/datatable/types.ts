@@ -1,8 +1,13 @@
-import type { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table';
+import type {
+    ColumnDef,
+    PaginationState,
+    SortingState,
+} from '@tanstack/react-table';
 
 export interface DataTableProps<T> {
     data: T[];
     columns: ColumnDef<T>[];
+    getRowId?: (row: T, index: number) => string;
     initialPagination?: PaginationState;
     initialSorting?: SortingState;
     pageSizeOptions?: number[];

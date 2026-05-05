@@ -73,22 +73,54 @@ class ObatController extends Controller
             // Check if obat is used in pembelian_detail
             $pembelianDetail = PembelianDetail::where('obat_id', $obat->id)->with('pembelian')->first();
             if ($pembelianDetail) {
+                $nomorFaktur = $pembelianDetail->pembelian->nomor_faktur;
+
+                if (request()->wantsJson() || request()->header('Accept') === 'application/json') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Obat tidak bisa dihapus karena masih ada riwayat transaksi',
+                        'nomor_faktur' => $nomorFaktur,
+                        'obat_nama' => $obat->nama_obat,
+                    ], 422);
+                }
+
                 return redirect()->back()
-                    ->withErrors(['error' => 'Obat tidak bisa dihapus karena masih ada sudah ada riwayat transaksi dengan nomor faktur "'.$pembelianDetail->pembelian->nomor_faktur.'"']);
+                    ->withErrors(['error' => 'Obat tidak bisa dihapus karena masih ada riwayat transaksi dengan nomor faktur "'.$nomorFaktur.'"']);
             }
 
             // Check if obat has stock
             $stok = Stok::where('obat_id', $obat->id)->first();
             if ($stok) {
+                if (request()->wantsJson() || request()->header('Accept') === 'application/json') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Obat tidak bisa dihapus karena masih ada stok',
+                    ], 422);
+                }
+
                 return redirect()->back()
                     ->withErrors(['error' => 'Obat tidak bisa dihapus karena masih ada stok']);
             }
 
             $obat->delete();
 
+            if (request()->wantsJson() || request()->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Obat berhasil dihapus',
+                ]);
+            }
+
             return inertia()->back()
                 ->with('success', 'Obat berhasil dihapus');
         } catch (\Exception $e) {
+            if (request()->wantsJson() || request()->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan saat menghapus obat',
+                ], 500);
+            }
+
             return redirect()->back()
                 ->withErrors(['error' => 'Terjadi kesalahan saat menghapus obat']);
         }

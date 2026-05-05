@@ -2,7 +2,7 @@ import { usePage } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { CalendarIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import DataTable from '@/components/datatable/datatable';
+import { DataTable } from '@/components/datatable/datatable';
 import { Badge } from '@/components/ui/badge';
 import {
     Card,
@@ -124,16 +124,13 @@ export default function PembelianHistory({
             accessorKey: 'tanggal_pembelian',
             header: 'Tanggal Pembelian',
             cell: ({ row }) => {
-                return new Date(
-                    row.original.tanggal_pembelian,
-                ).toLocaleDateString('id-ID', {
-                    day: '2-digit',
-                    month: 'long',
-                    year: 'numeric',
-                }).replace(
-                    /(\w+) (\w+) (\d+)/,
-                    '$1 $2, $3',
-                );
+                return new Date(row.original.tanggal_pembelian)
+                    .toLocaleDateString('id-ID', {
+                        day: '2-digit',
+                        month: 'long',
+                        year: 'numeric',
+                    })
+                    .replace(/(\w+) (\w+) (\d+)/, '$1 $2, $3');
             },
         },
         {
@@ -141,7 +138,6 @@ export default function PembelianHistory({
             header: 'User',
             cell: ({ row }) => row.original.user?.name || '-',
         },
-
     ];
 
     const renderExpandedRow = (pembelianData: Pembelian) => {
@@ -205,7 +201,9 @@ export default function PembelianHistory({
                                     </div>
                                 </TableCell>
                                 <TableCell className="text-center">
-                                    {detail.jumlah_beli.toLocaleString('id-ID')} {detail.obat?.satuan_kecil?.nama_satuan || ''}
+                                    {detail.jumlah_beli.toLocaleString('id-ID')}{' '}
+                                    {detail.obat?.satuan_kecil?.nama_satuan ||
+                                        ''}
                                 </TableCell>
                                 <TableCell className="text-center">
                                     {new Intl.NumberFormat('id-ID', {
@@ -215,7 +213,9 @@ export default function PembelianHistory({
                                         maximumFractionDigits: 0,
                                     }).format(detail.harga_beli)}{' '}
                                     <Badge className="rounded-sm px-1.5 py-px text-[10px]">
-                                        per {detail.obat?.satuan_kecil?.nama_satuan || ''}
+                                        per{' '}
+                                        {detail.obat?.satuan_kecil
+                                            ?.nama_satuan || ''}
                                     </Badge>
                                 </TableCell>
                                 <TableCell className="text-right">
