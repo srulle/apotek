@@ -89,8 +89,9 @@ export default function Satuan() {
         {
             id: 'actions',
             header: () => <div className="text-center">Aksi</div>,
-            cell: ({ row }) => {
+            cell: ({ row, table }) => {
                 const item = row.original;
+                const disableActions = (table.options.meta as any)?.disableActions;
 
                 return (
                     <div className="flex justify-center gap-1">
@@ -98,6 +99,7 @@ export default function Satuan() {
                             size="sm"
                             variant="ghost"
                             onClick={(e) => handleEdit(item, e)}
+                            disabled={disableActions}
                             className="h-6 w-6 cursor-pointer p-2"
                         >
                             <Pencil />
@@ -106,6 +108,7 @@ export default function Satuan() {
                             title="Hapus Satuan"
                             description={`Apakah Anda yakin ingin menghapus satuan "${item.nama_satuan}"? Tindakan ini tidak dapat dibatalkan.`}
                             isLoading={deleteLoading === item.id}
+                            disabled={disableActions}
                             onConfirm={() => {
                                 setDeleteLoading(item.id);
 

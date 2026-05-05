@@ -91,8 +91,9 @@ export default function Supplier() {
         {
             id: 'actions',
             header: () => <div className="text-center">Aksi</div>,
-            cell: ({ row }) => {
+            cell: ({ row, table }) => {
                 const item = row.original;
+                const disableActions = (table.options.meta as any)?.disableActions;
 
                 return (
                     <div className="flex justify-center gap-1">
@@ -100,6 +101,7 @@ export default function Supplier() {
                             size="sm"
                             variant="ghost"
                             onClick={(e) => handleEdit(item, e)}
+                            disabled={disableActions}
                             className="h-6 w-6 cursor-pointer p-2"
                         >
                             <Pencil />
@@ -108,6 +110,7 @@ export default function Supplier() {
                             title="Hapus Supplier"
                             description={`Apakah Anda yakin ingin menghapus supplier "${item.nama_supplier}"? Tindakan ini tidak dapat dibatalkan.`}
                             isLoading={deleteLoading === item.id}
+                            disabled={disableActions}
                             onConfirm={() => {
                                 setDeleteLoading(item.id);
 

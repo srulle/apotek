@@ -91,8 +91,9 @@ export default function KategoriObat() {
         {
             id: 'actions',
             header: () => <div className="text-center">Aksi</div>,
-            cell: ({ row }) => {
+            cell: ({ row, table }) => {
                 const kategori = row.original;
+                const disableActions = (table.options.meta as any)?.disableActions;
 
                 return (
                     <div className="flex justify-center gap-1">
@@ -100,6 +101,7 @@ export default function KategoriObat() {
                             size="sm"
                             variant="ghost"
                             onClick={(e) => handleEdit(kategori, e)}
+                            disabled={disableActions}
                             className="h-6 w-6 cursor-pointer p-2"
                         >
                             <Pencil />
@@ -108,6 +110,7 @@ export default function KategoriObat() {
                             title="Hapus Kategori Obat"
                             description={`Apakah Anda yakin ingin menghapus kategori "${kategori.nama_kategori}"? Tindakan ini tidak dapat dibatalkan.`}
                             isLoading={deleteLoading === kategori.id}
+                            disabled={disableActions}
                             onConfirm={() => {
                                 setDeleteLoading(kategori.id);
 

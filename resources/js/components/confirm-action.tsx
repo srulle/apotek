@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { useState, cloneElement, isValidElement } from 'react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import {
     Popover,
     PopoverContent,
@@ -18,6 +19,7 @@ interface ConfirmActionProps {
     confirmText?: string;
     cancelText?: string;
     isLoading?: boolean;
+    disabled?: boolean;
 }
 
 const defaultConfig: Record<
@@ -60,6 +62,7 @@ export function ConfirmAction({
     confirmText,
     cancelText = 'Batal',
     isLoading = false,
+    disabled = false,
 }: ConfirmActionProps) {
     const [open, setOpen] = useState(false);
     const config = defaultConfig[type];
@@ -68,6 +71,18 @@ export function ConfirmAction({
         await onConfirm();
         setOpen(false);
     };
+
+    if (disabled) {
+        if (isValidElement(children)) {
+            const child = children as React.ReactElement<any>;
+            const existingClassName = child.props.className || '';
+            return cloneElement(child, {
+                disabled: true,
+                className: cn(existingClassName, 'opacity-50 cursor-not-allowed'),
+            });
+        }
+        return children;
+    }
 
     return (
         <Popover open={open} onOpenChange={setOpen}>
@@ -110,7 +125,7 @@ export function ConfirmAction({
 // Pre-configured exports for convenience
 interface TypedConfirmProps extends Omit<
     ConfirmActionProps,
-    'type' | 'title' | 'description' | 'confirmText'
+    'type'
 > {}
 
 export function VerifyConfirm(props: TypedConfirmProps) {

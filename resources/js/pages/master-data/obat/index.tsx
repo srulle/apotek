@@ -141,8 +141,9 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
         {
             id: 'actions',
             header: () => <div className="text-center">Aksi</div>,
-            cell: ({ row }) => {
+            cell: ({ row, table }) => {
                 const item = row.original;
+                const disableActions = (table.options.meta as any)?.disableActions;
 
                 return (
                     <div className="flex justify-center gap-1">
@@ -150,6 +151,7 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                             size="sm"
                             variant="ghost"
                             onClick={() => handleEdit(item)}
+                            disabled={disableActions}
                             className="h-6 w-6 cursor-pointer p-2"
                         >
                             <Pencil size={14} />
@@ -158,6 +160,7 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                             title="Hapus Obat"
                             description={`Apakah Anda yakin ingin menghapus obat "${item.nama_obat}"? Tindakan ini tidak dapat dibatalkan.`}
                             isLoading={deleteLoading === item.id}
+                            disabled={disableActions}
                             onConfirm={() => {
                                 setDeleteLoading(item.id);
 
