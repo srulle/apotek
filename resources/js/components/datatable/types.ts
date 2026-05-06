@@ -2,6 +2,7 @@ import type {
     ColumnDef,
     PaginationState,
     SortingState,
+    VisibilityState,
 } from '@tanstack/react-table';
 
 export interface DataTableProps<T> {
@@ -21,6 +22,8 @@ export interface DataTableProps<T> {
     renderExpandedRow?: (row: T) => React.ReactNode;
     enableBulkDelete?: boolean;
     onBulkDelete?: () => void | Promise<void>;
+    enableColumnVisibility?: boolean;
+    initialColumnVisibility?: VisibilityState;
 }
 
 export interface SimpleDatatableProps<TData, TValue> {
@@ -37,4 +40,10 @@ export interface FilterableColumn {
     label: string;
     accessorKey: string;
     values: string[];
+}
+
+export interface DataTableColumnMeta {
+    filterable?: boolean;
+    sortIconType?: 'text' | 'numeric';
+    enableHiding?: boolean;
 }

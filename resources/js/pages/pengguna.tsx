@@ -1,10 +1,10 @@
 import { Head } from '@inertiajs/react';
 import { router } from '@inertiajs/react';
 import { Users } from 'lucide-react';
-import { DataTable } from '@/components/datatable/datatable';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
 import { VerifyConfirm, UnverifyConfirm } from '@/components/confirm-action';
+import { DataTable } from '@/components/datatable/datatable';
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { pengguna } from '@/routes';
 
 type User = {

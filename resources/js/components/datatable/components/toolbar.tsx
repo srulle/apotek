@@ -1,12 +1,25 @@
 'use client';
 
-import { SearchIcon, Trash2, X } from 'lucide-react';
-import { useState } from 'react';
 import type { Table } from '@tanstack/react-table';
+import { Trash2, X, ChevronsUpDownIcon, CheckIcon, SearchIcon, RotateCcw } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 import { DeleteConfirm } from '@/components/confirm-action';
 import { Button } from '@/components/ui/button';
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from '@/components/ui/command';
 import { Input } from '@/components/ui/input';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
 
 import type { FilterableColumn } from '../types';
 import { FilterPopover } from './filter-popover';
@@ -24,6 +37,7 @@ interface ToolbarProps<T = any> {
     enableRowSelection: boolean;
     enableBulkDelete: boolean;
     onBulkDelete?: () => void | Promise<void>;
+    enableColumnVisibility: boolean;
     table: Table<T>;
     rowSelection: Record<string, boolean>;
 }
@@ -39,12 +53,42 @@ export function DataTableToolbar({
     enableRowSelection,
     enableBulkDelete,
     onBulkDelete,
+    enableColumnVisibility,
     table,
     rowSelection,
 }: ToolbarProps) {
     const [popoverOpens, setPopoverOpens] = useState<Record<string, boolean>>(
         {},
     );
+    const [columnVisibilityOpen, setColumnVisibilityOpen] = useState<boolean>(false);
+    const [columnVisibilitySearch, setColumnVisibilitySearch] = useState<string>('');
+    const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({});
+
+    // Update local state when table columns change
+    useEffect(() => {
+        const visibilityMap: Record<string, boolean> = {};
+        table.getAllColumns().forEach(column => {
+            visibilityMap[column.id] = column.getIsVisible();
+        });
+        setLocalColumnVisibility(visibilityMap);
+    }, [table]);
+
+    // Sync local state when column visibility changes
+    useEffect(() => {
+        const visibilityMap: Record<string, boolean> = {};
+        table.getAllColumns().forEach(column => {
+            visibilityMap[column.id] = column.getIsVisible();
+        });
+        setLocalColumnVisibility(prev => {
+            // Only update if there's actually a change to avoid infinite loops
+            const hasChanged = Object.keys(visibilityMap).some(key =>
+                visibilityMap[key] !== prev[key]
+            );
+
+            return hasChanged ? visibilityMap : prev;
+        });
+    }, [table.getState().columnVisibility]);
+
     const selectedCount = Object.keys(rowSelection).length;
 
     return (
@@ -94,6 +138,115 @@ export function DataTableToolbar({
                         />
                     );
                 })}
+
+                {enableColumnVisibility && (
+                    <Popover open={columnVisibilityOpen} onOpenChange={setColumnVisibilityOpen}>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={columnVisibilityOpen}
+                                className="order-3 h-auto min-h-8 w-full min-w-[110px] justify-between hover:bg-transparent sm:w-fit lg:order-2"
+                            >
+                                <span className="flex items-center gap-2">
+                                    <div
+                                        className="group flex h-5 w-6 shrink-0 cursor-pointer items-center justify-center rounded-sm border border-input bg-background text-sm font-medium transition-colors hover:text-destructive hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            table.resetColumnVisibility();
+                                            // Update local state for all columns
+                                            const visibilityMap: Record<string, boolean> = {};
+                                            table.getAllColumns().forEach(column => {
+                                                visibilityMap[column.id] = column.getIsVisible();
+                                            });
+                                            setLocalColumnVisibility(visibilityMap);
+                                            setColumnVisibilitySearch('');
+                                        }}
+                                        title="Reset kolom"
+                                        role="button"
+                                        tabIndex={0}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                table.resetColumnVisibility();
+                                                const visibilityMap: Record<string, boolean> = {};
+                                                table.getAllColumns().forEach(column => {
+                                                    visibilityMap[column.id] = column.getIsVisible();
+                                                });
+                                                setLocalColumnVisibility(visibilityMap);
+                                                setColumnVisibilitySearch('');
+                                            }
+                                        }}
+                                    >
+                                        <RotateCcw className="h-3 w-3" />
+                                    </div>
+                                    <span>Kolom</span>
+                                </span>
+                                <ChevronsUpDownIcon
+                                    className="ml-2 shrink-0 text-muted-foreground/80"
+                                    aria-hidden="true"
+                                />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-(--radix-popper-anchor-width) min-w-62.5 max-w-lg p-0" align="start">
+                            <Command>
+                                <CommandInput
+                                    placeholder="Cari kolom..."
+                                    value={columnVisibilitySearch}
+                                    onValueChange={setColumnVisibilitySearch}
+                                />
+                                <CommandList>
+                                    <CommandEmpty>Tidak ada kolom.</CommandEmpty>
+                                    <CommandGroup>
+                                        {table
+                                            .getAllColumns()
+                                            .filter(column => column.getCanHide())
+                                            .filter(column => {
+                                                if (!columnVisibilitySearch) {
+return true;
+}
+
+                                                const headerText = typeof column.columnDef.header === 'string'
+                                                    ? column.columnDef.header
+                                                    : column.id;
+
+                                                return headerText.toLowerCase().includes(columnVisibilitySearch.toLowerCase());
+                                            })
+                                            .map(column => {
+                                                const headerText = typeof column.columnDef.header === 'string'
+                                                    ? column.columnDef.header
+                                                    : column.id;
+                                                const isVisible = localColumnVisibility[column.id] ?? column.getIsVisible();
+
+                                                return (
+                                                    <CommandItem
+                                                        key={column.id}
+                                                        onSelect={() => {
+                                                            const newVisibility = !isVisible;
+                                                            column.toggleVisibility(newVisibility);
+                                                            setLocalColumnVisibility(prev => ({
+                                                                ...prev,
+                                                                [column.id]: newVisibility
+                                                            }));
+                                                        }}
+                                                    >
+                                                        <span className="truncate capitalize">{headerText}</span>
+                                                        {isVisible && (
+                                                            <CheckIcon
+                                                                size={16}
+                                                                className="ml-auto"
+                                                            />
+                                                        )}
+                                                    </CommandItem>
+                                                );
+                                            })}
+                                    </CommandGroup>
+                                </CommandList>
+                            </Command>
+                        </PopoverContent>
+                    </Popover>
+                )}
             </div>
 
             {enableRowSelection && selectedCount > 0 && (

@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react';
 import { useState, cloneElement, isValidElement } from 'react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 
 type ConfirmType = 'verify' | 'unverify' | 'delete';
 
@@ -76,11 +76,13 @@ export function ConfirmAction({
         if (isValidElement(children)) {
             const child = children as React.ReactElement<any>;
             const existingClassName = child.props.className || '';
+
             return cloneElement(child, {
                 disabled: true,
                 className: cn(existingClassName, 'opacity-50 cursor-not-allowed'),
             });
         }
+
         return children;
     }
 

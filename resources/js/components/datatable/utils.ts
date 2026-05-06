@@ -1,10 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import type { FilterableColumn } from './types';
-
-interface DataTableColumnMeta {
-    filterable?: boolean;
-    sortIconType?: 'text' | 'numeric';
-}
+import type { DataTableColumnMeta } from './types';
 
 export const getNestedValue = (obj: any, path: string): any => {
     return path.split('.').reduce((prev: any, curr) => prev?.[curr], obj);
@@ -17,10 +13,12 @@ export const getFilterableColumns = <T>(
     return columns
         .filter((col): col is ColumnDef<T> & { accessorKey: string } => {
             const meta = col.meta as DataTableColumnMeta | undefined;
+
             return meta?.filterable === true;
         })
         .map((col) => {
             const accessorKey = col.accessorKey;
+
             return {
                 id: accessorKey,
                 label:
@@ -42,11 +40,19 @@ export const getFilterableColumns = <T>(
 export const processColumns = <T>(columns: ColumnDef<T>[]): ColumnDef<T>[] => {
     return columns.map((col) => {
         const meta = col.meta as DataTableColumnMeta | undefined;
+        let processedCol = { ...col };
+
         if (meta?.filterable) {
-            return { ...col, filterFn: 'multiSelect' as any };
+            processedCol = { ...processedCol, filterFn: 'multiSelect' as any };
         }
 
-        return col;
+        if (meta?.enableHiding === false) {
+            processedCol = { ...processedCol, enableHiding: false };
+        } else if (meta?.enableHiding !== undefined) {
+            processedCol = { ...processedCol, enableHiding: meta.enableHiding };
+        }
+
+        return processedCol;
     }) as ColumnDef<T>[];
 };
 

@@ -1,5 +1,6 @@
 'use client';
 
+import type { Table } from '@tanstack/react-table';
 import {
     ChevronFirstIcon,
     ChevronLastIcon,
@@ -8,9 +9,8 @@ import {
     ChevronsUpDownIcon,
     CheckIcon,
 } from 'lucide-react';
-import type { Table } from '@tanstack/react-table';
 
-import { useState, useEffect } from 'react';
+
 
 import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
@@ -33,21 +33,14 @@ export function DataTablePagination({
     pageSizeOptions,
     pagination,
 }: PaginationProps) {
-    const [mounted, setMounted] = useState(false);
     const { pageIndex, pageSize } = pagination;
 
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
-    const totalRows = mounted ? table.getRowCount() : 0;
+    const totalRows = table.getRowCount();
     const startRow = pageIndex * pageSize + 1;
     const endRow = Math.min((pageIndex + 1) * pageSize, totalRows);
 
-    const canPreviousPage = mounted ? pageIndex > 0 : false;
-    const canNextPage = mounted
-        ? totalRows > 0 && (pageIndex + 1) * pageSize < totalRows
-        : false;
+    const canPreviousPage = pageIndex > 0;
+    const canNextPage = totalRows > 0 && (pageIndex + 1) * pageSize < totalRows;
 
     return (
         <div className="flex flex-col items-center justify-end gap-4 sm:flex-row">

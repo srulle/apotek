@@ -92,7 +92,7 @@ export function FilterPopover({
                     />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-(--radix-popper-anchor-width) max-w-sm p-0">
+            <PopoverContent className="w-(--radix-popper-anchor-width) min-w-62.5 max-w-lg p-0" align="start">
                 <Command>
                     <CommandInput
                         placeholder={`Cari ${column.label.toLowerCase()}...`}

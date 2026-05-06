@@ -4,8 +4,8 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { ClipboardPlus, Pencil, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { DataTable } from '@/components/datatable/datatable';
 import { DeleteConfirm } from '@/components/confirm-action';
+import { DataTable } from '@/components/datatable/datatable';
 import { Modal } from '@/components/modal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -55,6 +55,9 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
         {
             accessorKey: 'nama_obat',
             header: 'Nama Obat',
+            meta: {
+                enableHiding: false,  // Nama obat selalu muncul
+            },
         },
         {
             accessorKey: 'kategori.nama_kategori',
@@ -141,6 +144,9 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
         {
             id: 'actions',
             header: () => <div className="text-center">Aksi</div>,
+            meta: {
+                enableHiding: false,  // Kolom aksi tidak dapat disembunyikan
+            },
             cell: ({ row, table }) => {
                 const item = row.original;
                 const disableActions = (table.options.meta as any)
@@ -299,6 +305,7 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                     if (r.status === 'rejected') {
                         return r.reason;
                     }
+
                     return null;
                 })
                 .filter(Boolean);
@@ -515,6 +522,7 @@ export default function Obat({ kategoriObat, satuan }: ObatPageProps) {
                             onSelectionChange={setSelectedObat}
                             enableBulkDelete
                             onBulkDelete={handleBulkDelete}
+                            enableColumnVisibility={true}
                         />
                     </div>
                 </div>
